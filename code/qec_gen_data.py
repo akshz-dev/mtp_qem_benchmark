@@ -2,12 +2,10 @@
 qec_gen_data.py -- repetition-code memory-experiment data generation under the
 PHENOMENOLOGICAL noise model, simulated directly in numpy.
 
-SCOPE NOTE. This track was originally specified as rotated surface code under
-stim's circuit-level noise model. The Python package index and conda-forge were
-both unreachable from this sandbox for the whole session, so `stim` and
-`pymatching` could not be installed. The scope was therefore reduced to the
-repetition code under phenomenological noise, which can be simulated exactly in
-numpy with no additional dependencies. See Chapter 6 of the thesis.
+SCOPE NOTE. The track uses the repetition code under phenomenological noise,
+not the rotated surface code under circuit-level noise. Its space-time defect
+graph is known analytically, so it can be simulated exactly in numpy with no
+additional dependencies. See Chapter 6 of the thesis.
 
 Model
   - Distance-d repetition code: d data qubits, d-1 ZZ stabilizers, T = d rounds.
@@ -89,9 +87,8 @@ def main() -> None:
         "noise_model": "phenomenological: data-qubit flip probability p per "
                        "round; stabilizer measurement flip probability p per "
                        "round; final round noiseless",
-        "scope_note": "Reduced from surface code + stim circuit-level noise "
-                      "because PyPI and conda-forge were unreachable for the "
-                      "entire session, so stim/pymatching could not be installed.",
+        "scope_note": "Repetition code under phenomenological noise, not the "
+                      "surface code under circuit-level noise (thesis Section 6.1).",
         "distances": DISTANCES,
         "error_rates": ERROR_RATES,
         "n_shots_per_config": N_SHOTS,

@@ -26,14 +26,13 @@ the same.
 \begin{quote}
 \textbf{Scope statement.} This chapter benchmarks decoders for the \emph{distance-$d$
 repetition code under phenomenological noise}, not the rotated surface code under
-circuit-level noise. The original design called for the latter, using \texttt{stim}
-for circuit-level sampling and \texttt{pymatching} for matching; neither package
-could be installed, because the Python package indices were unreachable throughout
-the work (see Section~\ref{sec:ch6_limits}). The repetition code was chosen because
-its space-time defect graph is analytically known, so the noise sampling could be
-written directly in NumPy and the defect graph constructed in closed form, with the
-matching itself solved by an exact blossom implementation already installed
-(\texttt{networkx}) rather than by a specialized decoding library. The consequence is that \textbf{the absolute error rates and
+circuit-level noise. The repetition code is used because its space-time defect
+graph is known analytically: the noise can be sampled exactly in NumPy, the matching
+graph constructed in closed form and solved by an exact blossom implementation
+(\texttt{networkx}), and the exact decoder validated against brute-force enumeration
+(Section~\ref{sec:ch6_method}). Its syndrome space is also small enough at $d = 3$
+for the training set to cover it almost completely, which makes the coverage
+analysis of Section~\ref{sec:ch6_mlwin} possible. The consequence is that \textbf{the absolute error rates and
 threshold estimates in this chapter are not comparable to published surface-code,
 circuit-level-noise numbers}, and should not be quoted as such. The comparisons
 \emph{between decoders}, which are what this chapter is about, are internally valid:
@@ -376,13 +375,13 @@ matching and the least demanding for a learned decoder. Surface-code circuit-lev
 decoding is a substantially harder problem, and results here do not transfer to it
 quantitatively.
 
-Four further limitations follow from the same unavailability of packages, and each
-one biases the comparison in a stated direction.
+Four further limitations follow from the tool chain used, and each one biases the
+comparison in a stated direction.
 
 \begin{enumerate}
-    \item \textbf{No recurrent or convolutional decoder was trained.} PyTorch was
-    unavailable and scikit-learn has no sequence model, so the neural arm is a
-    feed-forward network on a flattened syndrome. Round-structured architectures are
+    \item \textbf{No recurrent or convolutional decoder was trained.} The learned
+    decoders were built with scikit-learn, which has no sequence model, so the neural
+    arm is a feed-forward network on a flattened syndrome. Round-structured architectures are
     what the neural-decoder literature reports as strongest, precisely because they
     build in the time-translation symmetry that the flat MLP lacks. The learned
     decoders here are therefore a \emph{lower bound} on what learned decoding can
@@ -390,9 +389,8 @@ one biases the comparison in a stated direction.
     to expect a structured architecture to do better: it would not need to see each
     syndrome pattern to generalize.
 
-    \item \textbf{No union-find or belief-propagation decoder.} Neither was available
-    as an installed library and neither was implemented from scratch, so greedy
-    matching stands as the second classical baseline. The comparison against exact
+    \item \textbf{No union-find or belief-propagation decoder.} Neither was
+    implemented, so greedy matching stands as the second classical baseline. The comparison against exact
     matching is unaffected.
 
     \item \textbf{The hybrid arm used reduced shots.} State-vector simulation

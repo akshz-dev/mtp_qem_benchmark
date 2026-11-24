@@ -187,7 +187,7 @@ def fig_robustness(out):
         s7 = e[e.seed == 7]["rmse"]
         if len(s7):
             ax.plot(float(s7.iloc[0]), i, "D", color="black", ms=4.5, mfc="none", mew=0.9,
-                    label="seed 7 (reported in v01)" if i == 0 else None)
+                    label="seed 7 (Table 5.1.1)" if i == 0 else None)
         if base is not None:
             u = base[(base.split == sp) & (base.model == "no_mitigation")]["rmse"]
             if len(u):

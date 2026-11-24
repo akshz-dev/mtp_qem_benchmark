@@ -1,4 +1,4 @@
-"""Follow-up analyses requested by the pre-submission review (idealized regime).
+"""Follow-up analyses (idealized regime).
 
 F1  Out-of-distribution feature dependence. On the depth-extrapolation split
     (train depth <= 4, test depth >= 5), refit every learned arm with three

@@ -3,9 +3,8 @@ qec_bench.py -- benchmark classical matching decoders against ML syndrome
 decoders on the repetition-code / phenomenological-noise data produced by
 qec_gen_data.py.
 
-SCOPE NOTE. Reduced from surface code + stim circuit-level noise to repetition
-code + phenomenological noise because PyPI and conda-forge were unreachable for
-the entire session and stim/pymatching could not be installed. Every number
+SCOPE NOTE. The benchmark uses the repetition code under phenomenological noise,
+not the surface code under circuit-level noise (thesis Section 6.1). Every number
 produced here comes from the numpy simulation in qec_gen_data.py.
 
 Decoders

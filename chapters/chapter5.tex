@@ -656,8 +656,8 @@ bounded variant is far more stable at $0.0581 \pm 0.0096$ and better than no
 mitigation for every seed. On Split~B the reuploading arm is worse than no
 mitigation for all ten seeds ($0.1827$--$0.4900$) and the bounded arm for nine of
 ten. The reuploading arm's in-distribution accuracy is therefore not a property of
-the method but of a favourable initialisation, which is the single most important
-correction to the earlier version of these results.
+the method but of a favourable initialisation, and a single-seed result would
+misstate its performance.
 
 \paragraph{Out-of-range inputs.} Section~\ref{sec:ch5_main} attributed the Split~B
 inversion to extrapolation behaviour. Table~\ref{tab:ch5_oodfeat} and
@@ -804,12 +804,9 @@ memory together, and only the reset control isolates memory.
 Table~\ref{tab:ch5_scaling} and Figure~\ref{fig:ch5_scaling} run the benchmark under
 both noise-scaling methods of Section~\ref{sec:ch3_realistic}: idealized parameter
 scaling, which multiplies every noise rate exactly, and layer-level unitary folding,
-which is what hardware can do. The folded data were regenerated after a defect in
-the first version of the simulator was found and fixed: the inverse of a
-hardware-efficient layer applied its two rotations in forward rather than reverse
-order, which made the folded circuits compute a different unitary. A noise-free unit
-test now confirms that folded and unfolded circuits agree to $3.9 \times 10^{-16}$
-(Section~\ref{sec:ch4_verification}).
+which is what hardware can do. A noise-free unit test confirms that folded and
+unfolded circuits agree to $3.9 \times 10^{-16}$ (Section~\ref{sec:ch4_verification}),
+so folding changes only the noise, not the ideal circuit.
 
 \begin{table}[htbp]
 \centering
@@ -916,8 +913,8 @@ line is the unmitigated error with the defect removed.}
 \label{fig:ch5_regime}
 \end{figure}
 
-Three results follow, and the first two revise the conclusion that an earlier
-version of this analysis drew from the defect-removed control alone.
+Three results follow. The first two hold only against the reset control; the
+defect-removed control alone points the other way.
 
 First, memory does not change the unmitigated error: the paired difference between
 production and the reset control is $-0.0007$ under parameter scaling and $-0.0010$

@@ -186,6 +186,6 @@ Hardware measurements written into this schema run through `bench.py` and `exper
 }
 ```
 
-## Template and licence
+## Template and copyright
 
-The LaTeX layout follows the unofficial IIT Jodhpur thesis template by Chandan Mukherjee, distributed under CC BY-NC-SA 3.0; the template-derived files carry that licence. No licence has yet been chosen for the rest of this repository, so all rights are reserved by the author until a `LICENSE` file is added.
+The LaTeX layout follows the unofficial IIT Jodhpur thesis template by Chandan Mukherjee, distributed under CC BY-NC-SA 3.0; the template-derived files carry that licence. All other content (text, code, data and results) is © 2026 Abhishek Kumar Singh, all rights reserved.

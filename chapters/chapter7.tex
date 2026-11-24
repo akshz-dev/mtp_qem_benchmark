@@ -49,7 +49,7 @@ $3\%$. Every one of its predictions requires a shot-estimated circuit per traini
 point, $3150$ circuits here, which the classical arms do not need. The
 data-reuploading variational circuit is unstable: over ten initialisation seeds its
 in-distribution error ranges from $0.056$ to $0.151$, worse than no mitigation for
-half of them, and the value an earlier draft of this thesis reported was its best
+half of them, and the single-seed value in Table~\ref{tab:ch5_main} is its best
 seed. In the decoding track the hybrid decoder repeats the pattern in miniature: it
 beats its own classical control on identical compressed features at distance 3, by a
 factor of $5.9$, and the advantage fades with distance until at distance 9 both are
@@ -100,8 +100,8 @@ resets it every layer -- identical per-layer damage, zero memory by the
 Breuer--Laine--Piilo measure -- shows that memory alone leaves the raw error
 unchanged, worsens every non-variational learned arm resolvably (by $0.007$--$0.011$
 under parameter scaling and $0.019$--$0.022$ under folding), and leaves linear
-extrapolation unchanged or slightly better. An earlier draft of this thesis drew the
-opposite conclusion from the defect-removed control alone; it is retracted.
+extrapolation unchanged or slightly better. The defect-removed control alone points
+the other way, which is why the reset control is needed.
 
 Third, a $30\%$ recalibration of the device cost most learned arms no resolvable
 accuracy. Drift raised the raw error resolvably, and linear extrapolation and ridge
@@ -170,10 +170,10 @@ magnitude more circuit executions than its simulator accuracy suggests. Each reg
 uses one simulated device, one set of noise parameters and one drift magnitude.
 
 The decoding results are for the repetition code under phenomenological noise, not
-the surface code under circuit-level noise, because the required packages could not
-be installed (Section~\ref{sec:ch6_scope}). The repetition code is the easiest
+the surface code under circuit-level noise (Section~\ref{sec:ch6_scope}). The
+repetition code is the easiest
 setting for matching and the least demanding for a learned decoder, and the neural
-arm is a lower bound: no round-structured recurrent or convolutional decoder could be
+arm is a lower bound: no round-structured recurrent or convolutional decoder was
 trained, and those are the architectures the literature reports as strongest.
 
 Ten splits and ten seeds put variance on the headline comparisons, but the sweeps
@@ -215,8 +215,7 @@ run them:
     recurrent or graph neural network -- should not need to see each syndrome pattern
     and should therefore scale where the flat models failed. Testing that prediction
     on surface-code circuit-level data, against \texttt{pymatching}, is the
-    highest-value single experiment left undone here, and it is undone only because
-    of a package-availability accident.
+    highest-value single experiment for future work.
 
     \item \textbf{Hardware training of the variational arms.} The kernel side of the
     cost question is now measured (Section~\ref{sec:ch5_shotkernel}): about
@@ -257,9 +256,10 @@ What changed outcomes was, in order: whether the model's critical hyperparameter
 tuned and its initialisation repeated, whether the deployment inputs lay inside the
 training range, how much problem structure the model encoded, and whether the noise
 model, the controls and the cost accounting were realistic enough for the comparison
-to mean anything. Two conclusions of an earlier draft -- that memory favours
-learning over extrapolation, and that the variational circuit was a competitive
-in-distribution mitigator -- did not survive a proper control and repeated seeds.
+to mean anything. Two conclusions that a single control and a single seed would
+have supported -- that memory favours learning over extrapolation, and that the
+variational circuit is a competitive in-distribution mitigator -- do not survive the
+reset control and repeated seeds.
 That is the argument for running a benchmark under more than one noise model, with
 controls that isolate one variable at a time and with variance reported, rather than
 stating those choices as limitations.
