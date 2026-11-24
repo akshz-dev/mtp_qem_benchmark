@@ -1,0 +1,285 @@
+% Appendix A -- Derivations
+
+\chapter{Derivations}
+
+\label{AppendixA}
+
+This appendix collects the derivations referenced in Chapter~\ref{chap3:methodology}.
+
+\section{Richardson extrapolation coefficients and variance inflation}
+\label{sec:appA_richardson}
+
+Let $\mu(\lambda)$ be the expectation value measured at noise scale $\lambda$ and
+suppose it is smooth in $\lambda$, so that near zero it admits the expansion
+\begin{equation}
+    \mu(\lambda) \;=\; \mu_{\text{ideal}} \;+\; \sum_{j=1}^{\infty} a_j \lambda^{j}.
+    \label{eq:appA_expansion}
+\end{equation}
+Given measurements at $m+1$ distinct scales $\lambda_0, \ldots, \lambda_m$, the
+unique degree-$m$ interpolating polynomial evaluated at $\lambda = 0$ is, by the
+Lagrange form,
+\begin{equation}
+    \widehat{\mu}_{\text{ZNE}} \;=\; \sum_{k=0}^{m} c_k \, \mu(\lambda_k),
+    \qquad
+    c_k \;=\; \prod_{j \neq k} \frac{0 - \lambda_j}{\lambda_k - \lambda_j}
+    \;=\; \prod_{j \neq k} \frac{\lambda_j}{\lambda_j - \lambda_k}.
+    \label{eq:appA_coeffs}
+\end{equation}
+Substituting Eq.~\eqref{eq:appA_expansion} into Eq.~\eqref{eq:appA_coeffs} and using
+the interpolation identities
+$\sum_k c_k = 1$ and $\sum_k c_k \lambda_k^{\,j} = 0$ for $1 \leq j \leq m$, the
+first $m$ orders of the noise expansion cancel exactly and
+\begin{equation}
+    \widehat{\mu}_{\text{ZNE}} \;=\; \mu_{\text{ideal}}
+    \;+\; a_{m+1} \left( \sum_{k=0}^{m} c_k \lambda_k^{\,m+1} \right)
+    \;+\; O(\lambda^{m+2}),
+    \label{eq:appA_bias}
+\end{equation}
+so the residual bias is of order $m+1$ in the noise strength. This is the entire
+justification for the method: increasing the polynomial order cancels more terms.
+
+The cost appears when the measurements are noisy. For the three scales used in this
+thesis, $\lambda \in \{1, 2, 3\}$ with $m = 2$, Eq.~\eqref{eq:appA_coeffs} gives
+\begin{equation}
+    c_0 = \frac{(2)(3)}{(2-1)(3-1)} = 3,
+    \qquad
+    c_1 = \frac{(1)(3)}{(1-2)(3-2)} = -3,
+    \qquad
+    c_2 = \frac{(1)(2)}{(1-3)(2-3)} = 1,
+    \label{eq:appA_values}
+\end{equation}
+which indeed sum to unity. If each measurement carries independent statistical
+variance $\sigma^2$, the estimator variance is
+\begin{equation}
+    \mathrm{Var}\!\left[ \widehat{\mu}_{\text{ZNE}} \right]
+    \;=\; \sigma^2 \sum_{k} c_k^{2}
+    \;=\; \sigma^2 \left( 9 + 9 + 1 \right)
+    \;=\; 19\,\sigma^2 ,
+    \label{eq:appA_variance}
+\end{equation}
+an inflation of more than an order of magnitude relative to a single measurement.
+Richardson extrapolation therefore trades bias for variance, and at a finite shot
+budget the trade need not be favourable -- which is the mechanism behind the
+shot-budget results of Section~\ref{sec:ch5_shots}. Least-squares fitting of a
+degree-one polynomial to the same three points, as used by the linear arm, has
+smaller coefficient magnitudes and therefore less variance inflation, at the price of
+cancelling only the first order of Eq.~\eqref{eq:appA_expansion}.
+
+\section{Why exponential extrapolation is motivated, and why it fails here}
+\label{sec:appA_exp}
+
+Under a global depolarizing channel of strength $\varepsilon$ acting on an
+$n$-qubit state,
+\begin{equation}
+    \mathcal{E}(\rho) \;=\; (1 - \varepsilon)\rho \;+\; \varepsilon \frac{I}{2^{n}},
+    \label{eq:appA_global}
+\end{equation}
+any traceless observable $O$ has $\mathrm{Tr}[O \, I/2^n] = 0$, so
+$\langle O \rangle$ is simply attenuated by $(1 - \varepsilon)$. If each of $L$
+circuit layers applies such a channel independently, the attenuation compounds to
+$(1-\varepsilon)^{L} = e^{L \ln (1 - \varepsilon)}$, which is exponential in circuit
+depth and motivates fitting
+$\mu(\lambda) = a e^{-b \lambda} + c$.
+
+The difficulty is one of parameter counting rather than of physics. With $K = 3$
+noise scales and three free parameters $(a, b, c)$ the fit is exactly determined:
+there are no residual degrees of freedom, no averaging of the statistical
+fluctuations, and the covariance of the fit is not estimable. A fluctuation in any
+one of the three measurements propagates directly into the extrapolated value, and
+because the model is non-linear in $b$ the propagation can be violent. The results
+of Section~\ref{sec:ch5_main} show this arm performing worse than no mitigation at
+all, which is a statement about the three-point exactly-determined fit, not about
+the exponential ansatz. Four or more noise scales would make the fit
+overdetermined and the arm usable.
+
+\section{Fidelity kernel and concentration}
+\label{sec:appA_kernel}
+
+For a feature map $x \mapsto \ket{\phi(x)} = U(x)\ket{0}^{\otimes n}$ implemented by
+a parametrized circuit, the fidelity kernel is
+\begin{equation}
+    k(x, x') \;=\; \left| \braket{\phi(x) | \phi(x')} \right|^{2}
+    \;=\; \left| \bra{0}^{\otimes n} U^{\dagger}(x) U(x') \ket{0}^{\otimes n} \right|^{2},
+    \label{eq:appA_fidelity}
+\end{equation}
+which is symmetric, satisfies $k(x,x) = 1$, and is positive semi-definite because it
+is a Gram matrix of unit vectors under the Hilbert--Schmidt inner product. Hence it
+is a valid kernel and may be used in any kernel method. In simulation the states
+$\ket{\phi(x_i)}$ can be computed once and stored as rows of a matrix $\Psi$, after
+which the entire Gram matrix is the single product
+$K = \left| \Psi \Psi^{\dagger} \right|^{2}$ taken elementwise -- the reason the
+kernel arm is computationally cheap in this study but would require
+$O(M^2)$ circuit evaluations on hardware for $M$ training points.
+
+The concentration phenomenon follows from a dimensional argument. If the embedding
+spreads states so that they are close to Haar-random in a $2^n$-dimensional space,
+the expected fidelity between two independent states is
+\begin{equation}
+    \mathbb{E}\left[ \left| \braket{\phi | \psi} \right|^{2} \right]
+    \;=\; \frac{1}{2^{n}},
+    \label{eq:appA_haar}
+\end{equation}
+which is exponentially small in the qubit count. The Gram matrix then approaches the
+identity: every off-diagonal entry is near zero while the diagonal is exactly one.
+A kernel ridge regressor built on such a matrix can interpolate its training data
+but has almost no ability to relate a test point to any training point, so its
+predictions collapse towards the mean and its test error approaches that of a
+constant model -- or worse, since the small residual off-diagonal structure is
+dominated by sampling noise. Rescaling the input by a bandwidth
+$\beta < 1$ before embedding contracts the embedded states into a smaller region,
+restores non-trivial off-diagonal structure, and thereby controls the effective
+smoothness of the induced function class. This is why bandwidth is treated in
+Section~\ref{sec:ch3_hybrid} as a hyperparameter that must be tuned rather than a
+detail that may be left at its default, and why
+Section~\ref{sec:ch5_bandwidth} reports the untuned case as a finding.
+
+\section{Why a trace-distance revival implies memory}
+\label{sec:appA_blp}
+
+The criterion used in Section~\ref{sec:ch3_blp} rests on one property of quantum
+channels. For any completely positive trace-preserving map $\Lambda$ and any pair of
+states,
+\begin{equation}
+    D\!\left( \Lambda(\rho_1), \Lambda(\rho_2) \right)
+    \;\leq\; D\!\left( \rho_1, \rho_2 \right),
+    \qquad
+    D(\rho_1, \rho_2) = \tfrac{1}{2}\left\| \rho_1 - \rho_2 \right\|_1,
+    \label{eq:appA_contraction}
+\end{equation}
+that is, channels are contractive in trace distance. Operationally $D$ is the
+optimal bias with which a single measurement can distinguish the two states, so
+Eq.~\eqref{eq:appA_contraction} says no channel can make two states easier to tell
+apart.
+
+Suppose the layer-to-layer dynamics is Markovian in the CP-divisible sense: the map
+from layer $l$ to layer $l+1$ is itself a channel $\Lambda_{l+1,l}$, independent of
+history. Applying Eq.~\eqref{eq:appA_contraction} to that map gives
+\begin{equation}
+    D^{(l+1)} \;=\; D\!\left( \Lambda_{l+1,l}\rho_1^{(l)},\,
+    \Lambda_{l+1,l}\rho_2^{(l)} \right) \;\leq\; D^{(l)}
+    \label{eq:appA_monotone}
+\end{equation}
+for every $l$ and every initial pair, so $D^{(l)}$ is non-increasing and the sum of
+positive increments in Eq.~\eqref{eq:ch3_blp} vanishes identically. A measured
+revival $D^{(l+1)} > D^{(l)}$ is therefore incompatible with CP-divisibility: the
+step from $l$ to $l+1$ cannot be a channel acting on the system alone, which is to
+say the environment has returned information it previously held. This is why
+$\mathcal{N} > 0$ is evidence of memory and not merely of strong noise --- noise of
+any strength, provided it is Markovian, can only decrease $D$.
+
+The converse does not hold: $\mathcal{N} = 0$ does not prove CP-divisibility, since
+the maximization over state pairs is taken over a finite set in practice and some
+non-Markovian maps have no trace-distance revival at all. The measure is therefore
+used here as a positive witness of memory in the production model and as a null
+check on the control, not as a proof of Markovianity for the
+control~\cite{rivas2014nonmarkov}.
+
+\section{Noise amplification by unitary folding}
+\label{sec:appA_folding}
+
+Folding amplifies noise without changing the ideal action of the circuit. Let a
+layer's intended unitary be $L$ and let the noise accompanying one execution of it
+be a channel $\mathcal{N}$, so the physical layer implements
+$\mathcal{L} = \mathcal{N} \circ \mathcal{U}_L$ with
+$\mathcal{U}_L(\rho) = L \rho L^{\dagger}$. Replacing $L$ by $L L^{\dagger} L$
+executes three physical layers,
+\begin{equation}
+    \mathcal{L}_{\text{fold}} \;=\;
+    \left( \mathcal{N} \circ \mathcal{U}_{L} \right) \circ
+    \left( \mathcal{N} \circ \mathcal{U}_{L^{\dagger}} \right) \circ
+    \left( \mathcal{N} \circ \mathcal{U}_{L} \right),
+    \label{eq:appA_fold}
+\end{equation}
+whose ideal part is $\mathcal{U}_L \mathcal{U}_{L^\dagger} \mathcal{U}_L =
+\mathcal{U}_L$, unchanged, while three noise channels act instead of one. For a
+depolarizing channel of strength $p$ the composition of $k$ copies has strength
+$1 - (1-p)^{k} = kp + O(p^2)$, so to first order in $p$ the effective noise scale of
+a folded layer is $\lambda = 3$ and folding a fraction $f$ of the layers gives
+\begin{equation}
+    \lambda \;=\; 1 + 2f,
+    \label{eq:appA_lambda}
+\end{equation}
+which is the relation inverted in Section~\ref{sec:ch3_folding} to realize
+$\lambda = 2$ by folding half the layers.
+
+Two caveats follow from Eq.~\eqref{eq:appA_fold} and are visible in the results.
+First, the identity holds only to first order: at second order the composition of
+three channels is not the same map as one channel of three times the strength, so
+folding and parameter scaling are not interchangeable, and the extrapolation they
+feed can differ. Second, the argument assumes the noise is gate-local and
+inserted identically on $L$ and $L^{\dagger}$. The always-on crosstalk and the
+defect collision of Section~\ref{sec:ch3_realistic} violate this: they act during
+the folded segments as well, and their contribution scales with elapsed time rather
+than with the intended unitary. Folding therefore amplifies the different noise
+components by different factors, which is precisely the hardware effect that makes
+extrapolation from folded data harder than the idealized analysis suggests.
+
+\section{Circuit cost of a shot-estimated fidelity kernel}
+\label{sec:appA_kernelcost}
+
+In simulation the Gram matrix of the fidelity kernel is obtained as an inner product
+of state vectors, which has no quantum cost. On hardware each entry
+\begin{equation}
+    k_{ij} \;=\; \left| \left\langle \phi(x_i) \middle| \phi(x_j) \right\rangle \right|^{2}
+    \label{eq:appA_kij}
+\end{equation}
+must be measured, for instance by the inversion test, which prepares
+$U^{\dagger}(x_j) U(x_i) \ket{0}$ and estimates the probability of the all-zeros
+outcome. With $M$ shots the estimator is
+$\hat{k}_{ij} = B/M$ with $B \sim \mathrm{Binomial}(M, k_{ij})$, so
+\begin{equation}
+    \mathbb{E}\!\left[\hat{k}_{ij}\right] = k_{ij},
+    \qquad
+    \mathrm{Var}\!\left[\hat{k}_{ij}\right] = \frac{k_{ij}(1 - k_{ij})}{M}.
+    \label{eq:appA_kvar}
+\end{equation}
+Training a kernel ridge regressor on $M_{\text{tr}}$ points requires the symmetric
+training block, and predicting on $M_{\text{te}}$ points requires the rectangular
+block, giving a total of
+\begin{equation}
+    C \;=\; M \left[ \frac{M_{\text{tr}}\left(M_{\text{tr}} + 1\right)}{2}
+    \;+\; M_{\text{tr}} M_{\text{te}} \right]
+    \label{eq:appA_cost}
+\end{equation}
+circuit executions. The quadratic growth in $M_{\text{tr}}$, not the shot count, is
+what dominates: at the $M_{\text{tr}} = 3150$ used here even a single shot per entry
+would exceed $9 \times 10^{6}$ executions.
+
+Two consequences are measured in Section~\ref{sec:ch5_shotkernel}. First, the
+shot-estimated Gram matrix is no longer positive semidefinite -- independent
+binomial noise on each entry pushes small eigenvalues negative -- so it must be
+projected back onto the PSD cone before the ridge solve, which is done by clipping
+negative eigenvalues to zero. Second, combining
+Eqs.~\eqref{eq:appA_kvar} and~\eqref{eq:appA_cost}, the accuracy of the regressor
+becomes a function of the shot budget, and the relevant comparison against classical
+mitigation is accuracy at matched total circuit executions rather than accuracy at
+matched circuit \emph{evaluations per prediction}.
+
+\section{Finite-sampling model}
+\label{sec:appA_shots}
+
+Let $O$ be a Pauli string, so $O^2 = I$ and its eigenvalues are $\pm 1$. Writing
+$q$ for the probability of the $+1$ outcome and $\mu$ for the expectation value,
+\begin{equation}
+    \mu \;=\; (+1)\,q \;+\; (-1)(1-q) \;=\; 2q - 1
+    \qquad \Longleftrightarrow \qquad
+    q \;=\; \frac{1 + \mu}{2}.
+    \label{eq:appA_q}
+\end{equation}
+An $N$-shot experiment observes $k \sim \mathrm{Binomial}(N, q)$ outcomes equal to
+$+1$, and the natural estimator is $\widehat{\mu}_N = 2k/N - 1$. It is unbiased,
+$\mathbb{E}[\widehat{\mu}_N] = 2q - 1 = \mu$, with variance
+\begin{equation}
+    \mathrm{Var}\!\left[ \widehat{\mu}_N \right]
+    \;=\; \frac{4}{N^{2}} \, N q (1-q)
+    \;=\; \frac{1 - \mu^{2}}{N},
+    \label{eq:appA_var}
+\end{equation}
+so the sampling noise is largest for observables whose expectation is near zero and
+vanishes as $|\mu| \to 1$. Because the simulation provides the exact $\mu$, applying
+Eq.~\eqref{eq:appA_q} and drawing from the binomial reproduces the measurement
+statistics of the device exactly, rather than approximating them with additive
+Gaussian noise. Storing both the exact and the sampled values additionally makes the
+shot-budget sweep of Section~\ref{sec:ch5_shots} a re-sampling operation rather than
+a re-simulation, since Eq.~\eqref{eq:appA_var} can be realized at any $N$ from the
+same exact values.

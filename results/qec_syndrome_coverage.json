@@ -1,0 +1,30 @@
+{
+  "3": {
+    "n_det": 8,
+    "space": 256.0,
+    "distinct_train": 242,
+    "frac": 0.9453125,
+    "shots_per_pattern": 826.4462809917355
+  },
+  "5": {
+    "n_det": 24,
+    "space": 16777216.0,
+    "distinct_train": 54778,
+    "frac": 0.0032650232315063477,
+    "shots_per_pattern": 3.6511008068932784
+  },
+  "7": {
+    "n_det": 48,
+    "space": 281474976710656.0,
+    "distinct_train": 183049,
+    "frac": 6.503206861907529e-10,
+    "shots_per_pattern": 1.0926036197957925
+  },
+  "9": {
+    "n_det": 80,
+    "space": 1.2089258196146292e+24,
+    "distinct_train": 199918,
+    "frac": 1.6536829370037619e-19,
+    "shots_per_pattern": 1.0004101681689492
+  }
+}

@@ -1,0 +1,909 @@
+% Appendix B -- Complete result tables (auto-generated from results/)
+
+\chapter{Complete Result Tables}
+
+\label{AppendixB}
+
+Every table in this appendix is generated directly from the result files in \texttt{results/} by the script that produced them, so the numbers here and in Chapters~\ref{chap5:results} and~\ref{chap6:decoding} cannot disagree.
+
+\section{Idealized regime: main benchmark}
+
+{\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\begin{longtable}{llcccccccc}
+\caption[Main benchmark, idealized regime, both splits]{Main benchmark, idealized Markovian regime, both splits. Evals is circuit evaluations per prediction; the quantum kernel needs one fidelity circuit per training point in addition to the three noise-scaled measurements, and the VQC one circuit of its own (Section~\ref{sec:ch5_cost}).}\label{tab:appB_main}\\
+\toprule
+\textbf{Split} & \textbf{Method} & \textbf{RMSE} & \textbf{CI low} & \textbf{CI high} & \textbf{MAE} & \textbf{$R^2$} & \textbf{Red.\%} & \textbf{Evals} & \textbf{Params} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Split} & \textbf{Method} & \textbf{RMSE} & \textbf{CI low} & \textbf{CI high} & \textbf{MAE} & \textbf{$R^2$} & \textbf{Red.\%} & \textbf{Evals} & \textbf{Params} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+A\_random\_circuits & Neural net & 0.0412 & 0.0388 & 0.0434 & 0.0311 & 0.973 & 60.2 & 3 & 4673 \\
+A\_random\_circuits & Quantum kernel ridge & 0.0421 & 0.0395 & 0.0448 & 0.0314 & 0.972 & 59.3 & 3 + 3150 & 3150 \\
+A\_random\_circuits & GB trees & 0.0436 & 0.0413 & 0.0460 & 0.0330 & 0.970 & 57.8 & 3 & 4500 \\
+A\_random\_circuits & Ridge & 0.0515 & 0.0488 & 0.0543 & 0.0400 & 0.958 & 50.2 & 3 & 7 \\
+A\_random\_circuits & DR-VQC & 0.0557 & 0.0523 & 0.0596 & 0.0408 & 0.951 & 46.1 & 3 + 1 & 114 \\
+A\_random\_circuits & ZNE, linear & 0.0737 & 0.0690 & 0.0785 & 0.0543 & 0.914 & 28.8 & 3 & 0 \\
+A\_random\_circuits & ZNE, Richardson (2) & 0.0743 & 0.0713 & 0.0773 & 0.0593 & 0.913 & 28.2 & 3 & 0 \\
+A\_random\_circuits & No mitigation & 0.1035 & 0.0978 & 0.1090 & 0.0789 & 0.831 & 0.0 & 1 & 0 \\
+A\_random\_circuits & ZNE, exponential & 0.1548 & 0.1382 & 0.1714 & 0.0817 & 0.621 & -49.6 & 3 & 0 \\
+B\_depth\_extrapolation & GB trees & 0.0665 & 0.0638 & 0.0691 & 0.0521 & 0.904 & 45.4 & 3 & 4500 \\
+B\_depth\_extrapolation & Ridge & 0.0717 & 0.0689 & 0.0745 & 0.0560 & 0.888 & 41.1 & 3 & 7 \\
+B\_depth\_extrapolation & ZNE, Richardson (2) & 0.0831 & 0.0803 & 0.0856 & 0.0660 & 0.850 & 31.8 & 3 & 0 \\
+B\_depth\_extrapolation & ZNE, linear & 0.0960 & 0.0923 & 0.0996 & 0.0760 & 0.799 & 21.2 & 3 & 0 \\
+B\_depth\_extrapolation & No mitigation & 0.1217 & 0.1174 & 0.1261 & 0.0970 & 0.677 & 0.0 & 1 & 0 \\
+B\_depth\_extrapolation & Neural net & 0.1292 & 0.1249 & 0.1337 & 0.1084 & 0.636 & -6.2 & 3 & 4673 \\
+B\_depth\_extrapolation & Quantum kernel ridge & 0.1433 & 0.1366 & 0.1495 & 0.1153 & 0.553 & -17.7 & 3 + 2700 & 2700 \\
+B\_depth\_extrapolation & ZNE, exponential & 0.1805 & 0.1628 & 0.1970 & 0.1008 & 0.290 & -48.3 & 3 & 0 \\
+B\_depth\_extrapolation & DR-VQC & 0.4900 & 0.4725 & 0.5071 & 0.4146 & -4.229 & -302.4 & 3 + 1 & 114 \\
+\end{longtable}
+}
+
+\section{Idealized regime: sweep experiments}
+
+{\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\begin{longtable}{llccccc}
+\caption[All sweep experiments, idealized regime]{All sweep experiments, idealized regime. E1 noise strength, E2 shot budget, E3 system size, E4 bounded-encoding VQC, E5 learning curve, E6 feature ablation, E7 cross-family transfer. Sweep points use the reduced grid and 30-epoch VQC budget of Table~\ref{tab:ch4_grids}, except the E1 $1.0$x and E3 $5$q rows, which are the full-grid, 40-epoch main-benchmark fits, and E4, which uses the full grid.}\label{tab:appB_sweeps}\\
+\toprule
+\textbf{Experiment} & \textbf{Config} & \textbf{Method} & \textbf{RMSE} & \textbf{CI low} & \textbf{CI high} & \textbf{Red.\%} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Experiment} & \textbf{Config} & \textbf{Method} & \textbf{RMSE} & \textbf{CI low} & \textbf{CI high} & \textbf{Red.\%} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+E1 & 0.5x & Quantum kernel ridge & 0.0267 & 0.0247 & 0.0289 & 53.9 \\
+E1 & 0.5x & Neural net & 0.0270 & 0.0253 & 0.0287 & 53.4 \\
+E1 & 0.5x & Ridge & 0.0325 & 0.0309 & 0.0341 & 43.9 \\
+E1 & 0.5x & GB trees & 0.0339 & 0.0302 & 0.0389 & 41.4 \\
+E1 & 0.5x & DR-VQC & 0.0361 & 0.0325 & 0.0404 & 37.6 \\
+E1 & 0.5x & ZNE, linear & 0.0364 & 0.0337 & 0.0391 & 37.1 \\
+E1 & 0.5x & Bounded VQC & 0.0424 & 0.0386 & 0.0471 & 26.8 \\
+E1 & 0.5x & No mitigation & 0.0579 & 0.0538 & 0.0618 & 0.0 \\
+E1 & 0.5x & ZNE, Richardson (2) & 0.0675 & 0.0640 & 0.0718 & -16.6 \\
+E1 & 0.5x & ZNE, exponential & 0.1457 & 0.1185 & 0.1719 & -151.7 \\
+E1 & 1.0x & Neural net & 0.0412 & 0.0388 & 0.0434 & 60.2 \\
+E1 & 1.0x & Quantum kernel ridge & 0.0421 & 0.0394 & 0.0449 & 59.3 \\
+E1 & 1.0x & GB trees & 0.0436 & 0.0412 & 0.0461 & 57.8 \\
+E1 & 1.0x & Ridge & 0.0515 & 0.0486 & 0.0546 & 50.2 \\
+E1 & 1.0x & DR-VQC & 0.0557 & 0.0523 & 0.0590 & 46.1 \\
+E1 & 1.0x & Bounded VQC & 0.0597 & 0.0526 & 0.0678 & 42.3 \\
+E1 & 1.0x & ZNE, linear & 0.0737 & 0.0693 & 0.0786 & 28.8 \\
+E1 & 1.0x & ZNE, Richardson (2) & 0.0743 & 0.0713 & 0.0770 & 28.2 \\
+E1 & 1.0x & No mitigation & 0.1035 & 0.0978 & 0.1095 & 0.0 \\
+E1 & 1.0x & ZNE, exponential & 0.1548 & 0.1395 & 0.1707 & -49.6 \\
+E1 & 2.0x & Quantum kernel ridge & 0.0854 & 0.0781 & 0.0922 & 42.5 \\
+E1 & 2.0x & Neural net & 0.0861 & 0.0794 & 0.0922 & 42.1 \\
+E1 & 2.0x & GB trees & 0.0955 & 0.0879 & 0.1025 & 35.7 \\
+E1 & 2.0x & Bounded VQC & 0.0984 & 0.0909 & 0.1050 & 33.8 \\
+E1 & 2.0x & Ridge & 0.0990 & 0.0915 & 0.1063 & 33.4 \\
+E1 & 2.0x & ZNE, Richardson (2) & 0.1123 & 0.1047 & 0.1199 & 24.5 \\
+E1 & 2.0x & ZNE, linear & 0.1277 & 0.1192 & 0.1367 & 14.1 \\
+E1 & 2.0x & No mitigation & 0.1486 & 0.1406 & 0.1577 & 0.0 \\
+E1 & 2.0x & ZNE, exponential & 0.1629 & 0.1472 & 0.1799 & -9.6 \\
+E1 & 2.0x & DR-VQC & 0.1782 & 0.1584 & 0.1972 & -19.9 \\
+E1 & 4.0x & Neural net & 0.1519 & 0.1410 & 0.1638 & 23.9 \\
+E1 & 4.0x & Quantum kernel ridge & 0.1532 & 0.1423 & 0.1639 & 23.3 \\
+E1 & 4.0x & Ridge & 0.1606 & 0.1499 & 0.1710 & 19.6 \\
+E1 & 4.0x & ZNE, Richardson (2) & 0.1679 & 0.1574 & 0.1780 & 15.9 \\
+E1 & 4.0x & GB trees & 0.1696 & 0.1580 & 0.1812 & 15.1 \\
+E1 & 4.0x & Bounded VQC & 0.1726 & 0.1595 & 0.1849 & 13.6 \\
+E1 & 4.0x & ZNE, linear & 0.1874 & 0.1763 & 0.1982 & 6.2 \\
+E1 & 4.0x & No mitigation & 0.1997 & 0.1877 & 0.2120 & 0.0 \\
+E1 & 4.0x & ZNE, exponential & 0.2064 & 0.1840 & 0.2274 & -3.4 \\
+E1 & 4.0x & DR-VQC & 0.2380 & 0.2192 & 0.2562 & -19.2 \\
+E2 & 1024 & Quantum kernel ridge & 0.0661 & 0.0625 & 0.0696 & 38.3 \\
+E2 & 1024 & Neural net & 0.0667 & 0.0632 & 0.0701 & 37.7 \\
+E2 & 1024 & GB trees & 0.0717 & 0.0680 & 0.0754 & 33.0 \\
+E2 & 1024 & Ridge & 0.0773 & 0.0730 & 0.0813 & 27.9 \\
+E2 & 1024 & ZNE, linear & 0.0846 & 0.0798 & 0.0891 & 21.1 \\
+E2 & 1024 & Bounded VQC & 0.0974 & 0.0894 & 0.1048 & 9.1 \\
+E2 & 1024 & No mitigation & 0.1071 & 0.1017 & 0.1129 & 0.0 \\
+E2 & 1024 & DR-VQC & 0.1276 & 0.1135 & 0.1403 & -19.1 \\
+E2 & 1024 & ZNE, Richardson (2) & 0.1413 & 0.1363 & 0.1465 & -31.9 \\
+E2 & 1024 & ZNE, exponential & 0.1698 & 0.1505 & 0.1918 & -58.5 \\
+E2 & 256 & Quantum kernel ridge & 0.1013 & 0.0960 & 0.1061 & 16.3 \\
+E2 & 256 & Neural net & 0.1049 & 0.0995 & 0.1100 & 13.2 \\
+E2 & 256 & Ridge & 0.1077 & 0.1023 & 0.1124 & 11.0 \\
+E2 & 256 & Bounded VQC & 0.1131 & 0.1079 & 0.1184 & 6.5 \\
+E2 & 256 & GB trees & 0.1132 & 0.1070 & 0.1183 & 6.4 \\
+E2 & 256 & ZNE, linear & 0.1200 & 0.1146 & 0.1248 & 0.8 \\
+E2 & 256 & No mitigation & 0.1209 & 0.1147 & 0.1268 & 0.0 \\
+E2 & 256 & DR-VQC & 0.1521 & 0.1399 & 0.1653 & -25.8 \\
+E2 & 256 & ZNE, exponential & 0.2148 & 0.1950 & 0.2355 & -77.6 \\
+E2 & 256 & ZNE, Richardson (2) & 0.2684 & 0.2590 & 0.2784 & -121.9 \\
+E2 & 4096 & Quantum kernel ridge & 0.0427 & 0.0404 & 0.0454 & 59.1 \\
+E2 & 4096 & Neural net & 0.0428 & 0.0404 & 0.0451 & 59.0 \\
+E2 & 4096 & GB trees & 0.0475 & 0.0452 & 0.0501 & 54.5 \\
+E2 & 4096 & Ridge & 0.0522 & 0.0493 & 0.0553 & 49.9 \\
+E2 & 4096 & Bounded VQC & 0.0668 & 0.0628 & 0.0708 & 35.9 \\
+E2 & 4096 & ZNE, Richardson (2) & 0.0709 & 0.0682 & 0.0736 & 32.0 \\
+E2 & 4096 & ZNE, linear & 0.0751 & 0.0700 & 0.0800 & 28.0 \\
+E2 & 4096 & No mitigation & 0.1043 & 0.0982 & 0.1101 & 0.0 \\
+E2 & 4096 & ZNE, exponential & 0.1506 & 0.1338 & 0.1700 & -44.4 \\
+E2 & 4096 & DR-VQC & 0.1769 & 0.1599 & 0.1958 & -69.6 \\
+E2 & analytic & Quantum kernel ridge & 0.0031 & 0.0027 & 0.0034 & 97.0 \\
+E2 & analytic & Ridge & 0.0089 & 0.0081 & 0.0098 & 91.4 \\
+E2 & analytic & ZNE, exponential & 0.0119 & 0.0085 & 0.0157 & 88.5 \\
+E2 & analytic & Neural net & 0.0132 & 0.0120 & 0.0144 & 87.2 \\
+E2 & analytic & GB trees & 0.0197 & 0.0166 & 0.0226 & 80.9 \\
+E2 & analytic & ZNE, Richardson (2) & 0.0346 & 0.0313 & 0.0376 & 66.4 \\
+E2 & analytic & Bounded VQC & 0.0408 & 0.0376 & 0.0441 & 60.4 \\
+E2 & analytic & ZNE, linear & 0.0714 & 0.0661 & 0.0759 & 30.8 \\
+E2 & analytic & DR-VQC & 0.0932 & 0.0794 & 0.1088 & 9.6 \\
+E2 & analytic & No mitigation & 0.1031 & 0.0970 & 0.1091 & 0.0 \\
+E3 & 4q & Quantum kernel ridge & 0.0419 & 0.0388 & 0.0447 & 64.8 \\
+E3 & 4q & Neural net & 0.0424 & 0.0391 & 0.0451 & 64.4 \\
+E3 & 4q & GB trees & 0.0490 & 0.0455 & 0.0520 & 58.9 \\
+E3 & 4q & Bounded VQC & 0.0498 & 0.0470 & 0.0527 & 58.2 \\
+E3 & 4q & Ridge & 0.0538 & 0.0503 & 0.0571 & 54.9 \\
+E3 & 4q & DR-VQC & 0.0652 & 0.0606 & 0.0704 & 45.3 \\
+E3 & 4q & ZNE, Richardson (2) & 0.0799 & 0.0752 & 0.0842 & 33.0 \\
+E3 & 4q & ZNE, linear & 0.0848 & 0.0775 & 0.0907 & 28.8 \\
+E3 & 4q & No mitigation & 0.1192 & 0.1104 & 0.1265 & 0.0 \\
+E3 & 4q & ZNE, exponential & 0.1604 & 0.1306 & 0.1864 & -34.5 \\
+E3 & 5q & Neural net & 0.0412 & 0.0388 & 0.0434 & 60.2 \\
+E3 & 5q & Quantum kernel ridge & 0.0421 & 0.0394 & 0.0449 & 59.3 \\
+E3 & 5q & GB trees & 0.0436 & 0.0412 & 0.0461 & 57.8 \\
+E3 & 5q & Ridge & 0.0515 & 0.0486 & 0.0546 & 50.2 \\
+E3 & 5q & DR-VQC & 0.0557 & 0.0523 & 0.0590 & 46.1 \\
+E3 & 5q & Bounded VQC & 0.0597 & 0.0526 & 0.0678 & 42.3 \\
+E3 & 5q & ZNE, linear & 0.0737 & 0.0693 & 0.0786 & 28.8 \\
+E3 & 5q & ZNE, Richardson (2) & 0.0743 & 0.0713 & 0.0770 & 28.2 \\
+E3 & 5q & No mitigation & 0.1035 & 0.0978 & 0.1095 & 0.0 \\
+E3 & 5q & ZNE, exponential & 0.1548 & 0.1395 & 0.1707 & -49.6 \\
+E3 & 6q & Quantum kernel ridge & 0.0434 & 0.0405 & 0.0464 & 52.0 \\
+E3 & 6q & Neural net & 0.0440 & 0.0409 & 0.0469 & 51.3 \\
+E3 & 6q & GB trees & 0.0513 & 0.0479 & 0.0550 & 43.2 \\
+E3 & 6q & Ridge & 0.0518 & 0.0489 & 0.0550 & 42.7 \\
+E3 & 6q & Bounded VQC & 0.0534 & 0.0503 & 0.0566 & 40.9 \\
+E3 & 6q & ZNE, linear & 0.0667 & 0.0623 & 0.0713 & 26.3 \\
+E3 & 6q & ZNE, Richardson (2) & 0.0767 & 0.0732 & 0.0806 & 15.1 \\
+E3 & 6q & No mitigation & 0.0904 & 0.0848 & 0.0964 & 0.0 \\
+E3 & 6q & ZNE, exponential & 0.1507 & 0.1243 & 0.1737 & -66.7 \\
+E3 & 6q & DR-VQC & 0.1924 & 0.1724 & 0.2138 & -112.9 \\
+E4 & train\_depth<=4 & GB trees & 0.0665 & 0.0637 & 0.0691 & 45.4 \\
+E4 & train\_depth<=4 & Ridge & 0.0717 & 0.0685 & 0.0741 & 41.1 \\
+E4 & train\_depth<=4 & ZNE, Richardson (2) & 0.0831 & 0.0803 & 0.0854 & 31.8 \\
+E4 & train\_depth<=4 & ZNE, linear & 0.0960 & 0.0921 & 0.0996 & 21.2 \\
+E4 & train\_depth<=4 & No mitigation & 0.1217 & 0.1174 & 0.1258 & 0.0 \\
+E4 & train\_depth<=4 & Neural net & 0.1292 & 0.1251 & 0.1339 & -6.2 \\
+E4 & train\_depth<=4 & Quantum kernel ridge & 0.1433 & 0.1369 & 0.1493 & -17.7 \\
+E4 & train\_depth<=4 & Bounded VQC & 0.1543 & 0.1486 & 0.1591 & -26.7 \\
+E4 & train\_depth<=4 & ZNE, exponential & 0.1805 & 0.1628 & 0.1962 & -48.3 \\
+E4 & train\_depth<=4 & DR-VQC & 0.4900 & 0.4725 & 0.5056 & -302.4 \\
+E5 & 0.05 & Quantum kernel ridge & 0.0495 & 0.0466 & 0.0523 & 52.2 \\
+E5 & 0.05 & Ridge & 0.0520 & 0.0491 & 0.0551 & 49.8 \\
+E5 & 0.05 & ZNE, Richardson (2) & 0.0743 & 0.0713 & 0.0770 & 28.2 \\
+E5 & 0.05 & Bounded VQC & 0.0899 & 0.0808 & 0.1014 & 13.1 \\
+E5 & 0.05 & No mitigation & 0.1035 & 0.0978 & 0.1095 & 0.0 \\
+E5 & 0.05 & GB trees & 0.1085 & 0.0995 & 0.1167 & -4.8 \\
+E5 & 0.05 & Neural net & 0.1597 & 0.1525 & 0.1669 & -54.4 \\
+E5 & 0.05 & DR-VQC & 0.1861 & 0.1726 & 0.2011 & -79.8 \\
+E5 & 0.1 & Quantum kernel ridge & 0.0456 & 0.0429 & 0.0481 & 56.0 \\
+E5 & 0.1 & Ridge & 0.0516 & 0.0487 & 0.0545 & 50.1 \\
+E5 & 0.1 & Neural net & 0.0537 & 0.0509 & 0.0566 & 48.1 \\
+E5 & 0.1 & Bounded VQC & 0.0742 & 0.0670 & 0.0811 & 28.4 \\
+E5 & 0.1 & ZNE, Richardson (2) & 0.0743 & 0.0713 & 0.0770 & 28.2 \\
+E5 & 0.1 & GB trees & 0.0835 & 0.0778 & 0.0893 & 19.4 \\
+E5 & 0.1 & No mitigation & 0.1035 & 0.0978 & 0.1095 & 0.0 \\
+E5 & 0.1 & DR-VQC & 0.1879 & 0.1710 & 0.2054 & -81.5 \\
+E5 & 0.25 & Quantum kernel ridge & 0.0434 & 0.0407 & 0.0458 & 58.1 \\
+E5 & 0.25 & Neural net & 0.0444 & 0.0417 & 0.0467 & 57.1 \\
+E5 & 0.25 & Ridge & 0.0517 & 0.0489 & 0.0549 & 50.0 \\
+E5 & 0.25 & GB trees & 0.0589 & 0.0553 & 0.0624 & 43.1 \\
+E5 & 0.25 & Bounded VQC & 0.0628 & 0.0598 & 0.0659 & 39.3 \\
+E5 & 0.25 & ZNE, Richardson (2) & 0.0743 & 0.0713 & 0.0770 & 28.2 \\
+E5 & 0.25 & No mitigation & 0.1035 & 0.0978 & 0.1095 & 0.0 \\
+E5 & 0.25 & DR-VQC & 0.1812 & 0.1636 & 0.1975 & -75.1 \\
+E5 & 0.5 & Neural net & 0.0424 & 0.0400 & 0.0445 & 59.0 \\
+E5 & 0.5 & Quantum kernel ridge & 0.0438 & 0.0408 & 0.0469 & 57.7 \\
+E5 & 0.5 & Ridge & 0.0516 & 0.0488 & 0.0547 & 50.1 \\
+E5 & 0.5 & GB trees & 0.0525 & 0.0490 & 0.0556 & 49.3 \\
+E5 & 0.5 & Bounded VQC & 0.0610 & 0.0568 & 0.0650 & 41.1 \\
+E5 & 0.5 & ZNE, Richardson (2) & 0.0743 & 0.0713 & 0.0770 & 28.2 \\
+E5 & 0.5 & No mitigation & 0.1035 & 0.0978 & 0.1095 & 0.0 \\
+E5 & 0.5 & DR-VQC & 0.1649 & 0.1508 & 0.1793 & -59.3 \\
+E5 & 1.0 & Neural net & 0.0412 & 0.0388 & 0.0434 & 60.2 \\
+E5 & 1.0 & Quantum kernel ridge & 0.0421 & 0.0394 & 0.0449 & 59.3 \\
+E5 & 1.0 & GB trees & 0.0456 & 0.0432 & 0.0483 & 55.9 \\
+E5 & 1.0 & Ridge & 0.0515 & 0.0486 & 0.0546 & 50.2 \\
+E5 & 1.0 & Bounded VQC & 0.0517 & 0.0489 & 0.0544 & 50.0 \\
+E5 & 1.0 & ZNE, Richardson (2) & 0.0743 & 0.0713 & 0.0770 & 28.2 \\
+E5 & 1.0 & No mitigation & 0.1035 & 0.0978 & 0.1095 & 0.0 \\
+E5 & 1.0 & DR-VQC & 0.1836 & 0.1651 & 0.2013 & -77.4 \\
+E6 & full & Neural net & 0.0412 & 0.0388 & 0.0434 & 60.2 \\
+E6 & full & Quantum kernel ridge & 0.0421 & 0.0394 & 0.0449 & 59.3 \\
+E6 & full & GB trees & 0.0456 & 0.0432 & 0.0483 & 55.9 \\
+E6 & full & Ridge & 0.0515 & 0.0486 & 0.0546 & 50.2 \\
+E6 & full & Bounded VQC & 0.0517 & 0.0489 & 0.0544 & 50.0 \\
+E6 & full & No mitigation & 0.1035 & 0.0978 & 0.1095 & 0.0 \\
+E6 & lambda\_only & Neural net & 0.0474 & 0.0450 & 0.0497 & 54.2 \\
+E6 & lambda\_only & Quantum kernel ridge & 0.0497 & 0.0468 & 0.0528 & 51.9 \\
+E6 & lambda\_only & Ridge & 0.0515 & 0.0486 & 0.0545 & 50.2 \\
+E6 & lambda\_only & GB trees & 0.0528 & 0.0503 & 0.0556 & 48.9 \\
+E6 & lambda\_only & Bounded VQC & 0.0553 & 0.0522 & 0.0583 & 46.6 \\
+E6 & lambda\_only & No mitigation & 0.1035 & 0.0978 & 0.1095 & 0.0 \\
+E6 & single\_noisy\_plus\_structure & Neural net & 0.0444 & 0.0419 & 0.0467 & 57.1 \\
+E6 & single\_noisy\_plus\_structure & Quantum kernel ridge & 0.0457 & 0.0428 & 0.0486 & 55.8 \\
+E6 & single\_noisy\_plus\_structure & GB trees & 0.0482 & 0.0455 & 0.0508 & 53.4 \\
+E6 & single\_noisy\_plus\_structure & Bounded VQC & 0.0653 & 0.0579 & 0.0747 & 36.9 \\
+E6 & single\_noisy\_plus\_structure & Ridge & 0.0725 & 0.0685 & 0.0772 & 29.9 \\
+E6 & single\_noisy\_plus\_structure & No mitigation & 0.1035 & 0.0978 & 0.1095 & 0.0 \\
+E7 & hea\_to\_tfim & Ridge & 0.0546 & 0.0527 & 0.0564 & 47.7 \\
+E7 & hea\_to\_tfim & ZNE, linear & 0.0705 & 0.0667 & 0.0742 & 32.4 \\
+E7 & hea\_to\_tfim & ZNE, Richardson (2) & 0.0734 & 0.0711 & 0.0755 & 29.6 \\
+E7 & hea\_to\_tfim & GB trees & 0.0867 & 0.0828 & 0.0908 & 16.9 \\
+E7 & hea\_to\_tfim & No mitigation & 0.1043 & 0.1000 & 0.1086 & 0.0 \\
+E7 & hea\_to\_tfim & Neural net & 0.1191 & 0.1103 & 0.1262 & -14.2 \\
+E7 & hea\_to\_tfim & Quantum kernel ridge & 0.1250 & 0.1162 & 0.1324 & -19.8 \\
+E7 & hea\_to\_tfim & ZNE, exponential & 0.1569 & 0.1397 & 0.1715 & -50.4 \\
+E7 & hea\_to\_tfim & Bounded VQC & 0.1624 & 0.1465 & 0.1769 & -55.7 \\
+E7 & hea\_to\_tfim & DR-VQC & 0.2512 & 0.2356 & 0.2643 & -140.8 \\
+E7 & tfim\_to\_hea & Quantum kernel ridge & 0.0523 & 0.0504 & 0.0541 & 48.2 \\
+E7 & tfim\_to\_hea & GB trees & 0.0524 & 0.0507 & 0.0544 & 48.0 \\
+E7 & tfim\_to\_hea & Ridge & 0.0566 & 0.0541 & 0.0591 & 43.9 \\
+E7 & tfim\_to\_hea & Neural net & 0.0568 & 0.0544 & 0.0588 & 43.7 \\
+E7 & tfim\_to\_hea & DR-VQC & 0.0619 & 0.0591 & 0.0646 & 38.6 \\
+E7 & tfim\_to\_hea & Bounded VQC & 0.0725 & 0.0694 & 0.0756 & 28.2 \\
+E7 & tfim\_to\_hea & ZNE, Richardson (2) & 0.0767 & 0.0744 & 0.0788 & 24.0 \\
+E7 & tfim\_to\_hea & ZNE, linear & 0.0779 & 0.0746 & 0.0812 & 22.8 \\
+E7 & tfim\_to\_hea & No mitigation & 0.1009 & 0.0971 & 0.1042 & 0.0 \\
+E7 & tfim\_to\_hea & ZNE, exponential & 0.1682 & 0.1518 & 0.1828 & -66.8 \\
+\end{longtable}
+}
+
+\section{Realistic regime: all experiments}
+
+{\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{llllcccr}
+\caption[Realistic regime, all experiments]{Device-realistic regime, all experiments except the shot-limited kernel. R1: scaling method; R2: memory, with configuration given as scaling method : noise condition (markovian\_control = defect removed, reset\_control = defect reset every layer, nonmarkovian\_production = defect with memory); R3: calibration drift. Split A = held-out random circuits, B = deeper circuits, C = drifted calibration. Intervals are circuit-grouped bootstrap $95\%$ intervals; Red.\% is error reduction relative to the unmitigated estimator of the same configuration.}\label{tab:appB_realistic}\\
+\toprule
+\textbf{Exp.} & \textbf{Configuration} & \textbf{Split} & \textbf{Method} & \textbf{RMSE} & \textbf{CI low} & \textbf{CI high} & \textbf{Red.\%} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Exp.} & \textbf{Configuration} & \textbf{Split} & \textbf{Method} & \textbf{RMSE} & \textbf{CI low} & \textbf{CI high} & \textbf{Red.\%} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+R1 & param. & A & No mitigation & 0.1239 & 0.1156 & 0.1316 & 0.0 \\
+R1 & param. & A & ZNE, linear & 0.1023 & 0.0940 & 0.1113 & 17.5 \\
+R1 & param. & A & ZNE, Richardson (2) & 0.1201 & 0.1113 & 0.1288 & 3.1 \\
+R1 & param. & A & ZNE, exponential & 0.2074 & 0.1885 & 0.2268 & -67.3 \\
+R1 & param. & A & Ridge & 0.0673 & 0.0632 & 0.0715 & 45.7 \\
+R1 & param. & A & GB trees & 0.0708 & 0.0661 & 0.0754 & 42.9 \\
+R1 & param. & A & Neural net & 0.0648 & 0.0603 & 0.0694 & 47.8 \\
+R1 & param. & A & Quantum kernel ridge & 0.0622 & 0.0579 & 0.0666 & 49.8 \\
+R1 & param. & A & DR-VQC & 0.1012 & 0.0935 & 0.1093 & 18.3 \\
+R1 & param. & A & Bounded VQC & 0.0715 & 0.0664 & 0.0770 & 42.3 \\
+R1 & param. & B & No mitigation & 0.1370 & 0.1303 & 0.1430 & 0.0 \\
+R1 & param. & B & ZNE, linear & 0.1253 & 0.1167 & 0.1324 & 8.6 \\
+R1 & param. & B & ZNE, Richardson (2) & 0.1076 & 0.1015 & 0.1141 & 21.5 \\
+R1 & param. & B & ZNE, exponential & 0.2022 & 0.1870 & 0.2162 & -47.5 \\
+R1 & param. & B & Ridge & 0.0912 & 0.0857 & 0.0961 & 33.4 \\
+R1 & param. & B & GB trees & 0.0903 & 0.0844 & 0.0949 & 34.1 \\
+R1 & param. & B & Neural net & 0.1357 & 0.1295 & 0.1411 & 1.0 \\
+R1 & param. & B & Quantum kernel ridge & 0.0878 & 0.0830 & 0.0921 & 35.9 \\
+R1 & param. & B & DR-VQC & 0.1374 & 0.1309 & 0.1437 & -0.3 \\
+R1 & param. & B & Bounded VQC & 0.1031 & 0.0971 & 0.1081 & 24.8 \\
+R1 & fold. & A & No mitigation & 0.1241 & 0.1161 & 0.1321 & 0.0 \\
+R1 & fold. & A & ZNE, linear & 0.0904 & 0.0827 & 0.0986 & 27.2 \\
+R1 & fold. & A & ZNE, Richardson (2) & 0.1987 & 0.1844 & 0.2137 & -60.1 \\
+R1 & fold. & A & ZNE, exponential & 0.1950 & 0.1727 & 0.2149 & -57.1 \\
+R1 & fold. & A & Ridge & 0.0832 & 0.0760 & 0.0912 & 32.9 \\
+R1 & fold. & A & GB trees & 0.0831 & 0.0766 & 0.0891 & 33.1 \\
+R1 & fold. & A & Neural net & 0.0798 & 0.0726 & 0.0873 & 35.7 \\
+R1 & fold. & A & Quantum kernel ridge & 0.0757 & 0.0682 & 0.0826 & 39.0 \\
+R1 & fold. & A & DR-VQC & 0.1119 & 0.1020 & 0.1212 & 9.8 \\
+R1 & fold. & A & Bounded VQC & 0.0971 & 0.0895 & 0.1052 & 21.8 \\
+R1 & fold. & B & No mitigation & 0.1373 & 0.1306 & 0.1436 & 0.0 \\
+R1 & fold. & B & ZNE, linear & 0.1202 & 0.1121 & 0.1269 & 12.4 \\
+R1 & fold. & B & ZNE, Richardson (2) & 0.1934 & 0.1806 & 0.2083 & -40.9 \\
+R1 & fold. & B & ZNE, exponential & 0.1888 & 0.1753 & 0.2019 & -37.5 \\
+R1 & fold. & B & Ridge & 0.1104 & 0.1029 & 0.1168 & 19.6 \\
+R1 & fold. & B & GB trees & 0.1040 & 0.0963 & 0.1106 & 24.2 \\
+R1 & fold. & B & Neural net & 0.1287 & 0.1212 & 0.1353 & 6.2 \\
+R1 & fold. & B & Quantum kernel ridge & 0.1031 & 0.0963 & 0.1101 & 24.9 \\
+R1 & fold. & B & DR-VQC & 0.1604 & 0.1535 & 0.1663 & -16.9 \\
+R1 & fold. & B & Bounded VQC & 0.1242 & 0.1172 & 0.1311 & 9.5 \\
+R2 & param., defect removed & A & No mitigation & 0.0807 & 0.0760 & 0.0854 & 0.0 \\
+R2 & param., defect removed & A & ZNE, linear & 0.0522 & 0.0489 & 0.0554 & 35.4 \\
+R2 & param., defect removed & A & ZNE, Richardson (2) & 0.0665 & 0.0639 & 0.0688 & 17.6 \\
+R2 & param., defect removed & A & ZNE, exponential & 0.1435 & 0.1250 & 0.1613 & -77.7 \\
+R2 & param., defect removed & A & Ridge & 0.0424 & 0.0402 & 0.0443 & 47.5 \\
+R2 & param., defect removed & A & GB trees & 0.0474 & 0.0448 & 0.0498 & 41.3 \\
+R2 & param., defect removed & A & Neural net & 0.0417 & 0.0394 & 0.0435 & 48.3 \\
+R2 & param., defect removed & A & Quantum kernel ridge & 0.0404 & 0.0384 & 0.0423 & 50.0 \\
+R2 & param., defect removed & A & DR-VQC & 0.0445 & 0.0425 & 0.0463 & 44.9 \\
+R2 & param., defect removed & A & Bounded VQC & 0.0533 & 0.0507 & 0.0558 & 34.0 \\
+R2 & param., production & A & No mitigation & 0.1239 & 0.1156 & 0.1316 & 0.0 \\
+R2 & param., production & A & ZNE, linear & 0.1023 & 0.0940 & 0.1113 & 17.5 \\
+R2 & param., production & A & ZNE, Richardson (2) & 0.1201 & 0.1113 & 0.1288 & 3.1 \\
+R2 & param., production & A & ZNE, exponential & 0.2074 & 0.1885 & 0.2268 & -67.3 \\
+R2 & param., production & A & Ridge & 0.0673 & 0.0632 & 0.0715 & 45.7 \\
+R2 & param., production & A & GB trees & 0.0708 & 0.0661 & 0.0754 & 42.9 \\
+R2 & param., production & A & Neural net & 0.0648 & 0.0603 & 0.0694 & 47.8 \\
+R2 & param., production & A & Quantum kernel ridge & 0.0622 & 0.0579 & 0.0666 & 49.8 \\
+R2 & param., production & A & DR-VQC & 0.1012 & 0.0935 & 0.1093 & 18.3 \\
+R2 & param., production & A & Bounded VQC & 0.0715 & 0.0664 & 0.0770 & 42.3 \\
+R2 & param., reset control & A & No mitigation & 0.1247 & 0.1168 & 0.1324 & 0.0 \\
+R2 & param., reset control & A & ZNE, linear & 0.1130 & 0.1078 & 0.1178 & 9.4 \\
+R2 & param., reset control & A & ZNE, Richardson (2) & 0.1086 & 0.1008 & 0.1156 & 12.9 \\
+R2 & param., reset control & A & ZNE, exponential & 0.1866 & 0.1695 & 0.2032 & -49.7 \\
+R2 & param., reset control & A & Ridge & 0.0604 & 0.0574 & 0.0636 & 51.6 \\
+R2 & param., reset control & A & GB trees & 0.0599 & 0.0567 & 0.0627 & 51.9 \\
+R2 & param., reset control & A & Neural net & 0.0562 & 0.0535 & 0.0588 & 54.9 \\
+R2 & param., reset control & A & Quantum kernel ridge & 0.0525 & 0.0498 & 0.0549 & 57.9 \\
+R2 & param., reset control & A & DR-VQC & 0.0949 & 0.0873 & 0.1032 & 23.8 \\
+R2 & param., reset control & A & Bounded VQC & 0.0691 & 0.0633 & 0.0774 & 44.5 \\
+R2 & fold., defect removed & A & No mitigation & 0.0804 & 0.0759 & 0.0851 & 0.0 \\
+R2 & fold., defect removed & A & ZNE, linear & 0.0567 & 0.0536 & 0.0598 & 29.5 \\
+R2 & fold., defect removed & A & ZNE, Richardson (2) & 0.0835 & 0.0801 & 0.0865 & -3.8 \\
+R2 & fold., defect removed & A & ZNE, exponential & 0.1382 & 0.1177 & 0.1602 & -71.8 \\
+R2 & fold., defect removed & A & Ridge & 0.0500 & 0.0480 & 0.0520 & 37.8 \\
+R2 & fold., defect removed & A & GB trees & 0.0529 & 0.0507 & 0.0552 & 34.2 \\
+R2 & fold., defect removed & A & Neural net & 0.0474 & 0.0452 & 0.0497 & 41.1 \\
+R2 & fold., defect removed & A & Quantum kernel ridge & 0.0464 & 0.0444 & 0.0484 & 42.3 \\
+R2 & fold., defect removed & A & DR-VQC & 0.1497 & 0.1355 & 0.1642 & -86.1 \\
+R2 & fold., defect removed & A & Bounded VQC & 0.0543 & 0.0519 & 0.0566 & 32.5 \\
+R2 & fold., production & A & No mitigation & 0.1241 & 0.1161 & 0.1321 & 0.0 \\
+R2 & fold., production & A & ZNE, linear & 0.0904 & 0.0827 & 0.0986 & 27.2 \\
+R2 & fold., production & A & ZNE, Richardson (2) & 0.1987 & 0.1844 & 0.2137 & -60.1 \\
+R2 & fold., production & A & ZNE, exponential & 0.1950 & 0.1727 & 0.2149 & -57.1 \\
+R2 & fold., production & A & Ridge & 0.0832 & 0.0760 & 0.0912 & 32.9 \\
+R2 & fold., production & A & GB trees & 0.0831 & 0.0766 & 0.0891 & 33.1 \\
+R2 & fold., production & A & Neural net & 0.0798 & 0.0726 & 0.0873 & 35.7 \\
+R2 & fold., production & A & Quantum kernel ridge & 0.0757 & 0.0682 & 0.0826 & 39.0 \\
+R2 & fold., production & A & DR-VQC & 0.1119 & 0.1020 & 0.1212 & 9.8 \\
+R2 & fold., production & A & Bounded VQC & 0.0971 & 0.0895 & 0.1052 & 21.8 \\
+R2 & fold., reset control & A & No mitigation & 0.1251 & 0.1168 & 0.1328 & 0.0 \\
+R2 & fold., reset control & A & ZNE, linear & 0.0863 & 0.0807 & 0.0920 & 31.0 \\
+R2 & fold., reset control & A & ZNE, Richardson (2) & 0.1378 & 0.1294 & 0.1477 & -10.2 \\
+R2 & fold., reset control & A & ZNE, exponential & 0.1507 & 0.1343 & 0.1689 & -20.5 \\
+R2 & fold., reset control & A & Ridge & 0.0612 & 0.0584 & 0.0644 & 51.0 \\
+R2 & fold., reset control & A & GB trees & 0.0636 & 0.0606 & 0.0667 & 49.1 \\
+R2 & fold., reset control & A & Neural net & 0.0592 & 0.0566 & 0.0624 & 52.6 \\
+R2 & fold., reset control & A & Quantum kernel ridge & 0.0570 & 0.0544 & 0.0601 & 54.4 \\
+R2 & fold., reset control & A & DR-VQC & 0.1057 & 0.0928 & 0.1193 & 15.5 \\
+R2 & fold., reset control & A & Bounded VQC & 0.0676 & 0.0644 & 0.0708 & 46.0 \\
+R3 & drift\_heldout & C & No mitigation & 0.1298 & 0.1216 & 0.1376 & 0.0 \\
+R3 & drift\_heldout & C & ZNE, linear & 0.1066 & 0.0982 & 0.1155 & 17.9 \\
+R3 & drift\_heldout & C & ZNE, Richardson (2) & 0.1153 & 0.1066 & 0.1235 & 11.2 \\
+R3 & drift\_heldout & C & ZNE, exponential & 0.1922 & 0.1714 & 0.2117 & -48.0 \\
+R3 & drift\_heldout & C & Ridge & 0.0707 & 0.0663 & 0.0750 & 45.6 \\
+R3 & drift\_heldout & C & GB trees & 0.0696 & 0.0649 & 0.0741 & 46.4 \\
+R3 & drift\_heldout & C & Neural net & 0.0653 & 0.0609 & 0.0697 & 49.7 \\
+R3 & drift\_heldout & C & Quantum kernel ridge & 0.0636 & 0.0593 & 0.0678 & 51.0 \\
+R3 & drift\_heldout & C & DR-VQC & 0.1010 & 0.0939 & 0.1090 & 22.2 \\
+R3 & drift\_heldout & C & Bounded VQC & 0.0738 & 0.0683 & 0.0791 & 43.2 \\
+R3 & drift\_training\_circuits & C & No mitigation & 0.1263 & 0.1213 & 0.1314 & 0.0 \\
+R3 & drift\_training\_circuits & C & ZNE, linear & 0.1063 & 0.1007 & 0.1119 & 15.9 \\
+R3 & drift\_training\_circuits & C & ZNE, Richardson (2) & 0.1115 & 0.1057 & 0.1172 & 11.7 \\
+R3 & drift\_training\_circuits & C & ZNE, exponential & 0.1941 & 0.1810 & 0.2063 & -53.6 \\
+R3 & drift\_training\_circuits & C & Ridge & 0.0740 & 0.0704 & 0.0777 & 41.4 \\
+R3 & drift\_training\_circuits & C & GB trees & 0.0688 & 0.0658 & 0.0719 & 45.5 \\
+R3 & drift\_training\_circuits & C & Neural net & 0.0666 & 0.0637 & 0.0700 & 47.3 \\
+R3 & drift\_training\_circuits & C & Quantum kernel ridge & 0.0666 & 0.0633 & 0.0702 & 47.3 \\
+R3 & drift\_training\_circuits & C & DR-VQC & 0.1024 & 0.0973 & 0.1079 & 18.9 \\
+R3 & drift\_training\_circuits & C & Bounded VQC & 0.0759 & 0.0721 & 0.0800 & 39.9 \\
+R3 & no\_drift\_heldout & A & No mitigation & 0.1239 & 0.1156 & 0.1316 & 0.0 \\
+R3 & no\_drift\_heldout & A & ZNE, linear & 0.1023 & 0.0940 & 0.1113 & 17.5 \\
+R3 & no\_drift\_heldout & A & ZNE, Richardson (2) & 0.1201 & 0.1113 & 0.1288 & 3.1 \\
+R3 & no\_drift\_heldout & A & ZNE, exponential & 0.2074 & 0.1885 & 0.2268 & -67.3 \\
+R3 & no\_drift\_heldout & A & Ridge & 0.0673 & 0.0632 & 0.0715 & 45.7 \\
+R3 & no\_drift\_heldout & A & GB trees & 0.0708 & 0.0661 & 0.0754 & 42.9 \\
+R3 & no\_drift\_heldout & A & Neural net & 0.0648 & 0.0603 & 0.0694 & 47.8 \\
+R3 & no\_drift\_heldout & A & Quantum kernel ridge & 0.0622 & 0.0579 & 0.0666 & 49.8 \\
+R3 & no\_drift\_heldout & A & DR-VQC & 0.1012 & 0.0935 & 0.1093 & 18.3 \\
+R3 & no\_drift\_heldout & A & Bounded VQC & 0.0715 & 0.0664 & 0.0770 & 42.3 \\
+\end{longtable}
+}
+
+\section{Realistic regime: shot-limited kernel}
+
+{\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{rrccccc}
+\caption[Shot-limited quantum kernel, every shot-noise draw]{Shot-limited quantum kernel (realistic regime, Split A), every shot-noise draw. Executions are totals to build and apply the kernel; per prediction is one fidelity circuit per training point times the shots per entry.}\label{tab:appB_shotkernel}\\
+\toprule
+\textbf{Shots/entry} & \textbf{Draw} & \textbf{Total exec.} & \textbf{Per prediction} & \textbf{RMSE} & \textbf{CI low} & \textbf{CI high} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Shots/entry} & \textbf{Draw} & \textbf{Total exec.} & \textbf{Per prediction} & \textbf{RMSE} & \textbf{CI low} & \textbf{CI high} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+exact & 0 & --- & --- & 0.0629 & 0.0587 & 0.0671 \\
+100 & 0 & 9.22e+08 & 3.15e+05 & 0.1896 & 0.1807 & 0.2017 \\
+100 & 1 & 9.22e+08 & 3.15e+05 & 0.1963 & 0.1876 & 0.2042 \\
+100 & 2 & 9.22e+08 & 3.15e+05 & 0.1819 & 0.1742 & 0.1910 \\
+100 & 3 & 9.22e+08 & 3.15e+05 & 0.1845 & 0.1768 & 0.1921 \\
+100 & 4 & 9.22e+08 & 3.15e+05 & 0.1852 & 0.1785 & 0.1925 \\
+1000 & 0 & 9.22e+09 & 3.15e+06 & 0.0853 & 0.0808 & 0.0900 \\
+1000 & 1 & 9.22e+09 & 3.15e+06 & 0.0835 & 0.0794 & 0.0878 \\
+1000 & 2 & 9.22e+09 & 3.15e+06 & 0.0855 & 0.0812 & 0.0906 \\
+1000 & 3 & 9.22e+09 & 3.15e+06 & 0.0836 & 0.0790 & 0.0888 \\
+1000 & 4 & 9.22e+09 & 3.15e+06 & 0.0835 & 0.0793 & 0.0890 \\
+10000 & 0 & 9.22e+10 & 3.15e+07 & 0.0892 & 0.0856 & 0.0933 \\
+10000 & 1 & 9.22e+10 & 3.15e+07 & 0.0878 & 0.0834 & 0.0922 \\
+10000 & 2 & 9.22e+10 & 3.15e+07 & 0.0893 & 0.0851 & 0.0936 \\
+10000 & 3 & 9.22e+10 & 3.15e+07 & 0.0908 & 0.0862 & 0.0950 \\
+10000 & 4 & 9.22e+10 & 3.15e+07 & 0.0926 & 0.0882 & 0.0959 \\
+100000 & 0 & 9.22e+11 & 3.15e+08 & 0.0678 & 0.0635 & 0.0723 \\
+100000 & 1 & 9.22e+11 & 3.15e+08 & 0.0669 & 0.0623 & 0.0715 \\
+100000 & 2 & 9.22e+11 & 3.15e+08 & 0.0674 & 0.0633 & 0.0716 \\
+100000 & 3 & 9.22e+11 & 3.15e+08 & 0.0657 & 0.0614 & 0.0699 \\
+100000 & 4 & 9.22e+11 & 3.15e+08 & 0.0675 & 0.0632 & 0.0727 \\
+\end{longtable}
+}
+
+\section{Realistic regime: paired comparisons}
+
+{\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{l>{\raggedright\arraybackslash}p{4.4cm}llcccc}
+\caption[Realistic regime, all paired comparisons]{Every paired comparison in the realistic regime: circuit-grouped paired bootstrap ($1000$ resamples) on the RMSE difference between two conditions or methods on identical test rows. A positive difference means the first-named condition has the larger error. Resolved = the $95\%$ interval excludes zero. param. = parameter scaling; fold. = unitary folding; defect removed, reset control and production are the three noise conditions of Section~\ref{sec:ch3_realistic}.}\label{tab:appB_paired}\\
+\toprule
+\textbf{Exp.} & \textbf{Comparison} & \textbf{Split} & \textbf{Method} & \textbf{Diff.} & \textbf{Low} & \textbf{High} & \textbf{Res.} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Exp.} & \textbf{Comparison} & \textbf{Split} & \textbf{Method} & \textbf{Diff.} & \textbf{Low} & \textbf{High} & \textbf{Res.} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+R1 & fold. $-$ param. & A & No mitigation & +0.0002 & -0.0008 & +0.0012 & no \\
+R1 & fold. $-$ param. & A & ZNE, linear & -0.0119 & -0.0152 & -0.0085 & yes \\
+R1 & fold. $-$ param. & A & ZNE, Richardson (2) & +0.0786 & +0.0631 & +0.0943 & yes \\
+R1 & fold. $-$ param. & A & ZNE, exponential & -0.0124 & -0.0381 & +0.0155 & no \\
+R1 & fold. $-$ param. & A & Ridge & +0.0160 & +0.0111 & +0.0207 & yes \\
+R1 & fold. $-$ param. & A & GB trees & +0.0123 & +0.0071 & +0.0175 & yes \\
+R1 & fold. $-$ param. & A & Neural net & +0.0151 & +0.0099 & +0.0202 & yes \\
+R1 & fold. $-$ param. & A & Quantum kernel ridge & +0.0134 & +0.0081 & +0.0188 & yes \\
+R1 & fold. $-$ param. & A & DR-VQC & +0.0107 & +0.0048 & +0.0160 & yes \\
+R1 & fold. $-$ param. & A & Bounded VQC & +0.0256 & +0.0208 & +0.0304 & yes \\
+R1 & fold. $-$ param. & B & No mitigation & +0.0002 & -0.0007 & +0.0012 & no \\
+R1 & fold. $-$ param. & B & ZNE, linear & -0.0051 & -0.0080 & -0.0016 & yes \\
+R1 & fold. $-$ param. & B & ZNE, Richardson (2) & +0.0859 & +0.0747 & +0.0986 & yes \\
+R1 & fold. $-$ param. & B & ZNE, exponential & -0.0134 & -0.0327 & +0.0072 & no \\
+R1 & fold. $-$ param. & B & Ridge & +0.0192 & +0.0155 & +0.0231 & yes \\
+R1 & fold. $-$ param. & B & GB trees & +0.0138 & +0.0089 & +0.0184 & yes \\
+R1 & fold. $-$ param. & B & Neural net & -0.0070 & -0.0117 & -0.0020 & yes \\
+R1 & fold. $-$ param. & B & Quantum kernel ridge & +0.0153 & +0.0107 & +0.0204 & yes \\
+R1 & fold. $-$ param. & B & DR-VQC & +0.0230 & +0.0165 & +0.0297 & yes \\
+R1 & fold. $-$ param. & B & Bounded VQC & +0.0211 & +0.0155 & +0.0273 & yes \\
+R1 & param., method $-$ unmitigated & A & No mitigation & +0.0000 & +0.0000 & +0.0000 & no \\
+R1 & param., method $-$ unmitigated & A & ZNE, linear & -0.0217 & -0.0272 & -0.0165 & yes \\
+R1 & param., method $-$ unmitigated & A & ZNE, Richardson (2) & -0.0038 & -0.0143 & +0.0048 & no \\
+R1 & param., method $-$ unmitigated & A & ZNE, exponential & +0.0835 & +0.0666 & +0.1031 & yes \\
+R1 & param., method $-$ unmitigated & A & Ridge & -0.0567 & -0.0631 & -0.0502 & yes \\
+R1 & param., method $-$ unmitigated & A & GB trees & -0.0532 & -0.0600 & -0.0457 & yes \\
+R1 & param., method $-$ unmitigated & A & Neural net & -0.0592 & -0.0664 & -0.0517 & yes \\
+R1 & param., method $-$ unmitigated & A & Quantum kernel ridge & -0.0617 & -0.0692 & -0.0542 & yes \\
+R1 & param., method $-$ unmitigated & A & DR-VQC & -0.0227 & -0.0303 & -0.0154 & yes \\
+R1 & param., method $-$ unmitigated & A & Bounded VQC & -0.0524 & -0.0587 & -0.0462 & yes \\
+R1 & param., method $-$ unmitigated & B & No mitigation & +0.0000 & +0.0000 & +0.0000 & no \\
+R1 & param., method $-$ unmitigated & B & ZNE, linear & -0.0117 & -0.0154 & -0.0079 & yes \\
+R1 & param., method $-$ unmitigated & B & ZNE, Richardson (2) & -0.0295 & -0.0372 & -0.0212 & yes \\
+R1 & param., method $-$ unmitigated & B & ZNE, exponential & +0.0651 & +0.0515 & +0.0789 & yes \\
+R1 & param., method $-$ unmitigated & B & Ridge & -0.0458 & -0.0505 & -0.0414 & yes \\
+R1 & param., method $-$ unmitigated & B & GB trees & -0.0468 & -0.0520 & -0.0419 & yes \\
+R1 & param., method $-$ unmitigated & B & Neural net & -0.0013 & -0.0080 & +0.0053 & no \\
+R1 & param., method $-$ unmitigated & B & Quantum kernel ridge & -0.0492 & -0.0552 & -0.0431 & yes \\
+R1 & param., method $-$ unmitigated & B & DR-VQC & +0.0004 & -0.0067 & +0.0073 & no \\
+R1 & param., method $-$ unmitigated & B & Bounded VQC & -0.0339 & -0.0390 & -0.0288 & yes \\
+R1 & param., method $-$ linear ZNE & A & No mitigation & +0.0217 & +0.0156 & +0.0270 & yes \\
+R1 & param., method $-$ linear ZNE & A & ZNE, linear & +0.0000 & +0.0000 & +0.0000 & no \\
+R1 & param., method $-$ linear ZNE & A & ZNE, Richardson (2) & +0.0178 & +0.0056 & +0.0289 & yes \\
+R1 & param., method $-$ linear ZNE & A & ZNE, exponential & +0.1051 & +0.0848 & +0.1235 & yes \\
+R1 & param., method $-$ linear ZNE & A & Ridge & -0.0350 & -0.0419 & -0.0292 & yes \\
+R1 & param., method $-$ linear ZNE & A & GB trees & -0.0315 & -0.0389 & -0.0254 & yes \\
+R1 & param., method $-$ linear ZNE & A & Neural net & -0.0375 & -0.0447 & -0.0315 & yes \\
+R1 & param., method $-$ linear ZNE & A & Quantum kernel ridge & -0.0400 & -0.0475 & -0.0335 & yes \\
+R1 & param., method $-$ linear ZNE & A & DR-VQC & -0.0011 & -0.0101 & +0.0078 & no \\
+R1 & param., method $-$ linear ZNE & A & Bounded VQC & -0.0308 & -0.0375 & -0.0248 & yes \\
+R1 & param., method $-$ linear ZNE & B & No mitigation & +0.0117 & +0.0076 & +0.0157 & yes \\
+R1 & param., method $-$ linear ZNE & B & ZNE, linear & +0.0000 & +0.0000 & +0.0000 & no \\
+R1 & param., method $-$ linear ZNE & B & ZNE, Richardson (2) & -0.0177 & -0.0278 & -0.0085 & yes \\
+R1 & param., method $-$ linear ZNE & B & ZNE, exponential & +0.0769 & +0.0630 & +0.0913 & yes \\
+R1 & param., method $-$ linear ZNE & B & Ridge & -0.0341 & -0.0396 & -0.0288 & yes \\
+R1 & param., method $-$ linear ZNE & B & GB trees & -0.0350 & -0.0407 & -0.0298 & yes \\
+R1 & param., method $-$ linear ZNE & B & Neural net & +0.0104 & +0.0029 & +0.0174 & yes \\
+R1 & param., method $-$ linear ZNE & B & Quantum kernel ridge & -0.0375 & -0.0446 & -0.0311 & yes \\
+R1 & param., method $-$ linear ZNE & B & DR-VQC & +0.0121 & +0.0037 & +0.0203 & yes \\
+R1 & param., method $-$ linear ZNE & B & Bounded VQC & -0.0222 & -0.0282 & -0.0166 & yes \\
+R1 & fold., method $-$ unmitigated & A & No mitigation & +0.0000 & +0.0000 & +0.0000 & no \\
+R1 & fold., method $-$ unmitigated & A & ZNE, linear & -0.0337 & -0.0393 & -0.0282 & yes \\
+R1 & fold., method $-$ unmitigated & A & ZNE, Richardson (2) & +0.0746 & +0.0599 & +0.0898 & yes \\
+R1 & fold., method $-$ unmitigated & A & ZNE, exponential & +0.0709 & +0.0477 & +0.0933 & yes \\
+R1 & fold., method $-$ unmitigated & A & Ridge & -0.0409 & -0.0476 & -0.0349 & yes \\
+R1 & fold., method $-$ unmitigated & A & GB trees & -0.0410 & -0.0480 & -0.0342 & yes \\
+R1 & fold., method $-$ unmitigated & A & Neural net & -0.0443 & -0.0511 & -0.0376 & yes \\
+R1 & fold., method $-$ unmitigated & A & Quantum kernel ridge & -0.0484 & -0.0551 & -0.0421 & yes \\
+R1 & fold., method $-$ unmitigated & A & DR-VQC & -0.0122 & -0.0197 & -0.0038 & yes \\
+R1 & fold., method $-$ unmitigated & A & Bounded VQC & -0.0270 & -0.0321 & -0.0215 & yes \\
+R1 & fold., method $-$ unmitigated & B & No mitigation & +0.0000 & +0.0000 & +0.0000 & no \\
+R1 & fold., method $-$ unmitigated & B & ZNE, linear & -0.0170 & -0.0212 & -0.0129 & yes \\
+R1 & fold., method $-$ unmitigated & B & ZNE, Richardson (2) & +0.0562 & +0.0428 & +0.0692 & yes \\
+R1 & fold., method $-$ unmitigated & B & ZNE, exponential & +0.0515 & +0.0358 & +0.0666 & yes \\
+R1 & fold., method $-$ unmitigated & B & Ridge & -0.0268 & -0.0308 & -0.0228 & yes \\
+R1 & fold., method $-$ unmitigated & B & GB trees & -0.0332 & -0.0386 & -0.0278 & yes \\
+R1 & fold., method $-$ unmitigated & B & Neural net & -0.0086 & -0.0150 & -0.0017 & yes \\
+R1 & fold., method $-$ unmitigated & B & Quantum kernel ridge & -0.0342 & -0.0394 & -0.0282 & yes \\
+R1 & fold., method $-$ unmitigated & B & DR-VQC & +0.0231 & +0.0164 & +0.0303 & yes \\
+R1 & fold., method $-$ unmitigated & B & Bounded VQC & -0.0131 & -0.0195 & -0.0058 & yes \\
+R1 & fold., method $-$ linear ZNE & A & No mitigation & +0.0337 & +0.0281 & +0.0394 & yes \\
+R1 & fold., method $-$ linear ZNE & A & ZNE, linear & +0.0000 & +0.0000 & +0.0000 & no \\
+R1 & fold., method $-$ linear ZNE & A & ZNE, Richardson (2) & +0.1083 & +0.0929 & +0.1240 & yes \\
+R1 & fold., method $-$ linear ZNE & A & ZNE, exponential & +0.1046 & +0.0827 & +0.1244 & yes \\
+R1 & fold., method $-$ linear ZNE & A & Ridge & -0.0072 & -0.0105 & -0.0039 & yes \\
+R1 & fold., method $-$ linear ZNE & A & GB trees & -0.0073 & -0.0125 & -0.0025 & yes \\
+R1 & fold., method $-$ linear ZNE & A & Neural net & -0.0106 & -0.0148 & -0.0062 & yes \\
+R1 & fold., method $-$ linear ZNE & A & Quantum kernel ridge & -0.0147 & -0.0194 & -0.0104 & yes \\
+R1 & fold., method $-$ linear ZNE & A & DR-VQC & +0.0215 & +0.0122 & +0.0312 & yes \\
+R1 & fold., method $-$ linear ZNE & A & Bounded VQC & +0.0067 & +0.0020 & +0.0114 & yes \\
+R1 & fold., method $-$ linear ZNE & B & No mitigation & +0.0170 & +0.0130 & +0.0215 & yes \\
+R1 & fold., method $-$ linear ZNE & B & ZNE, linear & +0.0000 & +0.0000 & +0.0000 & no \\
+R1 & fold., method $-$ linear ZNE & B & ZNE, Richardson (2) & +0.0732 & +0.0596 & +0.0875 & yes \\
+R1 & fold., method $-$ linear ZNE & B & ZNE, exponential & +0.0686 & +0.0533 & +0.0848 & yes \\
+R1 & fold., method $-$ linear ZNE & B & Ridge & -0.0098 & -0.0122 & -0.0075 & yes \\
+R1 & fold., method $-$ linear ZNE & B & GB trees & -0.0162 & -0.0197 & -0.0124 & yes \\
+R1 & fold., method $-$ linear ZNE & B & Neural net & +0.0085 & +0.0026 & +0.0144 & yes \\
+R1 & fold., method $-$ linear ZNE & B & Quantum kernel ridge & -0.0172 & -0.0214 & -0.0127 & yes \\
+R1 & fold., method $-$ linear ZNE & B & DR-VQC & +0.0402 & +0.0333 & +0.0464 & yes \\
+R1 & fold., method $-$ linear ZNE & B & Bounded VQC & +0.0040 & -0.0025 & +0.0105 & no \\
+R2 & param., defect removed, method $-$ unmitigated & A & No mitigation & +0.0000 & +0.0000 & +0.0000 & no \\
+R2 & param., defect removed, method $-$ unmitigated & A & ZNE, linear & -0.0285 & -0.0309 & -0.0261 & yes \\
+R2 & param., defect removed, method $-$ unmitigated & A & ZNE, Richardson (2) & -0.0142 & -0.0193 & -0.0093 & yes \\
+R2 & param., defect removed, method $-$ unmitigated & A & ZNE, exponential & +0.0627 & +0.0424 & +0.0808 & yes \\
+R2 & param., defect removed, method $-$ unmitigated & A & Ridge & -0.0383 & -0.0422 & -0.0345 & yes \\
+R2 & param., defect removed, method $-$ unmitigated & A & GB trees & -0.0333 & -0.0377 & -0.0288 & yes \\
+R2 & param., defect removed, method $-$ unmitigated & A & Neural net & -0.0390 & -0.0433 & -0.0348 & yes \\
+R2 & param., defect removed, method $-$ unmitigated & A & Quantum kernel ridge & -0.0403 & -0.0444 & -0.0362 & yes \\
+R2 & param., defect removed, method $-$ unmitigated & A & DR-VQC & -0.0362 & -0.0402 & -0.0324 & yes \\
+R2 & param., defect removed, method $-$ unmitigated & A & Bounded VQC & -0.0274 & -0.0316 & -0.0233 & yes \\
+R2 & param., production, method $-$ unmitigated & A & No mitigation & +0.0000 & +0.0000 & +0.0000 & no \\
+R2 & param., production, method $-$ unmitigated & A & ZNE, linear & -0.0217 & -0.0272 & -0.0158 & yes \\
+R2 & param., production, method $-$ unmitigated & A & ZNE, Richardson (2) & -0.0038 & -0.0127 & +0.0054 & no \\
+R2 & param., production, method $-$ unmitigated & A & ZNE, exponential & +0.0835 & +0.0636 & +0.1021 & yes \\
+R2 & param., production, method $-$ unmitigated & A & Ridge & -0.0567 & -0.0625 & -0.0506 & yes \\
+R2 & param., production, method $-$ unmitigated & A & GB trees & -0.0532 & -0.0601 & -0.0463 & yes \\
+R2 & param., production, method $-$ unmitigated & A & Neural net & -0.0592 & -0.0656 & -0.0522 & yes \\
+R2 & param., production, method $-$ unmitigated & A & Quantum kernel ridge & -0.0617 & -0.0684 & -0.0544 & yes \\
+R2 & param., production, method $-$ unmitigated & A & DR-VQC & -0.0227 & -0.0297 & -0.0154 & yes \\
+R2 & param., production, method $-$ unmitigated & A & Bounded VQC & -0.0524 & -0.0577 & -0.0469 & yes \\
+R2 & param., production $-$ defect removed & A & No mitigation & +0.0432 & +0.0367 & +0.0495 & yes \\
+R2 & param., production $-$ defect removed & A & ZNE, linear & +0.0501 & +0.0422 & +0.0584 & yes \\
+R2 & param., production $-$ defect removed & A & ZNE, Richardson (2) & +0.0536 & +0.0445 & +0.0623 & yes \\
+R2 & param., production $-$ defect removed & A & ZNE, exponential & +0.0639 & +0.0381 & +0.0871 & yes \\
+R2 & param., production $-$ defect removed & A & Ridge & +0.0249 & +0.0210 & +0.0292 & yes \\
+R2 & param., production $-$ defect removed & A & GB trees & +0.0234 & +0.0185 & +0.0283 & yes \\
+R2 & param., production $-$ defect removed & A & Neural net & +0.0230 & +0.0187 & +0.0281 & yes \\
+R2 & param., production $-$ defect removed & A & Quantum kernel ridge & +0.0219 & +0.0176 & +0.0264 & yes \\
+R2 & param., production $-$ defect removed & A & DR-VQC & +0.0567 & +0.0495 & +0.0643 & yes \\
+R2 & param., production $-$ defect removed & A & Bounded VQC & +0.0182 & +0.0138 & +0.0230 & yes \\
+R2 & param., production $-$ reset control & A & No mitigation & -0.0007 & -0.0055 & +0.0040 & no \\
+R2 & param., production $-$ reset control & A & ZNE, linear & -0.0107 & -0.0200 & -0.0014 & yes \\
+R2 & param., production $-$ reset control & A & ZNE, Richardson (2) & +0.0115 & +0.0034 & +0.0196 & yes \\
+R2 & param., production $-$ reset control & A & ZNE, exponential & +0.0208 & -0.0055 & +0.0456 & no \\
+R2 & param., production $-$ reset control & A & Ridge & +0.0069 & +0.0033 & +0.0110 & yes \\
+R2 & param., production $-$ reset control & A & GB trees & +0.0108 & +0.0064 & +0.0155 & yes \\
+R2 & param., production $-$ reset control & A & Neural net & +0.0086 & +0.0041 & +0.0136 & yes \\
+R2 & param., production $-$ reset control & A & Quantum kernel ridge & +0.0098 & +0.0056 & +0.0142 & yes \\
+R2 & param., production $-$ reset control & A & DR-VQC & +0.0063 & +0.0001 & +0.0126 & yes \\
+R2 & param., production $-$ reset control & A & Bounded VQC & +0.0024 & -0.0059 & +0.0088 & no \\
+R2 & param., reset control, method $-$ unmitigated & A & No mitigation & +0.0000 & +0.0000 & +0.0000 & no \\
+R2 & param., reset control, method $-$ unmitigated & A & ZNE, linear & -0.0117 & -0.0195 & -0.0031 & yes \\
+R2 & param., reset control, method $-$ unmitigated & A & ZNE, Richardson (2) & -0.0161 & -0.0232 & -0.0091 & yes \\
+R2 & param., reset control, method $-$ unmitigated & A & ZNE, exponential & +0.0620 & +0.0463 & +0.0797 & yes \\
+R2 & param., reset control, method $-$ unmitigated & A & Ridge & -0.0643 & -0.0706 & -0.0574 & yes \\
+R2 & param., reset control, method $-$ unmitigated & A & GB trees & -0.0647 & -0.0718 & -0.0578 & yes \\
+R2 & param., reset control, method $-$ unmitigated & A & Neural net & -0.0685 & -0.0755 & -0.0613 & yes \\
+R2 & param., reset control, method $-$ unmitigated & A & Quantum kernel ridge & -0.0722 & -0.0795 & -0.0647 & yes \\
+R2 & param., reset control, method $-$ unmitigated & A & DR-VQC & -0.0297 & -0.0369 & -0.0224 & yes \\
+R2 & param., reset control, method $-$ unmitigated & A & Bounded VQC & -0.0555 & -0.0644 & -0.0451 & yes \\
+R2 & fold., defect removed, method $-$ unmitigated & A & No mitigation & +0.0000 & +0.0000 & +0.0000 & no \\
+R2 & fold., defect removed, method $-$ unmitigated & A & ZNE, linear & -0.0237 & -0.0261 & -0.0214 & yes \\
+R2 & fold., defect removed, method $-$ unmitigated & A & ZNE, Richardson (2) & +0.0031 & -0.0011 & +0.0073 & no \\
+R2 & fold., defect removed, method $-$ unmitigated & A & ZNE, exponential & +0.0578 & +0.0357 & +0.0795 & yes \\
+R2 & fold., defect removed, method $-$ unmitigated & A & Ridge & -0.0304 & -0.0343 & -0.0266 & yes \\
+R2 & fold., defect removed, method $-$ unmitigated & A & GB trees & -0.0275 & -0.0322 & -0.0233 & yes \\
+R2 & fold., defect removed, method $-$ unmitigated & A & Neural net & -0.0331 & -0.0373 & -0.0291 & yes \\
+R2 & fold., defect removed, method $-$ unmitigated & A & Quantum kernel ridge & -0.0341 & -0.0383 & -0.0299 & yes \\
+R2 & fold., defect removed, method $-$ unmitigated & A & DR-VQC & +0.0692 & +0.0565 & +0.0817 & yes \\
+R2 & fold., defect removed, method $-$ unmitigated & A & Bounded VQC & -0.0261 & -0.0307 & -0.0215 & yes \\
+R2 & fold., production, method $-$ unmitigated & A & No mitigation & +0.0000 & +0.0000 & +0.0000 & no \\
+R2 & fold., production, method $-$ unmitigated & A & ZNE, linear & -0.0337 & -0.0391 & -0.0281 & yes \\
+R2 & fold., production, method $-$ unmitigated & A & ZNE, Richardson (2) & +0.0746 & +0.0601 & +0.0899 & yes \\
+R2 & fold., production, method $-$ unmitigated & A & ZNE, exponential & +0.0709 & +0.0482 & +0.0940 & yes \\
+R2 & fold., production, method $-$ unmitigated & A & Ridge & -0.0409 & -0.0467 & -0.0347 & yes \\
+R2 & fold., production, method $-$ unmitigated & A & GB trees & -0.0410 & -0.0471 & -0.0344 & yes \\
+R2 & fold., production, method $-$ unmitigated & A & Neural net & -0.0443 & -0.0505 & -0.0380 & yes \\
+R2 & fold., production, method $-$ unmitigated & A & Quantum kernel ridge & -0.0484 & -0.0545 & -0.0421 & yes \\
+R2 & fold., production, method $-$ unmitigated & A & DR-VQC & -0.0122 & -0.0196 & -0.0046 & yes \\
+R2 & fold., production, method $-$ unmitigated & A & Bounded VQC & -0.0270 & -0.0320 & -0.0220 & yes \\
+R2 & fold., production $-$ defect removed & A & No mitigation & +0.0437 & +0.0373 & +0.0499 & yes \\
+R2 & fold., production $-$ defect removed & A & ZNE, linear & +0.0337 & +0.0270 & +0.0407 & yes \\
+R2 & fold., production $-$ defect removed & A & ZNE, Richardson (2) & +0.1153 & +0.1011 & +0.1312 & yes \\
+R2 & fold., production $-$ defect removed & A & ZNE, exponential & +0.0568 & +0.0253 & +0.0858 & yes \\
+R2 & fold., production $-$ defect removed & A & Ridge & +0.0332 & +0.0264 & +0.0411 & yes \\
+R2 & fold., production $-$ defect removed & A & GB trees & +0.0301 & +0.0235 & +0.0369 & yes \\
+R2 & fold., production $-$ defect removed & A & Neural net & +0.0325 & +0.0253 & +0.0402 & yes \\
+R2 & fold., production $-$ defect removed & A & Quantum kernel ridge & +0.0293 & +0.0222 & +0.0365 & yes \\
+R2 & fold., production $-$ defect removed & A & DR-VQC & -0.0378 & -0.0495 & -0.0270 & yes \\
+R2 & fold., production $-$ defect removed & A & Bounded VQC & +0.0428 & +0.0356 & +0.0506 & yes \\
+R2 & fold., production $-$ reset control & A & No mitigation & -0.0010 & -0.0055 & +0.0033 & no \\
+R2 & fold., production $-$ reset control & A & ZNE, linear & +0.0041 & -0.0020 & +0.0099 & no \\
+R2 & fold., production $-$ reset control & A & ZNE, Richardson (2) & +0.0609 & +0.0469 & +0.0762 & yes \\
+R2 & fold., production $-$ reset control & A & ZNE, exponential & +0.0442 & +0.0150 & +0.0709 & yes \\
+R2 & fold., production $-$ reset control & A & Ridge & +0.0220 & +0.0156 & +0.0291 & yes \\
+R2 & fold., production $-$ reset control & A & GB trees & +0.0195 & +0.0137 & +0.0252 & yes \\
+R2 & fold., production $-$ reset control & A & Neural net & +0.0206 & +0.0136 & +0.0282 & yes \\
+R2 & fold., production $-$ reset control & A & Quantum kernel ridge & +0.0186 & +0.0117 & +0.0254 & yes \\
+R2 & fold., production $-$ reset control & A & DR-VQC & +0.0062 & -0.0057 & +0.0168 & no \\
+R2 & fold., production $-$ reset control & A & Bounded VQC & +0.0295 & +0.0232 & +0.0366 & yes \\
+R2 & fold., reset control, method $-$ unmitigated & A & No mitigation & +0.0000 & +0.0000 & +0.0000 & no \\
+R2 & fold., reset control, method $-$ unmitigated & A & ZNE, linear & -0.0387 & -0.0426 & -0.0348 & yes \\
+R2 & fold., reset control, method $-$ unmitigated & A & ZNE, Richardson (2) & +0.0128 & +0.0045 & +0.0202 & yes \\
+R2 & fold., reset control, method $-$ unmitigated & A & ZNE, exponential & +0.0257 & +0.0090 & +0.0441 & yes \\
+R2 & fold., reset control, method $-$ unmitigated & A & Ridge & -0.0638 & -0.0703 & -0.0571 & yes \\
+R2 & fold., reset control, method $-$ unmitigated & A & GB trees & -0.0615 & -0.0680 & -0.0546 & yes \\
+R2 & fold., reset control, method $-$ unmitigated & A & Neural net & -0.0658 & -0.0728 & -0.0585 & yes \\
+R2 & fold., reset control, method $-$ unmitigated & A & Quantum kernel ridge & -0.0680 & -0.0747 & -0.0612 & yes \\
+R2 & fold., reset control, method $-$ unmitigated & A & DR-VQC & -0.0194 & -0.0326 & -0.0041 & yes \\
+R2 & fold., reset control, method $-$ unmitigated & A & Bounded VQC & -0.0575 & -0.0638 & -0.0504 & yes \\
+R3 & calib. B $-$ calib. A & A & No mitigation & +0.0059 & +0.0044 & +0.0073 & yes \\
+R3 & calib. B $-$ calib. A & A & ZNE, linear & +0.0043 & +0.0020 & +0.0064 & yes \\
+R3 & calib. B $-$ calib. A & A & ZNE, Richardson (2) & -0.0048 & -0.0093 & +0.0001 & no \\
+R3 & calib. B $-$ calib. A & A & ZNE, exponential & -0.0152 & -0.0429 & +0.0120 & no \\
+R3 & calib. B $-$ calib. A & A & Ridge & +0.0034 & +0.0009 & +0.0058 & yes \\
+R3 & calib. B $-$ calib. A & A & GB trees & -0.0012 & -0.0045 & +0.0022 & no \\
+R3 & calib. B $-$ calib. A & A & Neural net & +0.0005 & -0.0019 & +0.0031 & no \\
+R3 & calib. B $-$ calib. A & A & Quantum kernel ridge & +0.0014 & -0.0013 & +0.0041 & no \\
+R3 & calib. B $-$ calib. A & A & DR-VQC & -0.0002 & -0.0030 & +0.0024 & no \\
+R3 & calib. B $-$ calib. A & A & Bounded VQC & +0.0023 & -0.0004 & +0.0047 & no \\
+\end{longtable}
+}
+
+\section{Robustness over ten splits}
+
+{\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{llccccccccc}
+\caption[Robustness over ten circuit-grouped splits]{Ten circuit-grouped splits (seeds $100$--$109$) per configuration. Mean and SD of test RMSE over splits, mean within-split rank, and the number of splits in which the paired difference against no mitigation, linear ZNE and the neural network is resolved in the stated direction. Setting: I = idealized regime; II = realistic production model; II reset = reset control; param. = parameter scaling; fold. = unitary folding.}\label{tab:appB_robust}\\
+\toprule
+\textbf{Setting} & \textbf{Method} & \textbf{Mean} & \textbf{SD} & \textbf{Rank} & \textbf{$>$unm.} & \textbf{$<$unm.} & \textbf{$>$lin.} & \textbf{$<$lin.} & \textbf{$>$NN} & \textbf{$<$NN} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Setting} & \textbf{Method} & \textbf{Mean} & \textbf{SD} & \textbf{Rank} & \textbf{$>$unm.} & \textbf{$<$unm.} & \textbf{$>$lin.} & \textbf{$<$lin.} & \textbf{$>$NN} & \textbf{$<$NN} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+I & Quantum kernel ridge & 0.0425 & 0.0012 & 1.4 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 0/10 \\
+I & Neural net & 0.0426 & 0.0009 & 1.6 & 10/10 & 0/10 & 10/10 & 0/10 & - & - \\
+I & GB trees & 0.0471 & 0.0010 & 3.0 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 10/10 \\
+I & Ridge & 0.0531 & 0.0014 & 4.5 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 10/10 \\
+I & Bounded VQC & 0.0548 & 0.0033 & 4.5 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 10/10 \\
+I & ZNE, linear & 0.0738 & 0.0018 & 6.3 & 10/10 & 0/10 & - & - & 0/10 & 10/10 \\
+I & ZNE, Richardson (2) & 0.0754 & 0.0012 & 6.9 & 10/10 & 0/10 & 0/10 & 1/10 & 0/10 & 10/10 \\
+I & No mitigation & 0.1018 & 0.0022 & 8.3 & - & - & 0/10 & 10/10 & 0/10 & 10/10 \\
+I & DR-VQC & 0.1211 & 0.0359 & 8.6 & 2/10 & 6/10 & 1/10 & 9/10 & 0/10 & 10/10 \\
+I & ZNE, exponential & 0.1599 & 0.0086 & 9.9 & 0/10 & 10/10 & 0/10 & 10/10 & 0/10 & 10/10 \\
+II, param. & Quantum kernel ridge & 0.0640 & 0.0019 & 1.0 & 10/10 & 0/10 & 10/10 & 0/10 & 10/10 & 0/10 \\
+II, param. & Neural net & 0.0662 & 0.0023 & 2.0 & 10/10 & 0/10 & 10/10 & 0/10 & - & - \\
+II, param. & Ridge & 0.0693 & 0.0022 & 3.1 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 7/10 \\
+II, param. & GB trees & 0.0725 & 0.0017 & 4.4 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 10/10 \\
+II, param. & Bounded VQC & 0.0802 & 0.0077 & 5.3 & 10/10 & 0/10 & 9/10 & 0/10 & 0/10 & 10/10 \\
+II, param. & DR-VQC & 0.0869 & 0.0192 & 5.5 & 8/10 & 0/10 & 7/10 & 1/10 & 0/10 & 9/10 \\
+II, param. & ZNE, linear & 0.1028 & 0.0049 & 6.8 & 10/10 & 0/10 & - & - & 0/10 & 10/10 \\
+II, param. & ZNE, Richardson (2) & 0.1188 & 0.0031 & 8.0 & 0/10 & 0/10 & 0/10 & 9/10 & 0/10 & 10/10 \\
+II, param. & No mitigation & 0.1227 & 0.0041 & 8.9 & - & - & 0/10 & 10/10 & 0/10 & 10/10 \\
+II, param. & ZNE, exponential & 0.2010 & 0.0045 & 10.0 & 0/10 & 10/10 & 0/10 & 10/10 & 0/10 & 10/10 \\
+II, fold. & Quantum kernel ridge & 0.0769 & 0.0043 & 1.4 & 10/10 & 0/10 & 10/10 & 0/10 & 1/10 & 0/10 \\
+II, fold. & Neural net & 0.0775 & 0.0042 & 1.6 & 10/10 & 0/10 & 10/10 & 0/10 & - & - \\
+II, fold. & GB trees & 0.0830 & 0.0027 & 3.2 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 9/10 \\
+II, fold. & Ridge & 0.0848 & 0.0033 & 3.8 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 10/10 \\
+II, fold. & ZNE, linear & 0.0938 & 0.0038 & 5.5 & 10/10 & 0/10 & - & - & 0/10 & 10/10 \\
+II, fold. & Bounded VQC & 0.0951 & 0.0040 & 5.8 & 10/10 & 0/10 & 2/10 & 1/10 & 0/10 & 10/10 \\
+II, fold. & DR-VQC & 0.1064 & 0.0110 & 6.8 & 8/10 & 1/10 & 0/10 & 6/10 & 0/10 & 10/10 \\
+II, fold. & No mitigation & 0.1224 & 0.0039 & 7.9 & - & - & 0/10 & 10/10 & 0/10 & 10/10 \\
+II, fold. & ZNE, exponential & 0.1918 & 0.0058 & 9.4 & 0/10 & 10/10 & 0/10 & 10/10 & 0/10 & 10/10 \\
+II, fold. & ZNE, Richardson (2) & 0.1956 & 0.0084 & 9.6 & 0/10 & 10/10 & 0/10 & 10/10 & 0/10 & 10/10 \\
+II reset, param. & Quantum kernel ridge & 0.0533 & 0.0008 & 1.0 & 10/10 & 0/10 & 10/10 & 0/10 & 10/10 & 0/10 \\
+II reset, param. & Neural net & 0.0556 & 0.0011 & 2.0 & 10/10 & 0/10 & 10/10 & 0/10 & - & - \\
+II reset, param. & Ridge & 0.0605 & 0.0011 & 3.4 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 10/10 \\
+II reset, param. & GB trees & 0.0605 & 0.0018 & 3.6 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 10/10 \\
+II reset, param. & DR-VQC & 0.0684 & 0.0045 & 5.2 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 10/10 \\
+II reset, param. & Bounded VQC & 0.0750 & 0.0102 & 5.8 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 10/10 \\
+II reset, param. & ZNE, Richardson (2) & 0.1038 & 0.0033 & 7.0 & 10/10 & 0/10 & 8/10 & 0/10 & 0/10 & 10/10 \\
+II reset, param. & ZNE, linear & 0.1140 & 0.0024 & 8.0 & 5/10 & 0/10 & - & - & 0/10 & 10/10 \\
+II reset, param. & No mitigation & 0.1210 & 0.0034 & 9.0 & - & - & 0/10 & 5/10 & 0/10 & 10/10 \\
+II reset, param. & ZNE, exponential & 0.1866 & 0.0111 & 10.0 & 0/10 & 10/10 & 0/10 & 10/10 & 0/10 & 10/10 \\
+II reset, fold. & Quantum kernel ridge & 0.0580 & 0.0014 & 1.0 & 10/10 & 0/10 & 10/10 & 0/10 & 10/10 & 0/10 \\
+II reset, fold. & Neural net & 0.0601 & 0.0017 & 2.0 & 10/10 & 0/10 & 10/10 & 0/10 & - & - \\
+II reset, fold. & Ridge & 0.0619 & 0.0012 & 3.0 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 5/10 \\
+II reset, fold. & GB trees & 0.0655 & 0.0020 & 4.0 & 10/10 & 0/10 & 10/10 & 0/10 & 0/10 & 10/10 \\
+II reset, fold. & Bounded VQC & 0.0765 & 0.0057 & 5.4 & 10/10 & 0/10 & 8/10 & 0/10 & 0/10 & 10/10 \\
+II reset, fold. & DR-VQC & 0.0842 & 0.0161 & 6.0 & 9/10 & 0/10 & 4/10 & 2/10 & 0/10 & 10/10 \\
+II reset, fold. & ZNE, linear & 0.0853 & 0.0023 & 6.6 & 10/10 & 0/10 & - & - & 0/10 & 10/10 \\
+II reset, fold. & No mitigation & 0.1215 & 0.0034 & 8.0 & - & - & 0/10 & 10/10 & 0/10 & 10/10 \\
+II reset, fold. & ZNE, Richardson (2) & 0.1333 & 0.0022 & 9.0 & 0/10 & 8/10 & 0/10 & 10/10 & 0/10 & 10/10 \\
+II reset, fold. & ZNE, exponential & 0.1551 & 0.0091 & 10.0 & 0/10 & 10/10 & 0/10 & 10/10 & 0/10 & 10/10 \\
+\end{longtable}
+}
+
+\section{Variational arms over ten initialisation seeds}
+
+{\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{llcccccr}
+\caption[Variational arms over ten initialisation seeds]{Variational arms, ten initialisation seeds on the reference split (seed 7 split), idealized regime.}\label{tab:appB_vqcseeds}\\
+\toprule
+\textbf{Split} & \textbf{Method} & \textbf{Epochs} & \textbf{Seed} & \textbf{RMSE} & \textbf{CI low} & \textbf{CI high} & \textbf{Red.\%} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Split} & \textbf{Method} & \textbf{Epochs} & \textbf{Seed} & \textbf{RMSE} & \textbf{CI low} & \textbf{CI high} & \textbf{Red.\%} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+A & Bounded VQC & 40 & 0 & 0.0664 & 0.0635 & 0.0694 & 35.8 \\
+A & Bounded VQC & 40 & 1 & 0.0532 & 0.0506 & 0.0561 & 48.6 \\
+A & Bounded VQC & 40 & 2 & 0.0568 & 0.0543 & 0.0596 & 45.1 \\
+A & Bounded VQC & 40 & 3 & 0.0809 & 0.0758 & 0.0858 & 21.8 \\
+A & Bounded VQC & 40 & 4 & 0.0533 & 0.0509 & 0.0560 & 48.5 \\
+A & Bounded VQC & 40 & 5 & 0.0589 & 0.0565 & 0.0613 & 43.1 \\
+A & Bounded VQC & 40 & 6 & 0.0522 & 0.0500 & 0.0545 & 49.5 \\
+A & Bounded VQC & 40 & 7 & 0.0597 & 0.0530 & 0.0678 & 42.3 \\
+A & Bounded VQC & 40 & 8 & 0.0527 & 0.0502 & 0.0551 & 49.1 \\
+A & Bounded VQC & 40 & 9 & 0.0471 & 0.0446 & 0.0497 & 54.4 \\
+A & DR-VQC & 30 & 0 & 0.0649 & 0.0613 & 0.0693 & 37.3 \\
+A & DR-VQC & 30 & 1 & 0.1081 & 0.0912 & 0.1259 & -4.4 \\
+A & DR-VQC & 30 & 2 & 0.0548 & 0.0518 & 0.0582 & 47.0 \\
+A & DR-VQC & 30 & 3 & 0.1222 & 0.1120 & 0.1351 & -18.1 \\
+A & DR-VQC & 30 & 4 & 0.0595 & 0.0551 & 0.0648 & 42.5 \\
+A & DR-VQC & 30 & 5 & 0.1503 & 0.1332 & 0.1689 & -45.3 \\
+A & DR-VQC & 30 & 6 & 0.0544 & 0.0517 & 0.0573 & 47.4 \\
+A & DR-VQC & 30 & 7 & 0.1836 & 0.1660 & 0.2018 & -77.4 \\
+A & DR-VQC & 30 & 8 & 0.1493 & 0.1339 & 0.1660 & -44.3 \\
+A & DR-VQC & 30 & 9 & 0.0872 & 0.0828 & 0.0915 & 15.8 \\
+A & DR-VQC & 40 & 0 & 0.0640 & 0.0557 & 0.0746 & 38.1 \\
+A & DR-VQC & 40 & 1 & 0.1197 & 0.1079 & 0.1314 & -15.7 \\
+A & DR-VQC & 40 & 2 & 0.0666 & 0.0629 & 0.0709 & 35.6 \\
+A & DR-VQC & 40 & 3 & 0.0632 & 0.0602 & 0.0668 & 38.9 \\
+A & DR-VQC & 40 & 4 & 0.1209 & 0.0983 & 0.1447 & -16.9 \\
+A & DR-VQC & 40 & 5 & 0.1067 & 0.0890 & 0.1277 & -3.1 \\
+A & DR-VQC & 40 & 6 & 0.1511 & 0.1292 & 0.1754 & -46.0 \\
+A & DR-VQC & 40 & 7 & 0.0557 & 0.0525 & 0.0592 & 46.1 \\
+A & DR-VQC & 40 & 8 & 0.0737 & 0.0658 & 0.0818 & 28.8 \\
+A & DR-VQC & 40 & 9 & 0.1128 & 0.0975 & 0.1289 & -9.0 \\
+B & Bounded VQC & 40 & 0 & 0.1166 & 0.1094 & 0.1222 & 4.3 \\
+B & Bounded VQC & 40 & 1 & 0.2119 & 0.2026 & 0.2209 & -74.1 \\
+B & Bounded VQC & 40 & 2 & 0.2040 & 0.1967 & 0.2112 & -67.5 \\
+B & Bounded VQC & 40 & 3 & 0.1883 & 0.1804 & 0.1954 & -54.6 \\
+B & Bounded VQC & 40 & 4 & 0.1449 & 0.1350 & 0.1536 & -19.0 \\
+B & Bounded VQC & 40 & 5 & 0.1393 & 0.1328 & 0.1451 & -14.4 \\
+B & Bounded VQC & 40 & 6 & 0.3225 & 0.3119 & 0.3333 & -164.8 \\
+B & Bounded VQC & 40 & 7 & 0.1543 & 0.1484 & 0.1591 & -26.7 \\
+B & Bounded VQC & 40 & 8 & 0.2014 & 0.1929 & 0.2093 & -65.5 \\
+B & Bounded VQC & 40 & 9 & 0.1296 & 0.1239 & 0.1349 & -6.4 \\
+B & DR-VQC & 40 & 0 & 0.2560 & 0.2487 & 0.2636 & -110.3 \\
+B & DR-VQC & 40 & 1 & 0.3319 & 0.3193 & 0.3433 & -172.6 \\
+B & DR-VQC & 40 & 2 & 0.1827 & 0.1769 & 0.1885 & -50.1 \\
+B & DR-VQC & 40 & 3 & 0.2391 & 0.2289 & 0.2481 & -96.4 \\
+B & DR-VQC & 40 & 4 & 0.2846 & 0.2690 & 0.2988 & -133.8 \\
+B & DR-VQC & 40 & 5 & 0.3108 & 0.3011 & 0.3213 & -155.3 \\
+B & DR-VQC & 40 & 6 & 0.2305 & 0.2236 & 0.2376 & -89.3 \\
+B & DR-VQC & 40 & 7 & 0.4900 & 0.4730 & 0.5059 & -302.4 \\
+B & DR-VQC & 40 & 8 & 0.2779 & 0.2694 & 0.2854 & -128.2 \\
+B & DR-VQC & 40 & 9 & 0.4306 & 0.4119 & 0.4477 & -253.7 \\
+\end{longtable}
+}
+
+\section{Input support and learning-curve variance}
+
+{\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{llcccc}
+\caption[Depth extrapolation by input set]{Depth extrapolation (Split B, idealized regime) by input set. The last column is the paired difference against no mitigation (negative = better).}\label{tab:appB_oodfeat}\\
+\toprule
+\textbf{Inputs} & \textbf{Method} & \textbf{RMSE} & \textbf{CI low} & \textbf{CI high} & \textbf{Paired diff. vs unmitigated} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Inputs} & \textbf{Method} & \textbf{RMSE} & \textbf{CI low} & \textbf{CI high} & \textbf{Paired diff. vs unmitigated} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+full & No mitigation & 0.1217 & 0.1174 & 0.1258 & --- \\
+full & Ridge & 0.0717 & 0.0685 & 0.0741 & -0.0501 [-0.0532, -0.0471] \\
+full & GB trees & 0.0665 & 0.0637 & 0.0691 & -0.0553 [-0.0584, -0.0521] \\
+full & Neural net & 0.1292 & 0.1251 & 0.1339 & +0.0075 [+0.0013, +0.0136] \\
+full & Quantum kernel ridge & 0.1433 & 0.1369 & 0.1493 & +0.0216 [+0.0150, +0.0279] \\
+full & DR-VQC & 0.4900 & 0.4725 & 0.5056 & +0.3682 [+0.3518, +0.3842] \\
+full & Bounded VQC & 0.1543 & 0.1486 & 0.1591 & +0.0325 [+0.0274, +0.0382] \\
+noise\_only & No mitigation & 0.1217 & 0.1174 & 0.1258 & --- \\
+noise\_only & Ridge & 0.0717 & 0.0686 & 0.0741 & -0.0501 [-0.0531, -0.0471] \\
+noise\_only & GB trees & 0.0714 & 0.0683 & 0.0743 & -0.0503 [-0.0534, -0.0471] \\
+noise\_only & Neural net & 0.0696 & 0.0665 & 0.0723 & -0.0521 [-0.0551, -0.0492] \\
+noise\_only & Quantum kernel ridge & 0.0720 & 0.0688 & 0.0746 & -0.0498 [-0.0528, -0.0468] \\
+noise\_only & DR-VQC & 0.0905 & 0.0864 & 0.0937 & -0.0313 [-0.0332, -0.0293] \\
+noise\_only & Bounded VQC & 0.0672 & 0.0643 & 0.0698 & -0.0546 [-0.0579, -0.0513] \\
+noise\_plus\_obs\_weight & No mitigation & 0.1217 & 0.1174 & 0.1258 & --- \\
+noise\_plus\_obs\_weight & Ridge & 0.0717 & 0.0685 & 0.0740 & -0.0501 [-0.0532, -0.0471] \\
+noise\_plus\_obs\_weight & GB trees & 0.0721 & 0.0690 & 0.0748 & -0.0497 [-0.0527, -0.0466] \\
+noise\_plus\_obs\_weight & Neural net & 0.0723 & 0.0692 & 0.0749 & -0.0494 [-0.0520, -0.0468] \\
+noise\_plus\_obs\_weight & Quantum kernel ridge & 0.0723 & 0.0693 & 0.0750 & -0.0494 [-0.0524, -0.0464] \\
+noise\_plus\_obs\_weight & DR-VQC & 0.0781 & 0.0748 & 0.0808 & -0.0437 [-0.0471, -0.0403] \\
+noise\_plus\_obs\_weight & Bounded VQC & 0.0773 & 0.0746 & 0.0801 & -0.0444 [-0.0481, -0.0408] \\
+\end{longtable}
+}
+
+{\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{clccccc}
+\caption[Learning-curve variance]{Learning-curve variance: $20$ independent subsets of training circuits at each size, Split A test set, idealized regime. The last column counts draws worse than no mitigation.}\label{tab:appB_learnvar}\\
+\toprule
+\textbf{Circuits} & \textbf{Method} & \textbf{Mean} & \textbf{SD} & \textbf{Min} & \textbf{Max} & \textbf{Worse} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Circuits} & \textbf{Method} & \textbf{Mean} & \textbf{SD} & \textbf{Min} & \textbf{Max} & \textbf{Worse} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+31 & No mitigation & 0.1035 & 0.0000 & 0.1035 & 0.1035 & 0/20 \\
+31 & ZNE, linear & 0.0737 & 0.0000 & 0.0737 & 0.0737 & 0/20 \\
+31 & Ridge & 0.0526 & 0.0010 & 0.0518 & 0.0564 & 0/20 \\
+31 & GB trees & 0.1093 & 0.0072 & 0.0972 & 0.1226 & 15/20 \\
+31 & Neural net & 0.1169 & 0.0510 & 0.0572 & 0.2075 & 12/20 \\
+31 & Quantum kernel ridge & 0.0545 & 0.0094 & 0.0465 & 0.0871 & 0/20 \\
+63 & No mitigation & 0.1035 & 0.0000 & 0.1035 & 0.1035 & 0/20 \\
+63 & ZNE, linear & 0.0737 & 0.0000 & 0.0737 & 0.0737 & 0/20 \\
+63 & Ridge & 0.0521 & 0.0003 & 0.0517 & 0.0527 & 0/20 \\
+63 & GB trees & 0.0871 & 0.0062 & 0.0679 & 0.0957 & 0/20 \\
+63 & Neural net & 0.0522 & 0.0023 & 0.0470 & 0.0557 & 0/20 \\
+63 & Quantum kernel ridge & 0.0502 & 0.0069 & 0.0438 & 0.0685 & 0/20 \\
+\end{longtable}
+}
+
+\section{Non-Markovianity measurements}
+
+Breuer--Laine--Piilo measure $\mathcal{N}$ (Eq.~\eqref{eq:ch3_blp}) on the idling register. First-layer trace distance in brackets.
+
+\begin{itemize}
+  \item non-Markovian production model, probe pair $|0\rangle$ vs. its partner: $\mathcal{N} = 0.8807$ (first layer $0.907$)
+  \item non-Markovian production model, probe pair $|+\rangle$ vs. its partner: $\mathcal{N} = 0.8234$ (first layer $0.949$)
+  \item reset control (defect reset every layer), probe pair $|0\rangle$ vs. its partner: $\mathcal{N} = 0.0000$ (first layer $0.907$)
+  \item reset control (defect reset every layer), probe pair $|+\rangle$ vs. its partner: $\mathcal{N} = 0.0000$ (first layer $0.949$)
+  \item defect-removed control, probe pair $|0\rangle$ vs. its partner: $\mathcal{N} = 0.0000$ (first layer $0.993$)
+  \item defect-removed control, probe pair $|+\rangle$ vs. its partner: $\mathcal{N} = 0.0000$ (first layer $0.993$)
+  \item coupling sweep ($g$, $\mathcal{N}$): (0.00, 0.0000), (0.05, 0.0000), (0.10, 0.5697), (0.15, 0.8807), (0.25, 1.6991), (0.40, 2.7005)
+\end{itemize}
+
+\section{Selected hyperparameters}
+
+Cross-validated bandwidth and ridge penalty selected for the quantum-kernel arm on each split of the idealized-regime benchmark:
+
+\begin{itemize}
+  \item A random circuits: bandwidth $\beta = 0.15$, penalty $\alpha = 1.00e-04$
+  \item B depth extrapolation: bandwidth $\beta = 0.15$, penalty $\alpha = 1.00e-04$
+\end{itemize}

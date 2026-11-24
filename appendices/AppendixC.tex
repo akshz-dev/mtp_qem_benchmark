@@ -1,0 +1,105 @@
+% Appendix C -- Source listings
+
+\chapter{Source Listings}
+
+\label{AppendixC}
+
+The complete source tree accompanies this thesis in \texttt{code/}. The listings
+below are the files that define the data-generating process and the model arms; the
+figure-generation script is included in the tree but not reproduced here. Line
+numbering is continuous within each listing.
+
+\section{Primary dataset generation}
+
+\texttt{gen\_data.py} defines the noise model, the two circuit families, the
+observables and the finite-sampling model, and writes the primary benchmark table
+together with a metadata record of every parameter used.
+
+\lstinputlisting[language=Python, caption={code/gen\_data.py},
+                 label={lst:gen_data}]{code/gen_data.py}
+
+\section{Parametrized simulator for the sweeps}
+
+\texttt{simulate.py} generalizes the generator over qubit count and noise multiplier
+while emitting the identical column schema, which is what allows the same model code
+to consume every dataset.
+
+\lstinputlisting[language=Python, caption={code/simulate.py},
+                 label={lst:simulate}]{code/simulate.py}
+
+\section{Model arms and the main benchmark}
+
+\texttt{bench.py} implements the analytic estimators, the classical regressors and
+the two hybrid quantum--classical arms, together with the circuit-grouped splits and
+the bootstrap confidence intervals.
+
+\lstinputlisting[language=Python, caption={code/bench.py},
+                 label={lst:bench}]{code/bench.py}
+
+\section{Sweep experiments}
+
+\texttt{experiments.py} runs the seven sweep experiments, including the
+bounded-encoding variational arm of Section~\ref{sec:ch3_bounded}. Results are
+flushed to disk after each experiment block so that a failure in a later block
+cannot discard completed work.
+
+\lstinputlisting[language=Python, caption={code/experiments.py},
+                 label={lst:experiments}]{code/experiments.py}
+
+\section{Device-realistic, non-Markovian generator}
+
+\texttt{simulate\_realistic.py} implements the regime-II model of
+Section~\ref{sec:ch3_realistic}: per-qubit inhomogeneous rates, coherent
+over-rotation, always-on $ZZ$ crosstalk, the two-level-system collision model, and
+both noise-scaling methods. It also records the circuit and ideal-value signatures
+on which the paired design of Section~\ref{sec:ch3_drift} depends.
+
+\lstinputlisting[language=Python, caption={code/simulate\_realistic.py},
+                 label={lst:simulate_realistic}]{code/simulate_realistic.py}
+
+\section{Non-Markovianity measurement}
+
+\texttt{nonmarkov\_check.py} evaluates the Breuer--Laine--Piilo measure on the idling
+register and sweeps the defect coupling. The \texttt{idle\_layer} function is the
+device noise map with all gates removed, which is the construction the argument of
+Section~\ref{sec:ch3_blp} requires.
+
+\lstinputlisting[language=Python, caption={code/nonmarkov\_check.py},
+                 label={lst:nonmarkov}]{code/nonmarkov_check.py}
+
+\section{Realistic-regime experiments}
+
+\texttt{experiments\_realistic.py} runs the scaling-method comparison, the Markovian
+control, the calibration-drift experiment and the shot-limited kernel study. The
+shot-limited kernel routine implements Eqs.~\eqref{eq:appA_kvar}
+and~\eqref{eq:appA_cost}, including the projection of the shot-estimated Gram matrix
+back onto the positive-semidefinite cone.
+
+\lstinputlisting[language=Python, caption={code/experiments\_realistic.py},
+                 label={lst:experiments_realistic}]{code/experiments_realistic.py}
+
+\section{Paired statistics and robustness}
+
+\texttt{stats\_util.py} implements the paired, circuit-grouped bootstrap on the
+difference of two RMSEs used for every comparison between methods or noise
+conditions. \texttt{robustness.py} repeats the benchmark over ten circuit-grouped
+splits, and \texttt{test\_folding.py} is the noise-free unit test of unitary
+folding.
+
+\lstinputlisting[language=Python, caption={code/stats\_util.py},
+                 label={lst:stats_util}]{code/stats_util.py}
+
+\lstinputlisting[language=Python, caption={code/robustness.py},
+                 label={lst:robustness}]{code/robustness.py}
+
+\lstinputlisting[language=Python, caption={code/test\_folding.py},
+                 label={lst:test_folding}]{code/test_folding.py}
+
+\section{Bandwidth sensitivity study}
+
+\texttt{bandwidth\_study.py} evaluates the fidelity kernel at fixed bandwidths,
+recording both the resulting error and the mean off-diagonal Gram matrix entry that
+quantifies concentration.
+
+\lstinputlisting[language=Python, caption={code/bandwidth\_study.py},
+                 label={lst:bandwidth}]{code/bandwidth_study.py}

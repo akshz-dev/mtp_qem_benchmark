@@ -1,0 +1,57 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%---Abstract---%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\thispagestyle{plain}
+\addcontentsline{toc}{chapter}{Abstract}
+
+\begin{center}
+\huge{\textbf{Abstract}}
+\end{center}
+\vspace{0.3cm}
+
+Hybrid quantum--classical machine-learning models are increasingly proposed for
+quantum error mitigation and syndrome decoding, but the evidence for them rests on
+inconsistent baselines, quantum cost that is rarely normalized against accuracy, and
+little testing outside the training distribution. This thesis is a benchmarking study
+designed to remove those three weaknesses.
+
+Mitigation is posed as regression from noise-scaled expectation values to the ideal
+value, on $4500$ circuit--observable pairs from two circuit families with exact
+reference values. Nine methods -- no mitigation, three zero-noise-extrapolation
+variants, three classical regressors, a fidelity quantum kernel and a data-reuploading
+variational circuit -- are compared on circuit-grouped folds with paired bootstrap
+tests, over ten splits and ten initialisation seeds. Two noise regimes are used: an
+idealized Markovian model, and a device-realistic model with inhomogeneous rates,
+coherent error, crosstalk, unitary folding, and non-Markovian memory from a
+two-level-system defect, measured with the Breuer--Laine--Piilo criterion
+($\mathcal{N} = 0.88$) and isolated by a reset control ($\mathcal{N} = 0$). A second
+track compares six decoders, one hybrid, against exact matching on $16$ million
+repetition-code shots.
+
+In-distribution, the three strongest learned methods (RMSE $0.0412$--$0.0436$) remove
+$41$--$44\%$ of the error left by the best extrapolation ($0.0737$), in every one of
+ten splits. The quantum kernel is tied with a classical neural network
+($0.0425 \pm 0.0012$ against $0.0426 \pm 0.0009$) at higher circuit cost; untuned
+bandwidth makes it $47\%$ worse than no mitigation, and the variational model's error
+ranges from $0.056$ to $0.151$ across seeds. On deeper circuits the neural and quantum
+models are worse than no mitigation, because depth and gate count fall outside the
+training range; without those inputs every learned method beats no mitigation.
+
+Realism changes the size of the advantage, not its sign: unitary folding halves the
+kernel's margin over linear extrapolation ($38\%$ to $18\%$), memory worsens every
+non-variational learned method but not extrapolation, and a $30\%$ recalibration
+costs most learned methods no resolvable accuracy. A shot-estimated kernel needs about $3 \times 10^8$ circuit executions
+per mitigated value to approach its simulator accuracy. In decoding, exact matching
+wins $33$ of $40$ configurations; learned decoders win only at distance $3$, though
+the neural decoder is about $740\times$ faster than a pure-Python matching
+implementation.
+
+Whether a learned method helps depends not on whether it is quantum, but on tuning,
+repeated initialisation, input coverage, encoded structure and realistic controls and
+cost accounting. All results are simulated, and the decoding track uses the
+repetition code in place of the surface code.
+
+\vspace{0.4cm}
+\noindent\textbf{Keywords:} quantum error mitigation, quantum error correction,
+quantum machine learning, zero-noise extrapolation, quantum kernel methods,
+variational quantum circuits, syndrome decoding, non-Markovian noise,
+benchmarking.

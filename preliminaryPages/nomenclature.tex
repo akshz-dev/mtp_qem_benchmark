@@ -1,0 +1,73 @@
+%\newpage
+
+\renewcommand{\nomname}{List of Symbols}
+\addcontentsline{toc}{chapter}{List of Symbols}
+\setlength{\columnsep}{4pc}
+\setstretch{0.5}
+
+% Refer to https://www.overleaf.com/learn/latex/Nomenclatures#Sorting_the_Entries for more info
+
+% Define nomenclature entries with grouping
+\renewcommand\nomgroup[1]{%
+  \item[\bfseries
+  \ifstrequal{#1}{Q}{Quantum states, operators and channels}{%
+  \ifstrequal{#1}{M}{Mitigation and noise parameters}{%
+  \ifstrequal{#1}{L}{Learning and evaluation}{}}}%
+]}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{multicols}{2}
+
+%%% Quantum states, operators and channels
+\nomenclature[Q, 01]{$\rho$}{Density matrix of a quantum state}
+\nomenclature[Q, 02]{$\rho_{\text{ideal}}$}{State produced by a noise-free circuit}
+\nomenclature[Q, 03]{$\rho_{\text{noisy}}$}{State produced by the noisy device}
+\nomenclature[Q, 04]{$O$}{Observable (a Pauli string in this work)}
+\nomenclature[Q, 05]{$X, Y, Z$}{Single-qubit Pauli operators}
+\nomenclature[Q, 06]{$\mathcal{E}$}{Quantum channel (completely positive trace-preserving map)}
+\nomenclature[Q, 07]{$K_i$}{Kraus operator of a channel}
+\nomenclature[Q, 08]{$\ket{\phi(x)}$}{Quantum state encoding the classical feature vector $x$}
+\nomenclature[Q, 09]{$n$}{Number of qubits}
+\nomenclature[Q, 10]{$d$}{Circuit depth in layers; code distance in Chapter~\ref{chap6:decoding}}
+
+%%% Mitigation quantities
+\nomenclature[M, 01]{$\mu_{\text{ideal}}$}{Noise-free expectation value $\mathrm{Tr}[O\rho_{\text{ideal}}]$}
+\nomenclature[M, 02]{$\mu_\lambda$}{Expectation value measured at noise scale $\lambda$}
+\nomenclature[M, 03]{$\widehat{\mu}$}{Mitigated estimator of the ideal expectation value}
+\nomenclature[M, 04]{$\lambda$}{Noise scale factor; $\lambda=1$ is the bare device}
+\nomenclature[M, 05]{$K$}{Number of noise scales measured per circuit}
+\nomenclature[M, 06]{$c_k$}{Extrapolation coefficient for noise scale $\lambda_k$}
+\nomenclature[M, 07]{$p_1$}{Depolarizing probability per single-qubit gate}
+\nomenclature[M, 08]{$p_2$}{Depolarizing probability per two-qubit gate}
+\nomenclature[M, 09]{$\gamma$}{Amplitude-damping rate per qubit per layer}
+\nomenclature[M, 10]{$N$}{Number of measurement shots per expectation value}
+\nomenclature[M, 11]{$p$}{Physical error rate per data qubit and per syndrome measurement (phenomenological noise)}
+
+%%% Learning and evaluation
+\nomenclature[L, 01]{$x$}{Feature vector supplied to a learned mitigation model}
+\nomenclature[L, 02]{$f$}{Mitigation map from measurements to the mitigated estimate}
+\nomenclature[L, 03]{$k(x,x')$}{Kernel function}
+\nomenclature[L, 04]{$K$}{Gram matrix of a kernel (context distinguishes it from the scale count)}
+\nomenclature[L, 05]{$\beta$}{Quantum-kernel bandwidth}
+\nomenclature[L, 06]{$\alpha$}{Ridge regularization strength}
+\nomenclature[L, 07]{$w_{\ell q}, b_{\ell q}$}{Trainable weights and biases of layer $\ell$, qubit $q$}
+\nomenclature[L, 08]{$M$}{Number of rows (circuit--observable pairs) in a fold}
+\nomenclature[L, 09]{$R^2$}{Coefficient of determination}
+\nomenclature[L, 10]{$p_{L}$}{Logical error rate per shot}
+
+\end{multicols}
+
+
+
+
+
+%\printglossary[type=\acronymtype]
+%\printglossary[title={List of Abbreviations}] %Generate List of Abbreviations
+%\renewcommand{\nomname}{List of Symbols}
+%\renewcommand{\nomname}{Nomenclature}
+%\begin{singlespace}
+%\printnomenclature
+%\end{singlespace}
+
+
+% Add the Print the nomenclature at the end 
+\printnomenclature

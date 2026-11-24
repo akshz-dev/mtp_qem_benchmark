@@ -1,0 +1,158 @@
+{
+  "Greedy": {
+    "crossings": {
+      "d3-d5": 0.09339640699316401,
+      "d5-d7": 0.0696051865811155,
+      "d7-d9": 0.07712604814307303
+    },
+    "p_th_crossing": 0.08004254723911751,
+    "p_th_fss": 0.07593867305390113,
+    "nu": 2.0078922089273767,
+    "fss_rss": 0.004209171283491616,
+    "n_fss_points": 36,
+    "bracketed": true,
+    "larger_d_better": {
+      "0.01": true,
+      "0.02": true,
+      "0.03": true,
+      "0.04": true,
+      "0.05": true,
+      "0.06": true,
+      "0.08": true,
+      "0.1": false,
+      "0.12": false,
+      "0.15": false
+    },
+    "no_threshold_in_window": false
+  },
+  "LogReg": {
+    "crossings": {
+      "d3-d5": null,
+      "d5-d7": null,
+      "d7-d9": null
+    },
+    "p_th_crossing": null,
+    "p_th_fss": null,
+    "nu": null,
+    "fss_rss": null,
+    "n_fss_points": 40,
+    "bracketed": false,
+    "larger_d_better": {
+      "0.01": false,
+      "0.02": false,
+      "0.03": false,
+      "0.04": false,
+      "0.05": false,
+      "0.06": false,
+      "0.08": false,
+      "0.1": false,
+      "0.12": false,
+      "0.15": false
+    },
+    "no_threshold_in_window": true
+  },
+  "LogReg-PCA": {
+    "crossings": {
+      "d3-d5": null,
+      "d5-d7": null,
+      "d7-d9": null
+    },
+    "p_th_crossing": null,
+    "p_th_fss": null,
+    "nu": null,
+    "fss_rss": null,
+    "n_fss_points": 40,
+    "bracketed": false,
+    "larger_d_better": {
+      "0.01": false,
+      "0.02": false,
+      "0.03": false,
+      "0.04": false,
+      "0.05": false,
+      "0.06": false,
+      "0.08": false,
+      "0.1": false,
+      "0.12": false,
+      "0.15": false
+    },
+    "no_threshold_in_window": true
+  },
+  "MLP": {
+    "crossings": {
+      "d3-d5": 0.07013665959946955,
+      "d5-d7": null,
+      "d7-d9": null
+    },
+    "p_th_crossing": 0.07013665959946955,
+    "p_th_fss": 0.02308087540676945,
+    "nu": 1.1896879740251578,
+    "fss_rss": 0.02809344738603461,
+    "n_fss_points": 33,
+    "bracketed": true,
+    "larger_d_better": {
+      "0.01": false,
+      "0.02": false,
+      "0.03": false,
+      "0.04": false,
+      "0.05": false,
+      "0.06": false,
+      "0.08": false,
+      "0.1": false,
+      "0.12": false,
+      "0.15": false
+    },
+    "no_threshold_in_window": false
+  },
+  "MWPM": {
+    "crossings": {
+      "d3-d5": 0.0950568913607314,
+      "d5-d7": 0.10526782242636677,
+      "d7-d9": 0.10414872360936846
+    },
+    "p_th_crossing": 0.1014911457988222,
+    "p_th_fss": 0.09762988564199179,
+    "nu": 1.870829997485676,
+    "fss_rss": 0.0006704097258075928,
+    "n_fss_points": 26,
+    "bracketed": true,
+    "larger_d_better": {
+      "0.01": true,
+      "0.02": true,
+      "0.03": true,
+      "0.04": true,
+      "0.05": true,
+      "0.06": true,
+      "0.08": true,
+      "0.1": true,
+      "0.12": false,
+      "0.15": false
+    },
+    "no_threshold_in_window": false
+  },
+  "VQC-PCA": {
+    "crossings": {
+      "d3-d5": null,
+      "d5-d7": null,
+      "d7-d9": null
+    },
+    "p_th_crossing": null,
+    "p_th_fss": null,
+    "nu": null,
+    "fss_rss": null,
+    "n_fss_points": 39,
+    "bracketed": false,
+    "larger_d_better": {
+      "0.01": false,
+      "0.02": false,
+      "0.03": false,
+      "0.04": false,
+      "0.05": false,
+      "0.06": false,
+      "0.08": false,
+      "0.1": false,
+      "0.12": false,
+      "0.15": false
+    },
+    "no_threshold_in_window": true
+  }
+}

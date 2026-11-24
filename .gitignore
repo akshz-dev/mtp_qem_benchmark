@@ -1,0 +1,36 @@
+# LaTeX build products
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.ilg
+*.lof
+*.log
+*.lot
+*.nlo
+*.nls
+*.out
+*.synctex.gz
+*.toc
+*.xdv
+*.run.xml
+*-blx.bib
+# Thesis.pdf is the compiled deliverable and IS tracked
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Scratch run directory and regenerable raw data
+run/
+qec_data/
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

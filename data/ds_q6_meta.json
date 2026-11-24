@@ -1,0 +1,31 @@
+{
+  "wires": 6,
+  "noise_mult": 1.0,
+  "base_noise": {
+    "p1": 0.002,
+    "p2": 0.02,
+    "gamma": 0.004
+  },
+  "effective_noise": {
+    "p1": 0.002,
+    "p2": 0.02,
+    "gamma": 0.004
+  },
+  "per_family": 250,
+  "shots": 4096,
+  "seed": 20260912,
+  "lambdas": [
+    1.0,
+    2.0,
+    3.0
+  ],
+  "depths": [
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "n_circuits": 500,
+  "n_rows": 2500
+}

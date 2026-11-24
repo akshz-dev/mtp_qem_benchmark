@@ -1,0 +1,198 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% M.Tech Thesis -- Indian Institute of Technology Jodhpur
+%%
+%% Built on the (unofficial) IITJ thesis template by Chandan Mukherjee
+%% (chandan.2@iitj.ac.in), which is in turn based on templates by Steve Gunn,
+%% Ajit Kumar Sahoo and Anand Mishra. Template license: CC BY-NC-SA 3.0.
+%%
+%% COMPILE WITH LuaLaTeX (fontspec is required).
+%%   lualatex Thesis  ->  bibtex Thesis  ->  lualatex Thesis  ->  lualatex Thesis
+%% or simply:  latexmk -lualatex Thesis.tex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[11pt, openright, twoside]{report}
+\usepackage{subfiles}
+\usepackage[nohyperlinks]{acronym}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\hypersetup{hidelinks}          % links stay clickable; no red/green boxes
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{chngcntr}
+\counterwithin{table}{section}
+\counterwithin{figure}{section}
+\usepackage{afterpage}
+\usepackage[export]{adjustbox}
+\usepackage{datetime}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{fontspec}
+\usepackage{tocbibind}
+\usepackage{nomencl}
+\usepackage{etoolbox}
+\makenomenclature
+
+%%%%%%%%%%%% packages added for this thesis %%%%%%%%%%%%
+\usepackage{amsmath}          % equation environments, \text in math
+\usepackage{amssymb}          % \mathbb, \lesssim
+\usepackage{braket}           % Dirac notation: \ket, \bra, \braket
+\usepackage{siunitx}          % aligned numeric columns in result tables
+\usepackage{array}             % >{\raggedright} column modifiers
+\usepackage{longtable}        % multi-page appendix tables
+\usepackage{listings}         % code listings in Appendix C
+\usepackage{xcolor}
+\usepackage{caption}
+\captionsetup{font=small}
+\sisetup{round-mode=places, round-precision=4, table-format=1.4}
+
+\lstdefinestyle{thesiscode}{
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color[rgb]{0.13,0.29,0.53},
+  commentstyle=\color[rgb]{0.35,0.35,0.35}\itshape,
+  stringstyle=\color[rgb]{0.31,0.45,0.18},
+  numbers=left, numberstyle=\ttfamily\tiny\color{gray}, numbersep=6pt,
+  breaklines=true, breakatwhitespace=false, showstringspaces=false,
+  frame=single, rulecolor=\color{gray}, tabsize=4, columns=fullflexible,
+  literate={-}{-}1
+}
+\lstset{style=thesiscode, language=Python}
+% ---------------------------   Packages end here ------------------------
+
+%%%%%%%%%%%%%%%%%%%%  Format for new dates  %%%%%%%%%%%%%%%%
+\newdateformat{monthyeardate}{%
+  \monthname[\THEMONTH], \THEYEAR}
+\newcommand\myemptypage{
+    \null
+    \thispagestyle{empty}
+    \newpage
+    }
+
+\newgeometry{
+	paper=a4paper,
+        total={210mm,297mm },
+	inner=3.23cm, % Inner margin
+	outer=1.5cm,  % Outer margin
+	bindingoffset=.5cm,
+	top=2.5cm,
+	bottom=2.5cm,
+}
+\usepackage{setspace}
+\setstretch{1.5}
+\usepackage[explicit]{titlesec}
+
+% %%%%%%%%% formatting the chapters  %%%%%%%
+\titleformat{\chapter}[display]
+{\fontsize{27}{27}\sffamily\bfseries\filleft}{\hfil \thechapter}{0pt}{{#1}}
+
+%%%%%%%%% formatting the sections  %%%%%%
+\titleformat{\section}{\Large\bfseries\sffamily}{\thesection}{0.5em}{\MakeUppercase{#1}}
+\titleformat{\subsection}{\large\bfseries\sffamily}{\thesubsection}{0.5em}{\MakeUppercase{#1}}
+\titleformat{\subsubsection}{\sffamily}{\thesubsubsection}{0.5em}{\MakeUppercase{#1}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% THESIS METADATA: THE SEVEN MACROS BELOW %%%%%%%%
+%%%%%%%% (values taken from the title page of the compiled v01 PDF) %%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\ttitle}{Benchmarking Hybrid Quantum--Classical Machine Learning
+for Quantum Error Mitigation and Syndrome Decoding}
+\newcommand{\supname}{Dr. Subhashish Banerjee}
+\newcommand{\degree}{Master of Technology}
+\newcommand{\authorname}{Abhishek Kumar Singh}
+\newcommand{\rn}{M23CSA503}
+\newcommand{\univname}{IIT Jodhpur}
+\newcommand{\deptname}{Computer Science and Engineering}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Three-level table/figure numbers (e.g. 5.11.2) need a wider number column in the
+%% List of Tables / List of Figures than the report-class default of 2.3em.
+\makeatletter
+\renewcommand*\l@figure{\@dottedtocline{1}{1.5em}{3.3em}}
+\renewcommand*\l@table{\@dottedtocline{1}{1.5em}{3.3em}}
+\makeatother
+
+\begin{document}
+\include{preliminaryPages/coverPage}
+\myemptypage
+\pagenumbering{roman}
+\setcounter{page}{3}
+\include{preliminaryPages/declaration}
+\myemptypage
+\include{preliminaryPages/certificate}
+\myemptypage
+\include{preliminaryPages/abstract}
+\myemptypage
+\include{preliminaryPages/acknowledgments}
+\myemptypage
+\include{preliminaryPages/dedication}   %%%% Optional %%%%%
+\begin{flushright}
+\tableofcontents
+\clearpage
+\listoffigures
+\listoftables
+\include{preliminaryPages/nomenclature}
+\include{preliminaryPages/abbreviation}
+\end{flushright}
+
+% resume page numbering for the rest of the document
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Chapter 1 (Introduction)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subfile{chapters/chapter1.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Chapter 2 (Background and Literature Review)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subfile{chapters/chapter2.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Chapter 3 (Methodology)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subfile{chapters/chapter3.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Chapter 4 (Experimental Setup and Implementation)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subfile{chapters/chapter4.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Chapter 5 (Results: Error Mitigation Benchmark)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subfile{chapters/chapter5.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Chapter 6 (Results: Machine-Learning Syndrome Decoding)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subfile{chapters/chapter6.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Chapter 7 (Conclusions and Future Scope)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subfile{chapters/chapter7.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Appendices
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\appendix
+\include{appendices/AppendixA}
+\include{appendices/AppendixB}
+\include{appendices/AppendixC}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Publications
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\include{chapters/publications}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Bibliography
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{unsrt}
+\bibliography{chapters/refs}
+
+%----------------------------------------------------------------------------------------
+\end{document}

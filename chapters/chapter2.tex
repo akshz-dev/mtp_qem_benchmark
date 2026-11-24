@@ -1,0 +1,904 @@
+%%%%%%%%%%%%%%%%%%%%%---Chapter2 Formatting---%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[Thesis.tex]{subfiles}
+\begin{document}
+\newpage
+\setcounter{chapter}{1} %%Chapter Numbering
+\titleformat{\chapter}[display]
+{\sffamily\fontsize{27}{27}\bfseries\filleft}{\thechapter}{0pt}{{#1}}
+\thispagestyle{empty}
+\chapter{Background and Literature Review}\label{chap2:background}
+
+This chapter reviews the three bodies of work that this thesis draws on and,
+in part, argues against. The first is the characterisation of noise in
+pre-fault-tolerant quantum processors: what the dominant error mechanisms are,
+how they are modelled as quantum channels, and how they are measured. The
+second is quantum error mitigation (QEM), the family of post-processing
+techniques that trade circuit repetitions for reduced bias in estimated
+observables, and in particular the branch of that literature which replaces an
+analytic extrapolation with a regression model learned from data. The third is
+quantum machine learning (QML), which supplies the hybrid models benchmarked
+here --- fidelity-kernel methods and data-reuploading variational circuits ---
+together with a substantial body of negative and cautionary results about when
+such models can be expected to help. A final strand, treated separately,
+concerns decoding for quantum error correction (QEC), where machine-learned
+decoders are a mature and well-benchmarked subfield and therefore a useful
+methodological mirror for the mitigation work.
+
+The chapter is organised so that the research gap identified in
+Section~\ref{sec2:gap} follows from the review rather than being asserted on
+top of it. Three recurring weaknesses in the learning-based mitigation
+literature are traced through Sections~\ref{sec2:qem}--\ref{sec2:qml}:
+inconsistent and often weak baselines, the almost universal absence of
+cost normalisation against the circuit evaluations a method consumes, and the
+near-total absence of tests outside the training distribution.
+
+\section{Noise in pre-fault-tolerant quantum processors}\label{sec2:noise}
+
+\subsection{Channels, Kraus operators and the observable-level picture}
+
+The standard description of an open quantum system is the completely positive
+trace-preserving (CPTP) map. For a density operator $\rho$ on a
+$2^{n}$-dimensional Hilbert space, any physical noise process can be written
+in Kraus form \cite{nielsen2012book}
+\begin{equation}
+  \mathcal{E}(\rho) \;=\; \sum_{k} K_{k}\,\rho\,K_{k}^{\dagger},
+  \qquad \sum_{k} K_{k}^{\dagger}K_{k} \;=\; \mathbb{I}.
+  \label{eq2:kraus}
+\end{equation}
+Three special cases dominate the modelling of superconducting and trapped-ion
+hardware. Global depolarising noise of strength $p$,
+\begin{equation}
+  \mathcal{E}_{\mathrm{dep}}(\rho) \;=\; (1-p)\,\rho \;+\; p\,\frac{\mathbb{I}}{2^{n}},
+  \label{eq2:depol}
+\end{equation}
+is the workhorse effective model because deep random circuits drive many
+realistic error processes towards it; amplitude damping with rate
+$\gamma = 1 - e^{-t/T_{1}}$ has Kraus operators
+$K_{0} = \mathrm{diag}(1,\sqrt{1-\gamma})$ and
+$K_{1} = \sqrt{\gamma}\,\lvert 0\rangle\langle 1\rvert$; and pure dephasing is
+the Pauli channel with $K_{0}=\sqrt{1-p_{z}}\,\mathbb{I}$,
+$K_{1}=\sqrt{p_{z}}\,Z$. Pauli channels in general,
+\begin{equation}
+  \mathcal{E}_{\mathrm{Pauli}}(\rho) \;=\; \sum_{a \in \{I,X,Y,Z\}^{n}} p_{a}\, P_{a}\,\rho\,P_{a}^{\dagger},
+  \label{eq2:pauli}
+\end{equation}
+are important out of proportion to their physical realism, because they are
+efficiently learnable, efficiently invertible in the Pauli basis, and can be
+enforced on hardware by randomised compiling \cite{wallman2016noise}, which
+twirls coherent errors into stochastic Pauli errors at no additional two-qubit
+gate cost.
+
+What matters for this thesis is not the full channel but its effect on a single
+scalar. For an observable $O$ and an ideal $n$-qubit state
+$\rho_{\mathrm{ideal}} = U\lvert 0\rangle\langle 0\rvert U^{\dagger}$ produced
+by a target circuit $U$, the noisy device returns
+\begin{equation}
+  \langle O\rangle_{\mathrm{noisy}} \;=\; \mathrm{Tr}\!\left[\,O\,\widetilde{\mathcal{E}}(\rho_{\mathrm{ideal}})\,\right]
+  \;=\; \langle O\rangle_{\mathrm{ideal}} \;+\; b(\lambda),
+  \label{eq2:bias}
+\end{equation}
+where $\widetilde{\mathcal{E}}$ is the composition of the per-layer noise
+channels interleaved with the ideal layers and $b(\lambda)$ is a bias that
+depends on an effective noise strength $\lambda$. Under global depolarising
+noise and a traceless observable, Eq.~\eqref{eq2:bias} collapses to the
+particularly simple multiplicative form
+$\langle O\rangle_{\mathrm{noisy}} = (1-p)\,\langle O\rangle_{\mathrm{ideal}}$.
+Every mitigation method reviewed below is, at bottom, an estimator of
+$\langle O\rangle_{\mathrm{ideal}}$ built from measurements at one or more
+values of $\lambda$, and every one of them pays for reduced bias with increased
+variance at fixed shot budget. The reviews by Preskill
+\cite{preskill2018nisq}, Bharti et al.\ \cite{bharti2022noisy} and Cai et al.\
+\cite{cai2023review} frame the same trade-off at the level of whole
+algorithms.
+
+\subsection{Characterisation: from averaged fidelities to learned noise models}
+
+Mitigation quality is bounded by how well the noise is known, so the
+characterisation literature is a direct input. Randomised benchmarking (RB)
+estimates an average gate error from the exponential decay of survival
+probability over random Clifford sequences of increasing length
+\cite{knill2008randomized}; its appeal is that the extracted decay rate is
+insensitive to state-preparation and measurement (SPAM) errors and requires no
+tomographic reconstruction. RB in its standard form returns a single averaged
+number and is therefore blind to the structure of the error --- it cannot
+distinguish coherent over-rotation from stochastic Pauli noise of the same
+average fidelity, a distinction that matters enormously for whether
+extrapolation-based mitigation behaves smoothly in $\lambda$.
+
+Gate set tomography (GST) addresses this by self-consistently estimating gates,
+preparations and measurements up to gauge freedom, yielding full process
+matrices rather than scalar fidelities \cite{nielsen2021gst}. GST is
+informative but scales poorly, which is why the most consequential recent
+development for mitigation is the efficient learning of \emph{structured}
+sparse noise models. Harper, Flammia and Wallman showed that the Pauli error
+rates of a full $n$-qubit Pauli channel can be estimated efficiently from
+cycle-benchmarking-style experiments \cite{harper2020efficient}, and van den
+Berg et al.\ turned this into a practical device-level pipeline by fitting a
+sparse Pauli--Lindblad generator whose support is restricted to the
+connectivity graph \cite{vandenberg2023probabilistic}. This learned-model route
+is what makes probabilistic error cancellation deployable at the scale of a
+hundred qubits, and it is the reason mitigation on current hardware is best
+understood as a two-stage procedure: learn a noise model, then invert or
+extrapolate through it. Learning-based mitigation of the kind benchmarked in
+this thesis is a third option --- learn the map from noisy to ideal
+expectation values directly, bypassing the explicit channel model --- and its
+central empirical question is whether that shortcut generalises.
+
+A practical corollary of the characterisation literature is that the effective
+noise seen by a mitigation routine is partly a matter of compilation choice
+rather than device physics. Coherent errors accumulate quadratically in
+amplitude and are not described by a Pauli channel, so their contribution to
+the bias $b(\lambda)$ in Eq.~\eqref{eq2:bias} is neither monotone nor smooth
+in the number of repetitions of a gate; twirling them into stochastic Pauli
+noise by randomised compiling restores the smooth, approximately exponential
+$\lambda$-dependence on which both extrapolation and learned regression
+implicitly rely \cite{wallman2016noise}. Two consequences follow for the
+benchmark reported in this thesis. First, the noise model used for a simulation
+study must be stated precisely, because the ranking of mitigation methods can
+depend on whether the dominant error is coherent or stochastic. Second, an
+empirical claim that a learned mitigator beats an analytic extrapolant is a
+claim about a specific noise structure unless the experiment varies that
+structure deliberately. The reviews of the NISQ programme by Preskill
+\cite{preskill2018nisq} and Bharti et al.\ \cite{bharti2022noisy}, and of
+mitigation specifically by Cai et al.\ \cite{cai2023review}, all treat the
+noise model as the central modelling assumption rather than an implementation
+detail; much of the learned-mitigation literature does not.
+
+\section{Quantum error mitigation}\label{sec2:qem}
+
+\subsection{Zero-noise extrapolation: estimator, bias and variance}
+
+Zero-noise extrapolation (ZNE) was introduced independently by Temme, Bravyi
+and Gambetta \cite{temme2017error} and, in the guise of active error
+minimisation for variational simulators, by Li and Benjamin
+\cite{li2017efficient}. The construction assumes that the expectation value
+can be measured not only at the native noise strength $\lambda_{0}$ but also at
+amplified strengths $\lambda_{i} = c_{i}\lambda_{0}$ with known scale factors
+$c_{i} \ge 1$, and that the resulting family of estimates is a smooth function
+of $\lambda$ admitting a series expansion
+\begin{equation}
+  \langle O\rangle(\lambda) \;=\; \langle O\rangle_{\mathrm{ideal}}
+  \;+\; \sum_{k=1}^{m} a_{k}\,\lambda^{k} \;+\; \mathcal{O}(\lambda^{m+1}).
+  \label{eq2:zne-series}
+\end{equation}
+Given $m+1$ measurements at distinct scale factors, the Richardson
+extrapolant is the unique degree-$m$ polynomial interpolant evaluated at
+$\lambda = 0$, which can be written as a fixed linear combination of the
+measured values,
+\begin{equation}
+  \widehat{\langle O\rangle}_{\mathrm{ZNE}} \;=\; \sum_{i=0}^{m} \gamma_{i}\,\langle O\rangle(c_{i}\lambda_{0}),
+  \qquad
+  \gamma_{i} \;=\; \prod_{j \ne i} \frac{c_{j}}{c_{j}-c_{i}},
+  \qquad \sum_{i} \gamma_{i} = 1 .
+  \label{eq2:richardson}
+\end{equation}
+Two properties of Eq.~\eqref{eq2:richardson} govern everything that follows.
+First, the residual bias is
+$\mathcal{O}(\lambda_{0}^{m+1})$ only if the expansion~\eqref{eq2:zne-series}
+is valid over the whole sampled range; when the true dependence is not
+polynomial --- and for deep circuits it is typically closer to an exponential
+decay --- Richardson extrapolation of increasing order does not converge to
+the noiseless value but instead amplifies model misspecification. Second, the
+coefficients $\gamma_{i}$ alternate in sign and grow with $m$, so the variance
+of the estimator is inflated by
+$\sum_{i}\gamma_{i}^{2}$ relative to a single measurement. Higher-order ZNE
+therefore buys bias reduction at a quantifiable and rapidly worsening
+statistical price, which is the reason practical implementations rarely go
+beyond $m = 2$ or $3$.
+
+Recognising the exponential character of noise accumulation, Endo, Benjamin and
+Li fitted decaying exponentials rather than polynomials
+\cite{endo2018practical}, and Cai generalised this to multi-exponential
+ans\"atze with several decay constants, showing on both simulation and hardware
+that a sum of exponentials tracks the observed $\lambda$-dependence of deep
+circuits better than either a polynomial or a single exponential
+\cite{cai2021multiexponential}. The comparison between linear, Richardson and
+exponential extrapolation is thus a comparison of prior assumptions about the
+functional form of $b(\lambda)$, evaluated at the same measurement cost; this
+thesis retains all three as analytic baselines for exactly that reason.
+
+\subsection{How noise is amplified}\label{sec:ch2_noise_amplification}
+
+ZNE requires a knob for $\lambda$, and the three established knobs are not
+equivalent. Kandala et al.\ implemented the original proposal by stretching
+the microwave pulses that implement each gate, so that a gate of nominal
+duration $t$ is executed over $ct$ while the rotation angle is held fixed
+\cite{kandala2019extends}. This is the most faithful realisation of
+``the same circuit under more noise'' because it scales the physical
+decoherence exposure directly, and it was used to extend the reach of a
+variational chemistry calculation on a superconducting device. It also demands
+pulse-level control and an assumption that the noise per unit time is
+stretch-invariant.
+
+Digital alternatives replace pulse control with circuit rewriting.
+Unitary folding maps each gate or each circuit layer $G \mapsto G G^{\dagger}
+G$, which is logically the identity but triples the noise exposure;
+Giurgica-Tiron et al.\ formalised local and global folding, showed how
+fractional scale factors are obtained by folding a random subset of gates, and
+benchmarked the resulting estimators \cite{giurgicatiron2020digital}. He et
+al.\ studied the closely related strategy of inserting identity pairs
+(\textit{e.g.}\ pairs of CNOTs) and pointed out that the effective noise
+scaling achieved is only approximately linear in the number of insertions,
+because inserted gates need not carry the same error profile as the gates they
+are meant to emulate \cite{he2020zero}. The \textsc{Mitiq} package made these
+scaling and extrapolation choices reproducible and interoperable across
+back-ends \cite{larose2022mitiq}, which is why folding-based ZNE has become the
+de facto baseline in the mitigation literature. The third knob, parameter-noise
+scaling, perturbs gate rotation angles to emulate stronger error and is
+likewise available as a standard scaling method \cite{larose2022mitiq}; it is
+cheap but conflates coherent and incoherent contributions and is therefore
+poorly suited to devices whose dominant error is stochastic.
+
+The practical consequence, and one that the benchmarking design of this thesis
+relies on, is that the ZNE estimator consumes a number of circuit evaluations
+equal to the number of scale factors. A three-point extrapolation is three
+circuit executions per estimated observable, not one. Any comparison between
+ZNE and a learned mitigator that ignores this factor is comparing methods at
+different budgets.
+
+\subsection{Probabilistic error cancellation and noise-model inversion}
+
+Probabilistic error cancellation (PEC) takes the opposite approach: rather than
+extrapolating in a scalar, it inverts the learned noise channel exactly. If the
+noise $\mathcal{E}$ is known, its inverse can be decomposed as a
+quasiprobability combination of implementable operations
+$\{\mathcal{O}_{i}\}$,
+\begin{equation}
+  \mathcal{E}^{-1} \;=\; \sum_{i} q_{i}\,\mathcal{O}_{i},
+  \qquad q_{i} \in \mathbb{R},
+  \qquad \sum_{i} q_{i} = 1,
+  \qquad \gamma \;\equiv\; \sum_{i} \lvert q_{i}\rvert \;\ge\; 1,
+  \label{eq2:pec}
+\end{equation}
+and an unbiased estimate of the ideal expectation value is obtained by sampling
+$\mathcal{O}_{i}$ with probability $\lvert q_{i}\rvert/\gamma$ and reweighting
+each shot by $\gamma\,\mathrm{sgn}(q_{i})$
+\cite{temme2017error,endo2018practical}. PEC is unbiased when the noise model
+is exact, and its cost is explicit: the variance is inflated by $\gamma^{2}$,
+and $\gamma$ grows exponentially in the circuit volume. Van den Berg et al.\
+made PEC practical at scale by fitting sparse Pauli--Lindblad models and
+sampling the inverse of the learned generator
+\cite{vandenberg2023probabilistic}, and Kim et al.\ combined learned-noise
+inversion with amplification to obtain expectation values on a 127-qubit
+processor for circuits beyond exact classical simulation
+\cite{kim2023utility}. That experiment is the clearest statement of the
+current state of the art and of its price: accuracy is bought with sampling
+overhead that grows with the volume of the circuit being mitigated.
+
+\subsection{Readout, symmetry and purification-based methods}
+
+Measurement errors are a separately structured and comparatively benign error
+source. If the assignment matrix $A$ with entries
+$A_{ij} = \Pr(\text{observe }i \mid \text{prepared }j)$ is estimated from
+calibration circuits, corrected probability vectors follow from
+$\hat{p} = A^{-1} p_{\mathrm{meas}}$, usually with a constrained least-squares
+solve to keep $\hat{p}$ a distribution. The obstacle is that $A$ has
+$4^{n}$ entries; Nation et al.\ removed this obstacle with a
+matrix-free formulation that restricts attention to the subspace of observed
+bit strings and solves the system iteratively, making readout mitigation
+routine at the scale of tens of qubits \cite{nation2021scalable}.
+
+Symmetry verification exploits the fact that many circuits of interest conserve
+a known quantity, such as particle number in a fermionic simulation.
+Bonet-Monroig et al.\ showed that measuring the symmetry operator and
+discarding or post-selecting runs that violate it removes a substantial
+fraction of the error at very low cost, and that it composes with
+extrapolation \cite{bonetmonroig2018symmetry}. A related family of methods
+attacks the problem at the level of the state rather than the observable:
+virtual distillation estimates
+$\mathrm{Tr}[O\rho^{M}]/\mathrm{Tr}[\rho^{M}]$ from $M$ copies of the noisy
+state, exponentially suppressing the contribution of non-dominant eigenvectors
+of $\rho$ and thereby the incoherent error, at the cost of additional qubits
+and entangling operations between copies \cite{huggins2021virtual}. These
+methods are complementary to ZNE rather than competitive with it, and their
+relevance here is that they illustrate the general pattern: each mitigation
+technique defines its own resource currency --- extra scale factors, extra
+shots with sign weights, extra copies, discarded runs --- and comparisons are
+meaningful only once that currency is made explicit.
+
+\subsection{Sampling cost and fundamental limits}
+
+The theoretical literature has made the pessimistic side of this trade-off
+precise. Takagi et al.\ derived general lower bounds on the sampling cost of
+any error mitigation protocol that is required to produce an unbiased
+estimator, showing that the overhead must grow exponentially in circuit depth
+for broad classes of noise \cite{takagi2022fundamental}. Quek et al.\
+subsequently tightened the picture considerably: for local depolarising noise
+at constant rate, the number of circuit executions any mitigation strategy
+needs grows exponentially with depth, and beyond a depth threshold the noisy
+device becomes effectively useless for estimating observables no matter how
+much classical post-processing is applied \cite{quek2024exponentially}. The
+results are asymptotic statements about worst-case families and do not forbid
+useful mitigation at the modest depths accessible today --- Kim et al.'s
+experiment is the counterpoint \cite{kim2023utility} --- but they do settle the
+question of whether mitigation can substitute for error correction: it cannot.
+They also carry a methodological lesson for benchmarking. If the cost of
+mitigation is the central theoretical quantity, then an empirical comparison
+that reports only accuracy, with no accounting of the circuit evaluations
+consumed, is measuring the less interesting half of the problem.
+
+\subsection{Composition and the common currency of circuit evaluations}
+
+The methods above are frequently composed: symmetry post-selection before
+extrapolation \cite{bonetmonroig2018symmetry}, readout correction before
+either \cite{nation2021scalable}, learned Pauli-channel inversion combined
+with amplification \cite{kim2023utility}, or exponential fits layered on
+purified estimates \cite{huggins2021virtual}. Composition is where the
+accounting problem becomes acute, because each stage multiplies the sampling
+overhead: if stage $j$ inflates the variance by a factor $\kappa_{j}$, the
+total shot requirement to reach a target standard error scales as
+$\prod_{j}\kappa_{j}$, and the reported accuracy of a composite pipeline is
+meaningless without that product. Cai et al.\ organise the whole field around
+exactly this bias--variance--overhead structure \cite{cai2023review}, and the
+\textsc{Mitiq} implementation makes the composition explicit in software by
+separating the noise-scaling executor from the inference step
+\cite{larose2022mitiq}.
+
+For the purposes of this thesis, the useful common currency is the number of
+distinct circuit executions required per estimated expectation value, holding
+the per-circuit shot count fixed. On this measure, the unmitigated estimate
+costs one; an $m+1$-point extrapolation costs $m+1$ regardless of the
+functional form fitted \cite{endo2018practical,cai2021multiexponential}; a
+regressor whose input features are noisy expectation values at several noise
+levels costs one per feature; and a hybrid quantum model costs the same as its
+classical counterpart plus the executions needed to evaluate its feature map
+or ansatz. Expressing every method in this currency is what makes the nine-way
+comparison in this thesis interpretable, and it is what most of the studies
+reviewed in the next section omit.
+
+\section{Learning-based and machine-learning-based error mitigation}\label{sec2:mlqem}
+
+The methods of Section~\ref{sec2:qem} share a common structure: a fixed
+estimator, derived from an assumed functional form or an explicit noise model,
+applied to measurements of the circuit of interest. Learning-based mitigation
+replaces the fixed estimator with a function fitted to data. Write
+$\mathbf{x}$ for a vector of features measured on the noisy device --- most
+often the noisy expectation value itself, optionally together with values at
+amplified noise, circuit metadata, or related observables --- and
+$y = \langle O\rangle_{\mathrm{ideal}}$ for the target. The mitigator is a
+regression function $f_{\theta}$ trained by empirical risk minimisation over
+training pairs generated from circuits whose exact answers are known,
+\begin{equation}
+  \theta^{\star} \;=\; \arg\min_{\theta}\;
+  \frac{1}{N}\sum_{i=1}^{N}\bigl(f_{\theta}(\mathbf{x}_{i}) - y_{i}\bigr)^{2}
+  \;+\; \Omega(\theta),
+  \label{eq2:erm}
+\end{equation}
+with $\Omega$ a regulariser. The whole approach therefore rests on two
+questions that are statistical rather than quantum-mechanical: where do the
+training labels $y_{i}$ come from, and over what distribution of circuits is
+the fitted $f_{\theta^{\star}}$ expected to remain valid?
+
+\subsection{Classically simulable training data: Clifford data regression and its descendants}
+
+The answer to the first question that unlocked the field is near-Clifford
+circuit construction. Czarnik et al.\ proposed Clifford data regression (CDR),
+which builds training circuits that are structurally similar to the target
+circuit but contain few enough non-Clifford gates to be simulated classically
+by stabiliser methods, giving exact labels $X^{\mathrm{exact}}_{i}$ alongside
+device measurements $X^{\mathrm{noisy}}_{i}$; a linear ansatz
+$X^{\mathrm{exact}} \approx a X^{\mathrm{noisy}} + b$ is then fitted and
+applied to the target circuit. They reported an order-of-magnitude error
+reduction for a ground-state energy problem on 16 qubits of an IBMQ device and
+on a 64-qubit noisy simulator, and analysed performance as a function of qubit
+count, depth, and the number of non-Clifford gates \cite{czarnik2021clifford}.
+Strikis et al.\ used the same near-Clifford substitution trick for a different
+purpose: instead of fitting a scalar correction, they learn the
+quasiprobability compensation strategy itself, so that PEC-style cancellation
+becomes possible without a prior characterisation of the noise
+\cite{strikis2021learning}. Lowe et al.\ then unified the two branches of
+data-driven mitigation. Their variable-noise CDR (vnCDR) generates training
+data both by near-Clifford substitution and by varying the noise level of those
+training circuits, so that the fitted model has access to the same
+$\lambda$-dependence that ZNE exploits. On an 8-qubit Ising energy estimation
+task with a noise model taken from hardware they reported improvement factors
+of 33 over the unmitigated result, 20 over ZNE and 1.8 over plain CDR, with
+further benchmarks on 64-qubit random circuits \cite{lowe2021unified}.
+
+Two features of this line of work deserve emphasis. First, the baselines are
+explicit and the comparisons are like-for-like: vnCDR is compared against both
+of the methods it unifies, on the same circuits and the same noise model.
+Second, the training distribution is deliberately matched to the target ---
+training circuits are built to resemble the circuit that will be mitigated ---
+which means the method is designed around, rather than tested against, the
+problem of distribution shift. A separate contribution in the same family,
+the resource-efficient error suppression technique of Czarnik et al., uses
+near-Clifford circuits not to fit a correction but to select the optimal number
+of virtual copies in a purification scheme, reducing the qubit requirement from
+$MN+1$ to $2N+1$ by exploiting active qubit reset
+\cite{czarnik2021qubit}; it is a useful reminder that ``learning'' in this
+literature sometimes means hyperparameter selection rather than function
+approximation.
+
+\subsection{Neural network regressors for expectation values}
+
+The step from linear ans\"atze to flexible nonlinear regressors was taken
+early. Kim, Park and Rhee proposed using an artificial neural network as the
+mitigation map \cite{kim2020ann}, an early explicit statement of mitigation as
+a supervised learning problem; it is cited here for priority. Zlokapa and
+Gheorghiu applied learning one level lower in the stack, training a
+convolutional network on device data to predict circuit noise and then using it
+inside a compiler that inserts gate sequences minimising predicted noise; on
+IBM 5-qubit devices this reduced output noise by $12.3\%$ relative to the
+default compiler, and --- importantly for the generalisation question --- a
+model trained on one device transferred to another with only $5.2\%$
+improvement, demonstrating that the learned object was device-specific rather
+than a universal noise map \cite{zlokapa2020deep}.
+
+Bennewitz et al.\ introduced neural error mitigation for ground-state problems,
+using neural quantum states to post-process variational quantum eigensolver
+output for the H$_{2}$ and LiH molecular Hamiltonians and for the lattice
+Schwinger model, and reported improved energies, fidelities and derived
+quantities such as order parameters and entanglement entropy without
+additional quantum resources \cite{bennewitz2022neural}. Zhukov and Pogosov
+studied a deep network applied at the post-processing stage for Trotterised
+dynamics of a two-dimensional spin lattice in the strong-noise regime, and
+their negative result is as informative as their positive one: weight-one and
+weight-two observables were recovered well under depolarising and
+inhomogeneous Pauli noise, but coherent $ZZ$ crosstalk was \emph{not}
+mitigated, so that randomised compiling \cite{wallman2016noise} is needed
+first to convert coherent errors into stochastic ones
+\cite{zhukov2024quantum}. This is direct evidence that a learned mitigator
+inherits assumptions about noise structure even when no noise model is written
+down.
+
+Two proposals attack the training-data bottleneck itself. Babukhin et al.\
+generate labelled pairs by echo evolution --- evolving a state forward and then
+backward in time so that the ideal final state is known by construction, while
+the device output carries the accumulated noise --- which removes the need for
+either classical simulation or target-circuit simplification
+\cite{babukhin2024echo}. Liao et al.\ go further and build a neural mitigator
+that requires neither prior knowledge of the noise nor any noise-free training
+data, using a quantum augmentation construction, and demonstrate it on
+simulated circuits and on hardware \cite{liao2025noiseagnostic}. In the
+measurement-error setting, Lee et al.\ exploited conditional independence of
+distant qubits to factorise the correction and combined it with transfer
+learning, obtaining an exponential reduction in network size relative to a
+monolithic deep model and validating on IBM devices
+\cite{lee2023scalable} --- the machine-learning analogue of the structural
+simplification that made matrix-free readout mitigation scalable
+\cite{nation2021scalable}. Sack and Egger pushed learned mitigation into an
+application setting, using a feed-forward network to mitigate \emph{samples}
+rather than expectation values so that depth-two QAOA could be optimised on
+non-planar random regular graphs with up to 40 nodes, requiring circuits with
+958 two-qubit gates \cite{sack2024large}.
+
+\subsection{The closest prior work, and what it measured}
+
+The most directly comparable study to this thesis is that of Liao et al.\
+\cite{liao2024machine}, who benchmarked a family of machine-learning
+mitigators --- linear regression, random forests, multi-layer perceptrons and
+graph neural networks --- on hardware using up to 100 qubits, across several
+circuit classes and increasingly complex device-noise profiles, with digital
+zero-noise extrapolation as the reference method, and who explicitly examined
+both interpolation and extrapolation regimes. Their headline claim is a cost
+claim rather than an accuracy claim: machine-learned mitigation matches the
+accuracy of conventional mitigation while substantially reducing its run-time
+overhead, because a trained model needs only the unmitigated circuit at
+inference time whereas extrapolation needs one execution per scale factor.
+They also propose using learned models to imitate conventional mitigators as a
+route to scalability.
+
+Taken together, the literature on learned mitigation establishes three things
+convincingly. Learned regressors can reduce residual error relative to
+analytic extrapolation on the circuit families they are trained on
+\cite{czarnik2021clifford,lowe2021unified,liao2024machine}. Training labels can
+be obtained without full classical simulation, by near-Clifford construction,
+echo evolution, or augmentation
+\cite{czarnik2021clifford,babukhin2024echo,liao2025noiseagnostic}. And the
+inference-time circuit cost of a trained mitigator can be lower than that of
+extrapolation \cite{liao2024machine}.
+
+What the literature does not establish is equally clear once the studies are
+read side by side. The baselines differ: some papers compare mainly against the
+unmitigated value \cite{bennewitz2022neural,zhukov2024quantum}, others against
+zero-noise extrapolation with one particular choice of scaling and fit
+\cite{lowe2021unified,liao2024machine}, and few compare against the full set of
+analytic extrapolants --- linear, Richardson and exponential --- that a
+practitioner actually chooses between. Cost accounting is usually informal:
+Liao et al.\ are explicit that reduced overhead is the point
+\cite{liao2024machine}, but most studies report accuracy at unstated total
+circuit cost, and none of the studies reviewed here reports an
+error-versus-circuit-evaluation curve from which a reader could read off which
+method wins at a fixed budget. And with the exception of the extrapolation
+experiments in \cite{liao2024machine} and the cross-device transfer test in
+\cite{zlokapa2020deep}, the evaluation protocol is in-distribution: models are
+tested on circuits drawn from the same family, depth range and noise profile as
+their training data. Since the practical appeal of a learned mitigator is
+precisely that it can be trained once and reused, this is the gap that matters
+most.
+
+\section{Quantum machine learning primitives and their known failure modes}\label{sec2:qml}
+
+If a learned mitigator is to be built from a quantum model rather than a
+classical one, the relevant primitives are variational circuits and quantum
+kernels. Both are reviewed extensively elsewhere \cite{cerezo2021vqa}; what
+follows concentrates on the properties that determine whether such a model can
+be expected to help on a regression task of the kind studied in this thesis,
+and on the substantial body of negative results that constrains the answer.
+
+\subsection{Variational circuits, encodings and data reuploading}
+
+A parameterised quantum circuit model computes
+$f(\mathbf{x};\boldsymbol{\theta}) = \langle 0\rvert
+U^{\dagger}(\mathbf{x},\boldsymbol{\theta})\, O \,
+U(\mathbf{x},\boldsymbol{\theta}) \lvert 0\rangle$, where the classical input
+$\mathbf{x}$ enters through gate rotation angles. P\'erez-Salinas et al.\
+showed that interleaving encoding layers with trainable layers --- data
+reuploading --- makes a single-qubit circuit a universal approximator, and that
+the construction is the quantum analogue of a feature-map expansion repeated
+at successive depths \cite{perezsalinas2020reuploading}. Schuld, Sweke and
+Meyer supplied the structural explanation that matters most for this thesis: a
+circuit whose encoding consists of Pauli rotations $e^{-i x_{j} P/2}$ computes a
+truncated Fourier series in the data,
+\begin{equation}
+  f(x;\boldsymbol{\theta}) \;=\; \sum_{\omega \in \Omega} c_{\omega}(\boldsymbol{\theta})\, e^{i \omega x},
+  \label{eq2:fourier}
+\end{equation}
+where the accessible frequency spectrum $\Omega$ is fixed by the eigenvalues of
+the encoding generators and by the number of reuploading layers, while the
+coefficients $c_{\omega}$ are what training adjusts
+\cite{schuld2021effect}. Equation~\eqref{eq2:fourier} makes two predictions
+that this thesis tests directly. Within the range of data on which the
+frequencies were fitted, richer spectra permit closer approximation; outside
+it, the model is not merely inaccurate but \emph{periodic}, so a
+data-reuploading regressor extrapolates by repeating its learned pattern rather
+than by continuing any trend. Angle-encoded quantum models therefore carry a
+structural disadvantage on extrapolation tasks that no amount of training data
+inside the original range can remove. Eq.~\eqref{eq2:fourier} therefore
+suggests a specific mechanism for out-of-distribution failure of the
+data-reuploading arm; Section~\ref{sec:ch5_bounded} tests it and finds that
+periodicity accounts for the size of that failure but not for the failure itself,
+which Section~\ref{sec:ch5_robustness} traces to inputs outside the training
+range.
+
+\subsection{Quantum kernels and the fidelity kernel}
+
+The kernel view of these models is cleaner. Encoding $\mathbf{x}$ into a state
+$\lvert \phi(\mathbf{x})\rangle = U_{\phi}(\mathbf{x})\lvert 0\rangle$ defines
+the fidelity (or quantum embedding) kernel
+\begin{equation}
+  k(\mathbf{x},\mathbf{x}') \;=\; \bigl\lvert \langle \phi(\mathbf{x}) \vert \phi(\mathbf{x}')\rangle \bigr\rvert^{2}
+  \;=\; \bigl\lvert \langle 0 \rvert U_{\phi}^{\dagger}(\mathbf{x})\,U_{\phi}(\mathbf{x}')\lvert 0\rangle \bigr\rvert^{2},
+  \label{eq2:fidkernel}
+\end{equation}
+which is estimated on hardware either by the inversion test implied by the
+right-hand side of Eq.~\eqref{eq2:fidkernel} or by a swap test. Havl\'i\v{c}ek
+et al.\ introduced this construction with the IQP-style encoding that remains
+the standard choice, and demonstrated both a variational classifier and a
+kernel estimator on superconducting hardware \cite{havlicek2019supervised}.
+Schuld later established the conceptual point that supervised models built from
+parameterised circuits are kernel methods: training a variational circuit
+explores a restricted region of a reproducing kernel Hilbert space whose kernel
+is fixed by the encoding, so the encoding, not the ansatz, is where the
+inductive bias lives \cite{schuld2021kernel}. Once a kernel matrix
+$K_{ij} = k(\mathbf{x}_{i},\mathbf{x}_{j})$ has been estimated, regression is
+classical kernel ridge regression,
+\begin{equation}
+  \widehat{y}(\mathbf{x}) \;=\; \sum_{i=1}^{N} \alpha_{i}\, k(\mathbf{x},\mathbf{x}_{i}),
+  \qquad
+  \boldsymbol{\alpha} \;=\; \bigl(K + \mu \mathbb{I}\bigr)^{-1}\mathbf{y},
+  \label{eq2:krr}
+\end{equation}
+with $\mu$ a ridge parameter. This is the estimator used for the quantum arm
+of the present benchmark, and its appeal is that the quantum device is
+responsible only for the Gram matrix, so training is convex and there are no
+barren plateaus to navigate.
+
+Huang et al.\ analysed when such models can offer an advantage, introducing a
+geometric quantity that compares the quantum and classical Gram matrices and
+proving that a large separation is necessary for a prediction advantage; they
+also showed how classical machine learning augmented by data can match quantum
+models in many practically relevant regimes \cite{huang2021power}. Liu,
+Arunachalam and Temme exhibited a learning problem, based on the discrete
+logarithm, with a rigorous and noise-robust quantum speed-up for a
+fidelity-kernel classifier \cite{liu2021rigorous}, establishing that advantage
+is possible in principle while leaving open how far such a construction is
+from anything a practitioner would encounter.
+
+\subsection{Concentration, bandwidth, and the collapse of expressive kernels}
+
+The most consequential practical result about fidelity kernels is that
+expressive encodings destroy them. Thanasilp et al.\ proved that for broad
+classes of encodings --- deep, expressive circuits, and also circuits subject
+to global depolarising noise or measured with too many qubits traced out ---
+the kernel entries concentrate exponentially in the number of qubits around a
+fixed value,
+\begin{equation}
+  k(\mathbf{x},\mathbf{x}') \;=\; \bar{k} \;+\; \varepsilon(\mathbf{x},\mathbf{x}'),
+  \qquad
+  \mathrm{Var}\bigl[\varepsilon\bigr] \in \mathcal{O}\!\left(2^{-n}\right),
+  \label{eq2:concentration}
+\end{equation}
+so that the Gram matrix approaches a constant matrix and, after
+regularisation, the trained model approaches a trivial predictor unless the
+number of shots grows exponentially \cite{thanasilp2024exponential}. This is
+the kernel counterpart of the barren plateau phenomenon and it is not a
+small-sample artefact: it is a property of the geometry of the embedding.
+
+The practical remedy is bandwidth. Shaydulin and Wild observed that rescaling
+the data before encoding, $\mathbf{x} \mapsto c\,\mathbf{x}$ with $c < 1$,
+changes the classification accuracy of quantum kernel models dramatically and
+can be the difference between near-random and competitive performance
+\cite{shaydulin2022importance}. Canatar, Peters, Pehlevan, Wild and Shaydulin
+then explained the effect within kernel learning theory: bandwidth controls the
+spectral decay of the kernel's eigenvalues and therefore the
+inductive bias of the model, and only at suitable bandwidth does generalisation
+improve with qubit count instead of degrading \cite{canatar2023bandwidth}.
+The consequence for experimental design is sharp: the bandwidth is a
+hyperparameter that must be tuned, and a quantum kernel evaluated at the
+default scaling $c = 1$ is not a fair representative of the method. It is also
+a double-edged result, as Fl\'orez-Ablan et al.\ showed numerically: at the
+bandwidths that optimise generalisation, fidelity and projected quantum kernels
+closely resemble classical radial basis function kernels, and in the
+small-bandwidth limit they reduce to low-order polynomial kernels ---
+so the tuning that makes a quantum kernel work also makes it
+classically imitable \cite{florezablan2025similarity}. Any claim of quantum
+advantage from a bandwidth-tuned fidelity kernel must therefore be checked
+against a classical kernel baseline.
+
+\subsection{Trainability and generalisation}
+
+For the variational arm, the dominant obstruction is the barren plateau:
+McClean et al.\ showed that for sufficiently random parameterised circuits the
+gradient of the cost function vanishes exponentially in the number of qubits,
+so that optimisation becomes infeasible without structured ans\"atze or
+informed initialisation \cite{mcclean2018barren}. The generalisation side is
+more encouraging. Caro et al.\ proved bounds showing that the generalisation
+error of a quantum model scales roughly as $\sqrt{T/N}$ in the number of
+trainable gates $T$ and training samples $N$, so that good generalisation from
+few samples is possible provided the model is not over-parameterised
+\cite{caro2022generalization}. Crucially for this thesis, the same group
+studied out-of-distribution generalisation explicitly for the task of learning
+quantum dynamics and showed that models trained on product states can
+generalise to entangled inputs for that structured problem
+\cite{caro2023ood} --- which establishes that out-of-distribution behaviour is
+a well-posed and analysable question for quantum models, not an unfair test.
+
+Finally, the benchmarking literature itself has become sceptical. Schuld and
+Killoran argued that framing quantum machine learning around advantage claims
+has distorted the field's evaluation practices, and urged attention to
+inductive bias and to careful comparisons instead \cite{schuld2022isquantum}.
+Bowles, Ahmed and Schuld ran a large systematic benchmark of quantum models
+against standard classical baselines and found that reported advantages
+frequently fail to survive properly tuned classical comparison, and that
+methodological choices --- hyperparameter search, data scaling, dataset
+selection --- dominate the observed differences \cite{bowles2024better}. Their
+recommended practice, which this thesis follows, is to fix the task, tune
+every model including the classical ones, and report the comparison at matched
+cost rather than at matched convenience.
+
+\section{Quantum error correction and the decoding problem}\label{sec2:qec}
+
+Mitigation buys accuracy on shallow circuits; error correction buys
+scalability. The second track of this thesis concerns decoding, and the
+literature there is instructive because it is a machine-learning subfield with
+mature benchmarking conventions --- a fixed code, a fixed noise model, a single
+reported figure of merit, and a universally accepted classical baseline.
+
+\subsection{Surface codes and the decoding problem}
+
+Kitaev's toric code introduced the idea of protecting quantum information in
+the topology of a lattice of qubits with local stabiliser measurements
+\cite{kitaev2003fault}, and Dennis, Kitaev, Landahl and Preskill developed the
+planar variant into a full fault-tolerance framework, establishing the
+mapping between decoding and a statistical-mechanical model and deriving
+threshold estimates \cite{dennis2002topological}. Fowler et al.\ turned this
+into an engineering blueprint, specifying the measurement circuits, the
+lattice surgery operations and the resource estimates that made the surface
+code the default architecture for superconducting processors
+\cite{fowler2012surface}.
+
+Operationally, a distance-$d$ surface code is measured repeatedly; each round
+of stabiliser measurements yields a syndrome, and the differences between
+consecutive rounds define \emph{detection events}. The decoder receives the
+detection-event history $\mathbf{s}$ and must output a correction. The
+statistically optimal rule is maximum-likelihood decoding over error classes,
+\begin{equation}
+  \widehat{c} \;=\; \arg\max_{c \,\in\, \{\text{logical classes}\}}\;
+  \sum_{E \,:\, \sigma(E)=\mathbf{s},\; [E]=c} \Pr(E),
+  \label{eq2:mld}
+\end{equation}
+where $\sigma(E)$ is the syndrome of error $E$ and $[E]$ its logical class.
+Equation~\eqref{eq2:mld} is intractable in general, so practical decoding is a
+search for accurate approximations that run faster than the syndrome
+measurement cycle. Because decoding research depends on generating enormous
+volumes of syndrome data under circuit-level noise, the field's progress is
+tied to fast stabiliser simulation; Gidney's \textsc{Stim} made
+million-shot circuit-level sampling routine and is now the standard data
+generator \cite{gidney2021stim}.
+
+\subsection{Matching decoders and their fast descendants}
+
+The dominant classical approach maps decoding to minimum-weight perfect
+matching (MWPM) on a graph whose vertices are detection events and whose edge
+weights are negative log-likelihoods of the corresponding error mechanisms; the
+matching itself is solved by Edmonds' blossom algorithm
+\cite{edmonds1965paths}. This reduction, already present in
+\cite{dennis2002topological}, is near-optimal for independent bit-flip and
+phase-flip noise but suboptimal when errors are correlated between the two
+lattices --- notably for $Y$ errors and for measurement errors with realistic
+circuit-level structure. Higgott's \textsc{PyMatching} provided the open
+implementation that made MWPM the universal baseline
+\cite{higgott2022pymatching}, and the throughput problem was addressed by
+Delfosse and Nickerson's union-find decoder, which achieves almost-linear
+time in the number of syndrome bits at a modest cost in threshold by growing
+and merging clusters instead of solving an exact matching
+\cite{delfosse2021almost}. The practical decoder design space is thus a
+trade-off surface between accuracy and latency, and any new decoder --- learned
+or not --- is expected to report where it sits on that surface.
+
+\subsection{Neural network decoders}
+
+Machine-learned decoding was proposed to recover the accuracy that matching
+gives up. Torlai and Melko trained a restricted Boltzmann machine as a
+generative model of the error distribution conditioned on the syndrome and
+showed it could decode the toric code near threshold \cite{torlai2017neural};
+Varsamopoulos, Criger and Bertels trained feed-forward networks on small
+surface codes, framing decoding as classification of the logical correction
+\cite{varsamopoulos2018decoding}; and Baireuther et al.\ introduced recurrent
+networks so that a decoder could consume an arbitrary number of measurement
+rounds and, importantly, learn correlated error behaviour directly from data
+rather than from a specified error model \cite{baireuther2018machine}. The
+unifying argument in this literature is that a learned decoder needs no prior
+estimate of physical error rates and can absorb error correlations that a
+matching graph cannot express.
+
+Recent work has made that argument quantitative. Varbanov et al.\ evaluated a
+recurrent neural-network decoder on both simulated and experimental transmon
+data for small-distance surface codes and found roughly $25\%$ lower logical
+error rate than MWPM on the experimental data set, approaching
+maximum-likelihood performance, with the gain traced specifically to better
+handling of correlated defects such as those from $Y$ errors; they also
+incorporated the soft (analog) readout information that a matching decoder
+discards \cite{varbanov2025neural}. Lange et al.\ formulated decoding as a
+graph classification problem and showed that a graph neural network trained
+only on simulated experimental data can outperform a matching decoder under
+circuit-level noise even when the matching decoder is given full knowledge of
+the underlying error model \cite{lange2025data}. The current state of the art
+is the transformer-based \textsc{AlphaQubit} decoder of Bausch et al., which
+was pre-trained on simulated data, fine-tuned on experimental data, and
+reported lower logical error rates than both matching and correlated-matching
+baselines on Google's distance-3 and distance-5 surface code experiments
+\cite{bausch2024learning}.
+
+The methodological contrast with the mitigation literature is stark and
+deliberate here. Every decoder paper cited above reports a single agreed
+metric --- logical error rate per round --- against a single agreed baseline
+--- MWPM, usually via \textsc{PyMatching} --- on a single agreed noise model,
+and recent papers additionally report latency or throughput because a decoder
+that cannot keep up with the syndrome cycle is useless regardless of accuracy.
+Generalisation is also tested as a matter of course: decoders are evaluated at
+code distances and error rates they were not trained on, and on experimental
+data after training on simulation
+\cite{varbanov2025neural,lange2025data,bausch2024learning}.
+
+There is a second transferable lesson. Learned decoders win where the
+classical baseline throws information away --- correlated $Y$ errors, analog
+readout confidence, circuit-level error structure that a matching graph cannot
+represent \cite{varbanov2025neural,lange2025data} --- and they do not win by
+being more flexible in general. That is a useful diagnostic to carry into
+mitigation: a learned mitigator should be expected to help where the analytic
+estimator discards structure, for example by using several observables jointly
+or by exploiting circuit metadata, and should not be expected to help merely
+because it has more parameters than a polynomial fit. It also suggests the
+right null hypothesis for a mitigation benchmark. Since the mitigation map for
+global depolarising noise is a one-parameter rescaling
+(Eq.~\eqref{eq2:depol}), a flexible regressor has little structure left to
+exploit once that rescaling is captured, and the appropriate expectation is
+parity with a well-tuned analytic estimator rather than a large improvement.
+
+\subsection{Experimental status}
+
+The experimental milestones establish that the whole enterprise is no longer
+hypothetical. Google's surface code experiments demonstrated first a
+distance-3 to distance-5 comparison and then, decisively, operation below
+threshold: a distance-7 logical qubit with a logical error rate suppressed by
+roughly a factor of two per distance increment, together with real-time
+decoding at the measurement cycle rate \cite{google2025below}. In a different
+hardware modality, Bluvstein et al.\ demonstrated a reconfigurable
+neutral-atom processor performing logical operations on up to 48 logical
+qubits with transversal gates and mid-circuit measurement
+\cite{bluvstein2024logical}. Both results make decoder quality and decoder
+latency the binding constraints on near-term logical performance, which is
+precisely why learned decoders are studied so carefully and why the standards
+of comparison in that subfield are worth importing into the mitigation
+literature.
+
+\section{Research gap}\label{sec2:gap}
+
+The review above supports a narrow and specific claim: the case for
+machine-learning-based quantum error mitigation has been made with an
+evaluation protocol too weak to support the conclusions that are drawn from it.
+Three deficiencies are distinguishable, and each has a concrete counterpart in
+the design of this thesis.
+
+\subsection{Inconsistent baselines}
+
+There is no agreed reference method for
+learned mitigation. Clifford data regression was introduced against the
+unmitigated value and analysed in isolation \cite{czarnik2021clifford};
+variable-noise CDR was compared against both ZNE and CDR, which is stronger,
+but against one extrapolation order and one noise-scaling method
+\cite{lowe2021unified}; the large-scale hardware benchmark of Liao et al.\ uses
+digital ZNE as its single reference \cite{liao2024machine}; the
+neural-network studies of Bennewitz et al.\ and Zhukov and Pogosov report
+improvement over the noisy expectation value
+\cite{bennewitz2022neural,zhukov2024quantum}; and application-driven work
+reports whether the downstream optimisation succeeded rather than an error
+metric against alternatives \cite{sack2024large}. Because ZNE is not one
+method but a family --- linear, Richardson, and exponential fits, over
+pulse-stretched \cite{kandala2019extends}, folded
+\cite{giurgicatiron2020digital} or identity-inserted \cite{he2020zero} noise
+scaling, each with its own bias--variance profile
+\cite{endo2018practical,cai2021multiexponential} --- reporting a win against
+``ZNE'' without specifying which member of the family was used, and without
+tuning it, leaves the comparison unfalsifiable. The contrast with the decoding
+literature, where every paper reports against MWPM under
+\textsc{PyMatching} \cite{higgott2022pymatching} on a stated circuit-level
+noise model, is the clearest evidence that the mitigation field's looseness is
+a choice rather than a necessity. This thesis therefore fixes a single task and
+evaluates nine methods on it --- the unmitigated baseline, linear, Richardson
+and exponential extrapolation, three classical regressors, a fidelity-kernel
+model and a data-reuploading circuit --- with identical data, identical shot
+budgets and tuned hyperparameters for every arm, including the classical ones,
+as Bowles et al.\ recommend \cite{bowles2024better}.
+
+\subsection{Absent cost normalisation}
+
+The theory of mitigation is a theory of
+cost: unbiasedness is purchased with sampling overhead, and the fundamental
+results are statements about how that overhead scales
+\cite{takagi2022fundamental,quek2024exponentially}. Yet accuracy is routinely
+reported without the corresponding budget. This matters because the methods
+under comparison consume different numbers of circuit evaluations per
+estimated observable. A three-point extrapolation consumes three; a classical
+regressor trained on noise-scaled features consumes as many evaluations as it
+has features; a fidelity-kernel or data-reuploading model consumes those
+evaluations \emph{plus} the additional circuit executions needed to evaluate
+its feature map or ansatz. An accuracy comparison that ignores this difference
+credits the quantum models with resources it does not count. Liao et al.\ are
+the exception that proves the rule: their central claim is explicitly about
+run-time overhead \cite{liao2024machine}, and once cost is made the axis, the
+conclusion about which method to prefer changes. This thesis therefore reports
+error against circuit evaluations consumed, so that methods are ranked at
+matched budget rather than at matched accuracy, and a model that ties on
+accuracy while consuming more circuit executions is recorded as losing.
+
+\subsection{No out-of-distribution testing}
+
+The appeal of a learned mitigator
+is amortisation --- train once, apply to many circuits. That appeal is only
+justified if the learned map survives a change in the circuits it is applied
+to, and almost no study tests this. Training circuits are constructed to
+resemble the target \cite{czarnik2021clifford,lowe2021unified}, evaluation
+draws from the training family, and the two available exceptions are partial:
+the cross-device transfer test of Zlokapa and Gheorghiu, which found most of
+the benefit did not transfer \cite{zlokapa2020deep}, and the extrapolation
+experiments of Liao et al.\ \cite{liao2024machine}. Theory predicts that this
+should be the decisive test for quantum models specifically. A
+data-reuploading circuit is a truncated Fourier series in its inputs
+\cite{schuld2021effect}, so its predictions are periodic beyond the training
+range; a fidelity kernel concentrates unless its bandwidth is tuned
+\cite{thanasilp2024exponential,shaydulin2022importance,canatar2023bandwidth},
+and the tuning that makes it generalise also makes it resemble a classical
+radial basis function kernel \cite{florezablan2025similarity}. That
+out-of-distribution generalisation is nonetheless a tractable and meaningful
+criterion for quantum models is established by Caro et al.\
+\cite{caro2023ood}, alongside the sample-complexity bounds that govern
+in-distribution behaviour \cite{caro2022generalization}. This thesis therefore
+trains every model on circuits up to a fixed depth and tests all nine methods
+on deeper circuits, reporting the degradation explicitly rather than the
+in-distribution number alone.
+
+Taken together, these three corrections define the contribution of this work.
+It is not a new mitigation method, and it does not claim a quantum advantage;
+it is a controlled, cost-normalised, distribution-shift-aware benchmark of
+hybrid quantum-classical and purely classical mitigators on a common
+noisy-to-ideal regression task, complemented by a machine-learned decoding
+study that borrows its evaluation conventions from the more disciplined
+decoding literature
+\cite{varbanov2025neural,lange2025data,bausch2024learning}. The methodology
+that implements these three corrections is set out in the next chapter.
+
+\end{document}

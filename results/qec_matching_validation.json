@@ -1,0 +1,7 @@
+{
+  "n_trials": 400,
+  "mwpm_matches_bruteforce": 400,
+  "mwpm_mismatches": 0,
+  "mismatch_examples": [],
+  "greedy_optimal_fraction": 0.37
+}

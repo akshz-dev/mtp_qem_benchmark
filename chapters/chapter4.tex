@@ -1,0 +1,297 @@
+%%%%%%%%%%%%%%%%%%%%%---Chapter4 Formatting---%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[Thesis.tex]{subfiles}
+\begin{document}
+\newpage
+\setcounter{chapter}{3} %%Chapter Numbering
+
+\titleformat{\chapter}[display]
+{\sffamily\fontsize{27}{27}\bfseries\filleft}{\thechapter}{0pt}{{#1}}
+
+\thispagestyle{empty}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Experimental Setup and Implementation}\label{chap4:setup}
+
+This chapter records the implementation in enough detail to reproduce every number
+in Chapters~\ref{chap5:results} and~\ref{chap6:decoding}. The intent is that a
+reader with the accompanying source tree and these version pins can regenerate the
+result tables and figures without contacting the author.
+
+\section{Software stack}
+
+All simulation and model fitting was performed in Python. Table~\ref{tab:ch4_stack}
+lists the exact versions used; results were produced on a single machine
+(Apple silicon, \texttt{arm64}, $12$ cores, $18$~GiB RAM) with no GPU and no
+distributed compute.
+
+\begin{table}[htbp]
+\centering
+\caption[Software versions]{Software versions used for all reported results.}
+\label{tab:ch4_stack}
+\begin{tabular}{ll}
+\toprule
+\textbf{Component} & \textbf{Version} \\
+\midrule
+Python            & 3.12.14 \\
+PennyLane         & 0.45.1 \\
+NumPy             & 2.5.3 \\
+SciPy             & 1.18.1 \\
+pandas            & 3.0.5 \\
+scikit-learn      & 1.9.1 \\
+Matplotlib        & 3.11.1 \\
+Autograd          & bundled with PennyLane \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+PennyLane provides both the noisy simulation and the quantum models, which removes
+any question of consistency between the data-generating simulator and the simulator
+used inside the hybrid arms. Two devices are used. The \texttt{default.mixed} device
+performs density-matrix simulation and is used for all noisy circuit evaluation,
+since the channels of Eqs.~\eqref{eq:ch3_depol} and~\eqref{eq:ch3_ad} are
+non-unitary and cannot be represented on a state-vector simulator. The
+\texttt{default.qubit} state-vector device is used inside the two hybrid arms, whose
+embedding and ansatz circuits are unitary.
+
+\section{Simulation procedure and cost}
+
+For each circuit, the density matrix is evaluated once per noise scale
+$\lambda \in \{0, 1, 2, 3\}$ and all five observables are then obtained from that
+single matrix as $\mathrm{Tr}[O \rho]$, rather than by four separate circuit
+executions per observable. This reduces the simulation cost of the primary dataset
+by a factor of five and is possible only because the study is simulated; on hardware
+each $(\text{circuit}, \text{observable}, \lambda)$ triple would be a separate
+measurement job.
+
+Generating the primary $900$-circuit dataset takes approximately three minutes at
+$n = 5$ qubits. The five secondary datasets of $500$ circuits each take between
+about one minute ($n = 4$) and about eight minutes ($n = 6$), the growth reflecting
+the $4^n$ scaling of density-matrix simulation.
+
+\section{Hyperparameter selection}
+
+Hyperparameters are selected on the training fold only. For the gradient-boosted
+trees and the quantum kernel the selection is four-fold grouped cross-validation,
+with the circuit identifier as the grouping variable, so that no circuit appears in
+both the inner-training and inner-validation parts of any fold. Two arms are the
+exception. The ridge penalty is chosen by scikit-learn's efficient leave-one-out
+cross-validation (\texttt{RidgeCV}), and the neural network stops early on a random
+$10\%$ validation split of the training rows; neither of these inner splits is
+grouped by circuit, so the selected values may be slightly optimistic. Every
+\emph{test} evaluation remains grouped. Table~\ref{tab:ch4_grids}
+lists the search spaces. No hyperparameter was selected using test-fold performance,
+and the analytic arms have no hyperparameters to select.
+
+\begin{table}[htbp]
+\centering
+\caption[Hyperparameter search spaces]{Hyperparameter search spaces. All searches use four-fold grouped
+cross-validation on the training fold. The reduced grids in the right-hand column
+were used for the sweep experiments of Sections~\ref{sec:ch5_noise},
+\ref{sec:ch5_shots}, \ref{sec:ch5_qubits}, \ref{sec:ch5_learning},
+\ref{sec:ch5_ablation} and~\ref{sec:ch5_transfer}, and for every realistic-regime
+experiment of Sections~\ref{sec:ch5_scaling}--\ref{sec:ch5_drift}, to keep the total
+runtime tractable. The main benchmark of Section~\ref{sec:ch5_main}, the
+depth-extrapolation experiment, and the base-configuration points of the
+noise-strength and system-size sweeps ($1.0\times$ and $n = 5$, which reuse the
+main-benchmark fits) use the full grids and 40 epochs. The shot-limited kernel of
+Section~\ref{sec:ch5_shotkernel} fixes $\beta = 0.15$ and selects $\alpha$ from 12
+log-spaced points in $[10^{-6}, 10^{1}]$.}
+\label{tab:ch4_grids}
+\small
+\begin{tabular}{p{3.4cm} p{5.3cm} p{3.6cm}}
+\toprule
+\textbf{Arm} & \textbf{Full grid} & \textbf{Reduced grid} \\
+\midrule
+Ridge regression &
+$\alpha \in$ 30 points log-spaced in $[10^{-4}, 10^{3}]$ &
+same \\
+\addlinespace
+Gradient-boosted trees &
+leaves $\in \{15, 31\}$, learning rate $\in \{0.05, 0.1\}$, 300 iterations &
+leaves $= 31$, rate $= 0.1$ \\
+\addlinespace
+Neural network &
+fixed $(64, 64)$, early stopping, max 3000 iterations &
+same \\
+\addlinespace
+Quantum kernel ridge &
+bandwidth $\beta \in \{0.05, 0.15, 0.4, 1.0\}$, $\alpha \in$ 15 points
+log-spaced in $[10^{-6}, 10^{1}]$ &
+$\beta \in \{0.05, 0.15, 0.4\}$, $\alpha \in$ 8 points \\
+\addlinespace
+Data-reuploading VQC &
+4 qubits, 4 layers, Adam, step $0.05$, batch $96$, 40 epochs &
+30 epochs \\
+\addlinespace
+Bounded-encoding VQC &
+identical to the above &
+30 epochs \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The two variational arms are trained by minimizing mean squared error with the Adam
+optimizer at a step size of $0.05$ and a batch size of $96$. Gradients are obtained
+by automatic differentiation through the state-vector simulator rather than by the
+parameter-shift rule; the two are mathematically equivalent for the expectation
+values used here, and backpropagation is far cheaper in simulation. On hardware the
+parameter-shift rule would be required, and the training cost would rise by a factor
+of twice the parameter count per gradient evaluation -- a point returned to in
+Section~\ref{sec:ch5_cost}.
+
+\section{Random seeds and determinism}
+
+Two seeds control all reported results. The dataset seed $20260912$ fixes the
+circuit parameters and the binomial shot sampling; the model seed $7$ fixes the
+train/test split, the cross-validation folds, the neural-network initialization,
+the variational-circuit initialization and shuffling, and the bootstrap resampling.
+Two families of repetition were added to put variance on the headline results
+(Section~\ref{sec:ch5_robustness}): ten circuit-grouped splits with seeds
+$100$--$109$, in which the scikit-learn model seeds follow the split; and ten
+variational-circuit initialisation seeds $0$--$9$ on the reference split. Paired
+bootstrap comparisons use $1000$ resamples of test circuits.
+
+One implementation detail is worth recording because getting it wrong silently
+invalidates the paired comparisons of Sections~\ref{sec:ch5_markovianity}
+and~\ref{sec:ch5_drift}. The circuit parameters and the shot noise are drawn from
+\emph{separate} generators, seeded at $20260912$ and $20260913$. A single shared
+generator does not work: NumPy's binomial sampler uses rejection sampling, so the
+number of underlying random words it consumes depends on its parameters, which in
+turn depend on the noise configuration. With one stream, the circuit sequence
+therefore becomes a function of the noise model, and the three realistic datasets --
+which must differ only in their noise -- silently end up containing different
+circuits. This was in fact observed during development: an initial generation run
+produced datasets agreeing on only $185$ of $900$ circuit depths. Each dataset now
+records a hash of its circuit sequence and of its ideal expectation values, and the
+experiment driver refuses to run unless the hashes of all four realistic datasets
+(production, drifted, defect-removed and reset control) agree.
+Given these seeds, the entire pipeline is deterministic, with the single exception
+noted below.
+
+One implementation detail is worth recording because it affects reproducibility on
+other machines. The scikit-learn grid searches are run single-threaded
+(\texttt{n\_jobs=1}); process-based parallelism was unavailable in the execution
+environment used here. Single-threaded execution removes any dependence of the
+result on thread scheduling, so this constraint improves determinism at the cost of
+wall-clock time.
+
+\section{Source tree and file map}
+
+Table~\ref{tab:ch4_files} maps each script to the outputs it produces. The pipeline
+is designed so that the model code is independent of the data source: every script
+downstream of data generation consumes a flat table with the columns
+\texttt{circuit\_id}, \texttt{family}, \texttt{depth}, \texttt{n\_2q},
+\texttt{observable}, \texttt{obs\_weight}, \texttt{noisy\_l1}, \texttt{noisy\_l2},
+\texttt{noisy\_l3} and \texttt{ideal}. A table of hardware measurements with those
+columns can therefore be substituted for the simulated one without modifying any
+model code, which is the intended path for extending this work to a real device.
+
+\begin{table}[htbp]
+\centering
+\caption[Source files and their outputs]{Source files and their outputs. Scripts are in \texttt{code/} and
+outputs in \texttt{results/} of the accompanying project tree.}
+\label{tab:ch4_files}
+\small
+\begin{tabular}{p{4.4cm} >{\raggedright\arraybackslash}p{9.0cm}}
+\toprule
+\textbf{Script} & \textbf{Produces} \\
+\midrule
+\texttt{gen\_data.py} &
+Primary dataset (\texttt{benchmark\_data.csv}) and its metadata record. \\
+\texttt{simulate.py} &
+Secondary datasets for the noise-strength and qubit-count sweeps, parametrized by
+qubit count, noise multiplier and shot budget. \\
+\texttt{bench.py} &
+Main benchmark: all nine arms on Splits A and B
+(\texttt{benchmark\_results.csv}), per-observable and per-depth breakdown, and
+the fitted predictions. \\
+\texttt{experiments.py} &
+The seven sweep experiments (\texttt{sweep\_results.csv}), including the
+bounded-encoding arm. \\
+\texttt{make\_figures.py} &
+Every figure in Chapter~\ref{chap5:results}. \\
+\texttt{simulate\_realistic.py} &
+Device-realistic regime-II generator: inhomogeneous rates, coherent over-rotation,
+$ZZ$ crosstalk, the non-Markovian defect, and both noise-scaling methods. Writes
+\texttt{ds\_real\_A/B/M/R.csv} (production, drift, defect removed, defect reset)
+with circuit and ideal-value signatures. \\
+\addlinespace
+\texttt{test\_folding.py} &
+Noise-free unit test that unitary folding leaves every expectation value
+unchanged, for both circuit families. \\
+\addlinespace
+\texttt{nonmarkov\_check.py} &
+Breuer--Laine--Piilo measurement on the idling register
+(\texttt{nonmarkovianity\_check.json}) and the coupling sweep. \\
+\addlinespace
+\texttt{experiments\_realistic.py} &
+Regime-II experiments: scaling-method comparison, both memory controls, calibration
+drift, shot-limited quantum kernel with five draws per budget
+(\texttt{sweep\_realistic.csv}) and all paired comparisons
+(\texttt{paired\_realistic.csv}). \\
+\addlinespace
+\texttt{stats\_util.py} &
+Paired, circuit-grouped bootstrap on RMSE differences. \\
+\texttt{robustness.py} &
+Ten circuit-grouped splits per configuration with paired comparisons
+(\texttt{robust\_splits\_*.csv}, \texttt{robust\_pairs\_*.csv}). \\
+\texttt{followups.py} &
+Depth extrapolation by input set and learning-curve variance over $20$ draws
+(\texttt{followup\_results.csv}, \texttt{followup\_paired.csv}). \\
+\texttt{vqc\_seeds.py} &
+Variational arms over ten initialisation seeds (\texttt{vqc\_seed\_sweep.csv}). \\
+\texttt{make\_appendixB.py} &
+Regenerates the regime-II, robustness and non-Markovianity tables of
+Appendix~\ref{AppendixB} from the result files. \\
+\texttt{make\_figures\_realistic.py} &
+The regime-II and robustness figures of Chapter~\ref{chap5:results}. \\
+\addlinespace
+\texttt{qec\_gen\_data.py} &
+Repetition-code syndrome datasets under phenomenological noise
+(Section~\ref{chap6:decoding} states why this substitutes for the surface code). \\
+\texttt{qec\_bench.py} &
+Decoder benchmark (\texttt{qec\_decoder\_results.csv}) and the figures of
+Chapter~\ref{chap6:decoding}. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Verification practices}\label{sec:ch4_verification}
+
+Five practices are worth stating because they affected the reported numbers. First,
+every figure caption and every claim about a trend was checked against the saved
+result table before being written, and one panel title was corrected during
+preparation when the table showed the trend it asserted did not hold for all
+plotted series. Second, the quantum-kernel arm was initially run at unit bandwidth
+and produced an error worse than the unmitigated baseline; rather than report that
+as the performance of quantum kernel methods, bandwidth was promoted to a tuned
+hyperparameter, and the untuned result is reported in
+Section~\ref{sec:ch5_bandwidth} as a sensitivity finding in its own right. Both
+episodes are recorded here because they illustrate a general hazard in this
+literature: a hybrid model reported without its critical hyperparameter tuned is
+evidence about the implementation, not about the method.
+
+Third, every circuit transformation used for noise scaling is unit-tested in the
+absence of noise. Unitary folding must leave every expectation value unchanged
+($L L^{\dagger} L = L$), and \texttt{test\_folding.py} checks this for both circuit
+families. The test was written after a pre-submission review found that the first
+version of the realistic simulator built the inverse of a hardware-efficient layer
+with its two rotations in forward order ($R_Y^{\dagger}$ before $R_Z^{\dagger}$
+instead of after), so the folded circuits computed a different unitary and every
+folded feature of that family was invalid. After the fix the folded and unfolded
+values agree to $3.9 \times 10^{-16}$, the four realistic datasets were regenerated,
+and every regime-II result in Chapter~\ref{chap5:results} comes from the corrected
+data. The parameter-scaled columns were unaffected.
+
+Fourth, comparisons between two methods are made with a paired, circuit-grouped
+bootstrap on the difference of their errors rather than by inspecting whether two
+marginal intervals overlap, and every headline comparison is repeated over ten
+splits; Section~\ref{sec:ch5_robustness} reports what changed as a result.
+
+Fifth, every quantitative statement in the abstract, the contribution list, the
+chapter summaries and the conclusions was audited against the saved result tables
+before submission; statements that the tables did not support were corrected, and
+the audit log is part of the accompanying project tree
+(\texttt{results/claims\_audit.csv}).
+
+\end{document}

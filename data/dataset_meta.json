@@ -1,0 +1,36 @@
+{
+  "n_wires": 5,
+  "lambdas": [
+    1.0,
+    2.0,
+    3.0
+  ],
+  "base_noise": {
+    "p1_1q_depol": 0.002,
+    "p2_2q_depol": 0.02,
+    "amp_damping_per_layer": 0.004
+  },
+  "shots": 4096,
+  "seed": 20260912,
+  "depths": [
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "families": [
+    "hea",
+    "tfim"
+  ],
+  "observables": [
+    "Z0",
+    "Z0Z1",
+    "Z1Z2Z3",
+    "Z_all",
+    "X0X1"
+  ],
+  "noise_scaling": "noise-parameter scaling: (p1,p2,gamma) -> lambda*(p1,p2,gamma)",
+  "n_circuits": 900,
+  "n_rows": 4500
+}
