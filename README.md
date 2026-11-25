@@ -4,7 +4,7 @@ M.Tech thesis, Department of Computer Science and Engineering, Indian Institute 
 
 Author: Abhishek Kumar Singh (M23CSA503).
 
-Supervisor: Dr. Subhashish Banerjee.
+Supervisor: Prof. Subhashish Banerjee, Department of Physics.
 
 This repository holds the thesis source and PDF, analysis scripts, generated datasets, and result tables. The reported experimental results trace to the archived files or the documented calculations.
 
