@@ -1,0 +1,135 @@
+%%%%%%%%%%%%%%%%%%%%%---Chapter7 Formatting---%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[Thesis.tex]{subfiles}
+\begin{document}
+\setcounter{chapter}{6} %%Chapter Numbering
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Conclusions and Future Scope}\label{chap7:conclusion}
+
+\section{Conclusions}
+
+This thesis evaluated hybrid quantum--classical models for quantum error
+mitigation. The benchmark compares ten main expectation-value mitigation methods
+on $4500$ reference circuit--observable pairs, under an idealised Markovian noise
+model and a device-informed non-Markovian one. In these experiments, no hybrid
+model showed a consistent accuracy advantage over the strongest comparison
+methods.
+
+\subsection{The matched kernel comparison}
+
+On random held-out circuits in the idealised regime, classical RBF reaches
+$0.0404$, the fidelity kernel reaches $0.0421$, and
+linear zero-noise extrapolation reaches $0.0737$. The paired difference
+RMSE(RBF) $-$ RMSE(fidelity) is $-0.00168$ (95\% CI $[-0.00324,\allowbreak -0.00071]$). Across ten repeated
+grouped holdouts, the mean and standard deviation are $0.0416\pm0.0011$
+for RBF and $0.0426\pm0.0012$ for fidelity. The per-split paired intervals
+favour RBF in $9$ splits and favour fidelity in $0$; the tenth interval includes zero.
+
+\subsection{Sensitivity to hyperparameters and initialisation}
+
+The fixed-bandwidth diagnostic gives a fidelity-kernel RMSE of
+$0.1526$ at $\beta=1$ and $0.0421$ at the best observed
+bandwidth. The separate variational seed study shows a broad spread in test
+error at fixed data and training budget. Both results motivate systematic
+tuning and repeated initialisations in benchmarks.
+
+\subsection{The two noise-scaling protocols}
+
+In the idealised noise-strength sweep, RBF's reduction relative to
+unmitigated RMSE narrows from $59.6\%$ at $0.5\times$ to $24.6\%$ at $4\times$
+on the same held-out circuits.
+
+On the realistic reference pool, RBF and fidelity reach $0.0622$ and
+$0.0622$ under parameter scaling, and $0.0762$ and
+$0.0757$ under folding on the random holdout. Both paired
+RBF-minus-fidelity intervals include zero.
+On that holdout, the kernels' RMSE gap below linear ZNE
+narrows from about $0.040$ with parameter scaling to $0.014$ with folding.
+On the depth split, the paired comparison favours RBF under parameter
+scaling. The folding interval is
+$[-0.00158,\allowbreak +0.00289]$.
+Both protocols share their native-scale shots, and folded ZNE uses the
+actual ratios of executed to original layers.
+
+In the three-pool replication, folding lowers linear ZNE error and raises
+both fitted kernels' RMSE relative to parameter scaling on both splits in
+all nine shot-draw combinations (Section~\ref{sec:ch5_folding_seeds}).
+The reset intervention and drift comparisons give further controls for the
+same simulated device.
+
+\subsection{Finite-shot kernels and circuit cost}
+
+On the parameter-scaled random holdout, PSD repair on each training block defines
+the projection for its validation or test cross-kernel. Mean RMSE is $0.0658$
+at $10^5$ shots per entry and $0.0629$ with exact entries, against $0.0622$ for
+RBF (Section~\ref{sec:ch5_shotkernel}). Both fidelity variants use the same
+folds, bandwidth and ridge grid. At $10^5$ shots per entry, tuning, fitting and
+scoring the fidelity kernel on this split use $2.78\times10^{12}$ simulated
+fidelity executions, and each subsequent prediction adds $3.15\times10^{8}$.
+RBF computes its similarities classically from the $12{,}288$ input executions
+per row that both kernels share.
+
+\subsection{Feature support and depth transfer}
+
+On the idealised deeper-circuit split, RBF reaches $0.0658$
+and fidelity reaches $0.1433$, using the same six inputs. The raw measurement
+reaches $0.1217$. Removing depth and two-qubit gate count while retaining
+observable weight gives $0.0718$ for RBF and $0.0723$ for fidelity. This feature
+ablation changes the inputs and fidelity-map width, and its result applies to
+the tested depth split (Section~\ref{sec:ch5_robustness}).
+
+\subsection{Scope and limitations}
+
+Mitigation uses simulated circuits with at most six qubits. The device-informed
+regime models one set of noise parameters and one drift condition, including a
+coupled defect on qubit~$0$, which appears in four of the five measured Pauli
+strings. The model omits readout assignment errors and leakage. The trace-distance witness covers two
+probe pairs on an idle register. The reset comparison studies a specific
+between-layer intervention at fixed collision and damping parameters.
+The fidelity resource estimates count simulated circuit executions with ideal
+overlap probabilities and binomial sampling. The analytic fidelity reference
+computes exact state overlaps in simulation.
+
+The initial sweeps and cross-family experiment use one data split per setting.
+The ten repeated holdouts are drawn from one dataset, so their test sets overlap and are not independent. The pool replication uses three circuit
+pools, and shot draws within a pool share its circuits. Intervals across shot
+budgets and models are pointwise.
+
+\section{Future scope}
+
+\begin{enumerate}
+    \item \textbf{Hardware data through the same pipeline.} Use measured
+    expectations with a simulable or Clifford-replacement reference. Keep
+    all observables measured on a circuit in the same group and build inputs
+    as in Section~\ref{sec:ch3_features}. Use matched native measurements
+    and executed folding ratios to compare learned models with extrapolation
+    on a processor.
+
+    \item \textbf{Support-aware mitigation.} The depth ablation motivates
+    explicit checks for coverage of structural inputs. Compare an input-support
+    check, a shape-constrained regressor and a fallback to analytic extrapolation
+    on depth or family shifts.
+
+    \item \textbf{Hardware training of the variational arms.} The variational
+    arms use simulator backpropagation. For the standard two-shift identity, a
+    hardware gradient uses two shifted settings per differentiated gate angle
+    and circuit input, before accounting for measurement shots. Compare a
+    shot-resolved training and prediction budget with linear extrapolation.
+
+    \item \textbf{Wider noise and size sweeps.} Repeat the paired noise-strength
+    sweep on additional circuit pools and extend the system-size study to
+    test how both kernels scale. Beyond density-matrix simulation, these
+    experiments require controlled approximations or hardware measurements.
+
+\end{enumerate}
+
+\section{Closing remark}
+
+These simulations show how a matched nonlinear baseline changes the accuracy
+comparison in quantum error mitigation. The comparison depends on the circuit
+distribution, feature set and noise-scaling protocol. Hardware use also requires
+counting the reference data, input measurements and fidelity-estimation circuits.
+
+\end{document}

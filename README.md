@@ -22,7 +22,7 @@ ten initialisation seeds.
 
 The comparison runs under two noise regimes. Regime I is an idealized Markovian model. Regime II is a device-inspired simulator with inhomogeneous rates, coherent error, crosstalk, unitary folding, and an explicit two-level environment that can retain memory. 
 
-Selected results from Chapter 5 and the tables in Appendix B.
+Selected results from Chapters 5 and 6 and the tables in Appendix B.
 
 - On the idealized random held-out split, classical RBF kernel ridge reaches 0.0404 RMSE, the fidelity kernel reaches 0.0421, and linear extrapolation reaches 0.0737. On deeper circuits, RBF and fidelity reach 0.0658 and 0.1433.
 - On the realistic reference random holdout, RBF and fidelity reach 0.0622 and 0.0622 under parameter scaling and 0.0762 and 0.0757 under folding. On the reference depth split, the paired comparison favours RBF under parameter scaling and includes zero under folding.
@@ -36,7 +36,7 @@ All results are simulated.
 ```
 Thesis.tex              master file: metadata macros and package preamble
 Thesis.pdf              compiled thesis
-chapters/               chapter1.tex … chapter6.tex and refs.bib
+chapters/               chapter1.tex … chapter7.tex and refs.bib
 preliminaryPages/       cover, declaration, certificate, abstract, acknowledgements,
                         dedication, list of symbols (nomencl), list of abbreviations (acronym)
 appendices/             A derivations, B complete result tables, C source listings
@@ -133,7 +133,7 @@ contrasts in `paired_kernel_main.csv`, `paired_kernel_sweeps.csv`, and
 `paired_kernel_followups.csv`. Positive RBF-minus-fidelity differences favour
 the fidelity fit. The VQC-only seed panel reports its separate diagnostic runs.
 
-### Regime II: device-realistic, non-Markovian benchmark (Sections 5.13–5.19)
+### Regime II: device-realistic, non-Markovian benchmark (Chapter 6, Sections 6.1–6.7)
 
 Four paired datasets share circuits and ideal values exactly:
 

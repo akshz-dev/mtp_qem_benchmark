@@ -81,7 +81,7 @@ regressor~\cite{havlicek2019supervised,schuld2021kernel,huang2021power}. That
 intuition motivates a controlled comparison with a classical kernel using the same
 inputs and loss~\cite{schuld2022isquantum,bowles2024better}. The benchmark measures
 how the resulting ranking depends on the split, tuning and precision of the kernel
-entries (Chapter~\ref{chap5:results}).
+entries (Chapters~\ref{chap5:results} and~\ref{chap6:realistic}).
 
 \section{Research motivation}
 
@@ -132,7 +132,6 @@ The objectives of this work are:
     initialisation. The fixed-setting and feature ablations test which changes
     account for differences on the paired holdouts.
 
-    
 \end{enumerate}
 
 \section{Research contributions}
@@ -202,7 +201,6 @@ The substantive contributions of this thesis are as follows.
     circuit. A feature ablation measures the effect of removing depth and gate
     count, which both go beyond their training range on this split.
 
-    
 \end{enumerate}
 
 \subsection{Organisation of thesis}
@@ -215,14 +213,14 @@ arm, and the metrics.
 Chapter~\ref{chap4:setup} documents the implementation -- software versions, seeds,
 hyperparameter selection protocol and computational budget -- in enough detail to
 reproduce every number in the thesis.
-Chapter~\ref{chap5:results} reports the mitigation benchmark: the main comparison,
-the noise-strength, shot-budget and system-size sweeps, learning curves, feature
-ablation and the two out-of-distribution experiments in the idealised regime, and
-then repeats the main comparison under a device-realistic, non-Markovian noise model
-with hardware-realisable noise scaling, calibration drift and a shot-limited
-quantum kernel.
-
-Chapter~\ref{chap6:conclusion} states the conclusions, the limits of what has been
+Chapter~\ref{chap5:results} reports the mitigation benchmark in the idealised
+regime: the main comparison, the noise-strength, shot-budget and system-size
+sweeps, learning curves, feature ablation and the two out-of-distribution
+experiments.
+Chapter~\ref{chap6:realistic} repeats the main comparison under a
+device-realistic, non-Markovian noise model with hardware-realisable noise
+scaling, calibration drift and a shot-limited quantum kernel.
+Chapter~\ref{chap7:conclusion} states the conclusions, the limits of what has been
 established, and the directions that follow from the failure modes identified here.
 Appendix~\ref{AppendixA} collects the derivations,
 Appendix~\ref{AppendixB} the complete result tables and selected hyperparameters,

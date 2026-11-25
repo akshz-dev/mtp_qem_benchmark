@@ -1,4 +1,4 @@
-"""Figures for the device-realistic regime (Chapter 5, regime II).
+"""Figures for the device-realistic regime (Chapter 6).
 
 Reads sweep_realistic.csv and writes:
   fig_ch5_scaling.png   parameter scaling vs unitary folding, both splits

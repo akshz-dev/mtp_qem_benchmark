@@ -9,7 +9,7 @@
 \chapter{Experimental Setup and Implementation}\label{chap4:setup}
 
 This chapter records the implementation in enough detail to reproduce every number
-in Chapter~\ref{chap5:results}. The intent is that a
+in Chapters~\ref{chap5:results} and~\ref{chap6:realistic}. The intent is that a
 reader with the accompanying source tree and these version pins can regenerate the
 result tables and figures without contacting the author.
 
@@ -37,11 +37,9 @@ scikit-learn      & 1.9.1 \\
 Matplotlib        & 3.11.1 \\
 Autograd          & 1.8.0 \\
 threadpoolctl     & 3.8.0 \\
-
 \bottomrule
 \end{tabular}
 \end{table}
-
 
 The matched-kernel mitigation rerun used Python 3.12.10 and the package pins in
 \texttt{requirements.txt}. Timings reflect concurrent execution of configurations.
@@ -197,7 +195,7 @@ Table~\ref{tab:ch4_files} maps the main drivers to their outputs. The reference
 mitigation fit consumes one table of circuit groups, circuit descriptors,
 noisy expectations and ideal labels. The folded comparisons additionally
 require the stored exact expectation values, executed layer ratios and provenance
-manifests. 
+manifests.
 
 \begin{longtable}{p{4.9cm} >{\raggedright\arraybackslash}p{10.0cm}}
 \caption[Source files and their outputs]{Source files and their outputs. Scripts are in \texttt{code/} and
@@ -275,7 +273,6 @@ Appendix~\ref{AppendixB} from the result files. \\
 \texttt{make\_figures\_\allowbreak realistic.py} &
 The realistic-regime and robustness figures, including the circuit--shot
 replication. \\
-
 \end{longtable}
 
 \section{Verification practices}\label{sec:ch4_verification}
@@ -301,7 +298,7 @@ applies $R_Y$ and then $R_Z$, so its inverse must apply $R_Z^{\dagger}$ before
 $R_Y^{\dagger}$; reversing the two makes the folded circuit compute a different
 unitary, and every folded feature of that family would be invalid. Folded and
 unfolded values agree to $3.9 \times 10^{-16}$ for both families, and every
-regime-II dataset in Chapter~\ref{chap5:results} was generated with the tested
+regime-II dataset in Chapter~\ref{chap6:realistic} was generated with the tested
 simulator.
 
 Fourth, paired comparisons within a holdout resample whole circuit groups.
@@ -312,6 +309,6 @@ pools as the inference units.
 
 Fifth, the accompanying \texttt{results/claims\_audit.csv} records an earlier
 audit. The current comparisons use the updated result artifacts of
-Chapter~\ref{chap5:results}.
+Chapters~\ref{chap5:results} and~\ref{chap6:realistic}.
 
 \end{document}

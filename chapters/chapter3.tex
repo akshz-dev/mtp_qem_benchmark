@@ -13,7 +13,7 @@ learning problem, Sections~\ref{sec:ch3_noise}--\ref{sec:ch3_dataset} specify th
 data-generating process, Section~\ref{sec:ch3_protocol} defines the evaluation
 protocol and explains why a particular class of data split is invalid here, and
 Sections~\ref{sec:ch3_analytic}--\ref{sec:ch3_hybrid} define the ten main model arms.
-Section~\ref{sec:ch3_metrics} defines the metrics and the cost accounting. 
+Section~\ref{sec:ch3_metrics} defines the metrics and the cost accounting.
 
 \section{Problem formulation}\label{sec:ch3_formulation}
 
@@ -537,7 +537,7 @@ alongside the simulator's classical training time and model size.
 \section{Threats to validity}\label{sec:ch3_validity}
 
 The limitations of the design are stated here so that the results of
-Chapter~\ref{chap5:results} are not over-read. Because the benchmark is run under
+Chapters~\ref{chap5:results} and~\ref{chap6:realistic} are not over-read. Because the benchmark is run under
 two noise regimes, it is useful to separate the limitations that regime~II removes
 from those that remain in both.
 
@@ -553,7 +553,7 @@ a coupled defect can retain state across layers, and a second calibration
 models drift.
 Likewise, noise scaling in regime~I is exact by construction, which favours the
 extrapolation baselines relative to hardware practice; regime~II additionally
-supplies unitary folding. Chapter~\ref{chap5:results} reports how error and
+supplies unitary folding. Chapter~\ref{chap6:realistic} reports how error and
 rankings depend on the simulated noise conditions and scaling protocol.
 
 \subsection{Remaining in both regimes}
