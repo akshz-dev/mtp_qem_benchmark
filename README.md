@@ -50,7 +50,7 @@ requirements.txt        pinned Python environment
 
 ## Building the PDF
 
-The layout follows the public [IIT Jodhpur M.Tech. project report guide](https://www.iitj.ac.in/PageImages/Gallery/03-2025/Guidelines-for-submission-of-Project-Report-for-MTech-Students-638771979333235810.pdf). Compile with LuaLaTeX or XeLaTeX. The preamble uses Times New Roman when available and falls back to TeX Gyre Termes. Install Times New Roman or supply it to the compiler if you need to reproduce the included PDF's typeface.
+The layout follows the public [IIT Jodhpur M.Tech. project report guide](https://www.iitj.ac.in/PageImages/Gallery/03-2025/Guidelines-for-submission-of-Project-Report-for-MTech-Students-638771979333235810.pdf). Within those page rules (A4, 12 pt, margins 1 in top/bottom and 0.75 in left/right, 1.5 line spacing, 14 pt section headings), the design follows `MTP_Template`: Book Antiqua for text and Candara for headings, right-aligned chapter and front-matter headings, uppercase section headings, and a two-sided layout in which chapters open on right-hand pages. Compile with LuaLaTeX or XeLaTeX. On a Mac with Microsoft Office the two fonts are read from Word's font folder; elsewhere (for example on Overleaf) the build falls back to TeX Gyre Pagella and Latin Modern Sans, which moves some page breaks.
 
 On **Overleaf**, set *Menu → Compiler* to LuaLaTeX and recompile. Overleaf runs BibTeX and the nomenclature index automatically.
 

@@ -10,13 +10,13 @@
 %% or simply:  latexmk -lualatex Thesis.tex
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\documentclass[12pt,a4paper,oneside,openany]{report}
+\documentclass[12pt,a4paper,twoside,openright]{report}
 \usepackage{subfiles}
 \usepackage[nohyperlinks]{acronym}
 \usepackage{graphicx}
 \usepackage{hyperref}
 \hypersetup{hidelinks}          % links stay clickable; no red/green boxes
-\usepackage[a4paper,top=1in,bottom=1in,left=0.75in,right=0.75in]{geometry}
+\usepackage[a4paper,top=1in,bottom=1in,inner=0.75in,outer=0.75in]{geometry}  % IITJ M.Tech guideline margins
 \usepackage{chngcntr}
 \counterwithin{table}{section}
 \counterwithin{figure}{section}
@@ -25,18 +25,37 @@
 \usepackage{booktabs}
 \usepackage{multicol}
 \usepackage{multirow}
+\usepackage{mathpazo}            % Palatino-style mathematics, matching Book Antiqua
 \usepackage{fontspec}
-\IfFontExistsTF{Times New Roman}
-  {\setmainfont{Times New Roman}}
-  {\IfFileExists{/System/Library/Fonts/Supplemental/Times New Roman.ttf}
+%% IITJ thesis guideline fonts: Book Antiqua (text) and Candara (headings, \sffamily).
+%% On a Mac with Microsoft Office they are read from Word's font folder; elsewhere
+%% (e.g. Overleaf) the build falls back to TeX Gyre Pagella and Latin Modern Sans.
+\newcommand{\msofficefonts}{/Applications/Microsoft Word.app/Contents/Resources/DFonts/}
+\IfFontExistsTF{Book Antiqua}
+  {\setmainfont[Numbers=Lining]{Book Antiqua}}
+  {\IfFileExists{\msofficefonts Book Antiqua.ttf}
      {\setmainfont[
-       Path=/System/Library/Fonts/Supplemental/,
-       BoldFont={Times New Roman Bold.ttf},
-       ItalicFont={Times New Roman Italic.ttf},
-       BoldItalicFont={Times New Roman Bold Italic.ttf}
-      ]{Times New Roman.ttf}}
-     {\setmainfont{TeX Gyre Termes}
-      \PackageWarningNoLine{Thesis}{Times New Roman unavailable; using TeX Gyre Termes}}}
+       Numbers=Lining,
+       Path=\msofficefonts,
+       BoldFont={Book Antiqua Bold.ttf},
+       ItalicFont={Book Antiqua Italic.ttf},
+       BoldItalicFont={Book Antiqua Bold Italic.ttf}
+      ]{Book Antiqua.ttf}}
+     {\setmainfont{texgyrepagella}[Extension=.otf, Numbers=Lining,
+        UprightFont=*-regular, BoldFont=*-bold,
+        ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+      \PackageWarningNoLine{Thesis}{Book Antiqua unavailable; using TeX Gyre Pagella}}}
+\IfFontExistsTF{Candara}
+  {\setsansfont[Numbers=Lining]{Candara}}
+  {\IfFileExists{\msofficefonts Candara.ttf}
+     {\setsansfont[
+       Numbers=Lining,
+       Path=\msofficefonts,
+       BoldFont={Candarab.ttf},
+       ItalicFont={Candarai.ttf},
+       BoldItalicFont={Candaraz.ttf}
+      ]{Candara.ttf}}
+     {\PackageWarningNoLine{Thesis}{Candara unavailable; using Latin Modern Sans}}}
 \usepackage{tocbibind}
 \usepackage{nomencl}
 \usepackage{etoolbox}
@@ -53,7 +72,6 @@
 \usepackage{listings}         % code listings in Appendix C
 \usepackage{xcolor}
 \usepackage{caption}
-\captionsetup{font=small,justification=centering,singlelinecheck=false}
 \sisetup{round-mode=places, round-precision=4, table-format=1.4}
 
 \lstdefinestyle{thesiscode}{
@@ -72,23 +90,21 @@
 %%%%%%%%%%%%%%%%%%%%  Format for new dates  %%%%%%%%%%%%%%%%
 \newdateformat{monthyeardate}{%
   \monthname[\THEMONTH], \THEYEAR}
-\onehalfspacing
+\onehalfspacing   % IITJ M.Tech guideline: 1.5 line spacing
 \setlength{\emergencystretch}{2em}
 \usepackage[explicit]{titlesec}
 
 \titleformat{\chapter}[display]
-  {\normalfont\bfseries\centering\fontsize{16}{19}\selectfont}
-  {\chaptertitlename\ \thechapter}{0.5em}{\MakeUppercase{#1}}
-
+  {\fontsize{27}{27}\sffamily\bfseries\filleft\hyphenpenalty=10000}{\thechapter}{0pt}{#1}
 \titleformat{\section}
-  {\normalfont\bfseries\fontsize{14}{17}\selectfont}
-  {\thesection}{0.5em}{\MakeUppercase{#1}}
+  {\fontsize{14}{17}\selectfont\bfseries\sffamily\raggedright\hyphenpenalty=10000}{\thesection}{0.5em}{\MakeUppercase{#1}}
 \titleformat{\subsection}
-  {\normalfont\itshape}{\thesubsection}{0.5em}{#1}
+  {\normalsize\bfseries\sffamily\raggedright\hyphenpenalty=10000}{\thesubsection}{0.5em}{\MakeUppercase{#1}}
 \titleformat{\subsubsection}
-  {\normalfont\itshape}{\thesubsubsection}{0.5em}{#1}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  {\sffamily\raggedright\hyphenpenalty=10000}{\thesubsubsection}{0.5em}{\MakeUppercase{#1}}
+%% Blank verso page with no number, used between the one-page front-matter items
+%% (two-sided layout of the IITJ template). Inserts a page only when needed.
+\newcommand\myemptypage{\clearpage\ifodd\value{page}\else\null\thispagestyle{empty}\newpage\fi}
 %%%%%%%% THESIS METADATA: THE SEVEN MACROS BELOW %%%%%%%%
 %%%%%%%% Title-page metadata %%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -111,12 +127,18 @@ for Quantum Error Mitigation and Syndrome Decoding}
 
 \begin{document}
 \pagestyle{plain}
-\pagenumbering{roman}
 \include{preliminaryPages/coverPage}
+\myemptypage
+\pagenumbering{roman}
+\setcounter{page}{3}
 \include{preliminaryPages/declaration}
+\myemptypage
 \include{preliminaryPages/certificate}
+\myemptypage
 \include{preliminaryPages/abstract}
+\myemptypage
 \include{preliminaryPages/acknowledgments}
+\myemptypage
 \include{preliminaryPages/dedication}
 \tableofcontents
 \listoffigures
@@ -125,9 +147,9 @@ for Quantum Error Mitigation and Syndrome Decoding}
 \include{preliminaryPages/nomenclature}
 \include{preliminaryPages/abbreviation}
 \endgroup
-
-\clearpage
+\cleardoublepage
 \pagenumbering{arabic}
+\setcounter{page}{1}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% Chapter 1 (Introduction)
@@ -181,7 +203,7 @@ for Quantum Error Mitigation and Syndrome Decoding}
 %% Bibliography
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \clearpage
-\bibliographystyle{ieeetr}
+\bibliographystyle{unsrt}
 \bibliography{chapters/refs}
 
 %----------------------------------------------------------------------------------------
