@@ -1,11 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%---Chapter2 Formatting---%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \documentclass[Thesis.tex]{subfiles}
 \begin{document}
-\newpage
 \setcounter{chapter}{1} %%Chapter Numbering
-\titleformat{\chapter}[display]
-{\sffamily\fontsize{27}{27}\bfseries\filleft}{\thechapter}{0pt}{{#1}}
-\thispagestyle{empty}
 \chapter{Background and Literature Review}\label{chap2:background}
 
 This chapter reviews the three bodies of work that this thesis draws on and,
@@ -212,7 +208,7 @@ stretch-invariant.
 
 Digital alternatives replace pulse control with circuit rewriting.
 Unitary folding maps each gate or each circuit layer $G \mapsto G G^{\dagger}
-G$, which is logically the identity but triples the noise exposure;
+G$, which is logically equivalent to $G$ but triples the noise exposure;
 Giurgica-Tiron et al.\ formalised local and global folding, showed how
 fractional scale factors are obtained by folding a random subset of gates, and
 benchmarked the resulting estimators \cite{giurgicatiron2020digital}. He et
@@ -220,7 +216,7 @@ al.\ studied the closely related strategy of inserting identity pairs
 (\textit{e.g.}\ pairs of CNOTs) and pointed out that the effective noise
 scaling achieved is only approximately linear in the number of insertions,
 because inserted gates need not carry the same error profile as the gates they
-are meant to emulate \cite{he2020zero}. The \textsc{Mitiq} package made these
+are meant to emulate \cite{he2020zero}. The Mitiq package made these
 scaling and extrapolation choices reproducible and interoperable across
 back-ends \cite{larose2022mitiq}, which is why folding-based ZNE has become the
 de facto baseline in the mitigation literature. The third knob, parameter-noise
@@ -330,7 +326,7 @@ total shot requirement to reach a target standard error scales as
 $\prod_{j}\kappa_{j}$, and the reported accuracy of a composite pipeline is
 meaningless without that product. Cai et al.\ organise the whole field around
 exactly this bias--variance--overhead structure \cite{cai2023review}, and the
-\textsc{Mitiq} implementation makes the composition explicit in software by
+Mitiq implementation makes the composition explicit in software by
 separating the noise-scaling executor from the inference step
 \cite{larose2022mitiq}.
 
@@ -567,11 +563,10 @@ right-hand side of Eq.~\eqref{eq2:fidkernel} or by a swap test. Havl\'i\v{c}ek
 et al.\ introduced this construction with the IQP-style encoding that remains
 the standard choice, and demonstrated both a variational classifier and a
 kernel estimator on superconducting hardware \cite{havlicek2019supervised}.
-Schuld later established the conceptual point that supervised models built from
-parameterised circuits are kernel methods: training a variational circuit
-explores a restricted region of a reproducing kernel Hilbert space whose kernel
-is fixed by the encoding, so the encoding, not the ansatz, is where the
-inductive bias lives \cite{schuld2021kernel}. Once a kernel matrix
+Schuld formulates supervised quantum models in a kernel framework
+\cite{schuld2021kernel}. The feature map determines a kernel, and the
+variational ansatz and measurement determine the functions accessible to a
+particular circuit model. Once a kernel matrix
 $K_{ij} = k(\mathbf{x}_{i},\mathbf{x}_{j})$ has been estimated, regression is
 classical kernel ridge regression,
 \begin{equation}
@@ -596,25 +591,23 @@ fidelity-kernel classifier \cite{liu2021rigorous}, establishing that advantage
 is possible in principle while leaving open how far such a construction is
 from anything a practitioner would encounter.
 
-\subsection{Concentration, bandwidth, and the collapse of expressive kernels}
+\subsection{Concentration and bandwidth of fidelity kernels}
 
-The most consequential practical result about fidelity kernels is that
-expressive encodings destroy them. Thanasilp et al.\ proved that for broad
-classes of encodings --- deep, expressive circuits, and also circuits subject
-to global depolarising noise or measured with too many qubits traced out ---
-the kernel entries concentrate exponentially in the number of qubits around a
-fixed value,
+The most consequential practical result about fidelity kernels is that, under specified expressivity, measurement, entanglement and noise assumptions,
+fidelity entries can concentrate exponentially with system size
+\cite{thanasilp2024exponential}. A schematic concentration regime has
 \begin{equation}
   k(\mathbf{x},\mathbf{x}') \;=\; \bar{k} \;+\; \varepsilon(\mathbf{x},\mathbf{x}'),
   \qquad
-  \mathrm{Var}\bigl[\varepsilon\bigr] \in \mathcal{O}\!\left(2^{-n}\right),
+  \mathrm{Var}\bigl[\varepsilon\bigr] = \mathcal{O}\!\left(e^{-c n}\right),\quad c>0,
   \label{eq2:concentration}
 \end{equation}
-so that the Gram matrix approaches a constant matrix and, after
-regularisation, the trained model approaches a trivial predictor unless the
-number of shots grows exponentially \cite{thanasilp2024exponential}. This is
-the kernel counterpart of the barren plateau phenomenon and it is not a
-small-sample artefact: it is a property of the geometry of the embedding.
+for off-diagonal entries sampled over the data or ensemble in question.
+Exact fidelity keeps a unit diagonal. If off-diagonal fidelities concentrate
+near zero, finite-shot inversion tests can yield an estimated matrix close to
+the identity, with little useful similarity information
+\cite{thanasilp2024exponential}. The bandwidth sweep in this thesis compares
+a small fixed feature map over several scales.
 
 The practical remedy is bandwidth. Shaydulin and Wild observed that rescaling
 the data before encoding, $\mathbf{x} \mapsto c\,\mathbf{x}$ with $c < 1$,
@@ -674,7 +667,7 @@ Mitigation buys accuracy on shallow circuits; error correction buys
 scalability. The second track of this thesis concerns decoding, and the
 literature there is instructive because it is a machine-learning subfield with
 mature benchmarking conventions --- a fixed code, a fixed noise model, a single
-reported figure of merit, and a universally accepted classical baseline.
+reported figure of merit, and a widely used classical baseline.
 
 \subsection{Surface codes and the decoding problem}
 
@@ -704,7 +697,7 @@ Equation~\eqref{eq2:mld} is intractable in general, so practical decoding is a
 search for accurate approximations that run faster than the syndrome
 measurement cycle. Because decoding research depends on generating enormous
 volumes of syndrome data under circuit-level noise, the field's progress is
-tied to fast stabiliser simulation; Gidney's \textsc{Stim} made
+tied to fast stabiliser simulation; Gidney's Stim made
 million-shot circuit-level sampling routine and is now the standard data
 generator \cite{gidney2021stim}.
 
@@ -718,7 +711,7 @@ matching itself is solved by Edmonds' blossom algorithm
 \cite{dennis2002topological}, is near-optimal for independent bit-flip and
 phase-flip noise but suboptimal when errors are correlated between the two
 lattices --- notably for $Y$ errors and for measurement errors with realistic
-circuit-level structure. Higgott's \textsc{PyMatching} provided the open
+circuit-level structure. Higgott's PyMatching provided the open
 implementation that made MWPM the universal baseline
 \cite{higgott2022pymatching}, and the throughput problem was addressed by
 Delfosse and Nickerson's union-find decoder, which achieves almost-linear
@@ -756,16 +749,14 @@ graph classification problem and showed that a graph neural network trained
 only on simulated experimental data can outperform a matching decoder under
 circuit-level noise even when the matching decoder is given full knowledge of
 the underlying error model \cite{lange2025data}. The current state of the art
-is the transformer-based \textsc{AlphaQubit} decoder of Bausch et al., which
+is the transformer-based AlphaQubit decoder of Bausch et al., which
 was pre-trained on simulated data, fine-tuned on experimental data, and
 reported lower logical error rates than both matching and correlated-matching
 baselines on Google's distance-3 and distance-5 surface code experiments
 \cite{bausch2024learning}.
 
 The methodological contrast with the mitigation literature is stark and
-deliberate here. Every decoder paper cited above reports a single agreed
-metric --- logical error rate per round --- against a single agreed baseline
---- MWPM, usually via \textsc{PyMatching} --- on a single agreed noise model,
+deliberate here. Every decoder paper cited above reports a common metric --- logical error rate per round --- against a common baseline --- MWPM, usually via PyMatching --- on a common noise model,
 and recent papers additionally report latency or throughput because a decoder
 that cannot keep up with the syndrome cycle is useless regardless of accuracy.
 Generalisation is also tested as a matter of course: decoders are evaluated at
@@ -805,100 +796,46 @@ precisely why learned decoders are studied so carefully and why the standards
 of comparison in that subfield are worth importing into the mitigation
 literature.
 
+
 \section{Research gap}\label{sec2:gap}
 
-The review above supports a narrow and specific claim: the case for
-machine-learning-based quantum error mitigation has been made with an
-evaluation protocol too weak to support the conclusions that are drawn from it.
-Three deficiencies are distinguishable, and each has a concrete counterpart in
-the design of this thesis.
+Existing mitigation studies compare different reference methods, circuit
+families and measurement budgets. Bultrini et al.\ benchmark zero-noise
+extrapolation, regression-based mitigation, virtual distillation and their
+combination, finding that the ranking depends on the total shot budget
+\cite{bultrini2023unifying}. The present study investigates a complementary
+question: how classical and hybrid regression compare on shared circuit
+groups, under explicit distribution shifts and finite kernel measurements.
 
-\subsection{Inconsistent baselines}
+\subsection{Reference methods and matched kernels}
 
-There is no agreed reference method for
-learned mitigation. Clifford data regression was introduced against the
-unmitigated value and analysed in isolation \cite{czarnik2021clifford};
-variable-noise CDR was compared against both ZNE and CDR, which is stronger,
-but against one extrapolation order and one noise-scaling method
-\cite{lowe2021unified}; the large-scale hardware benchmark of Liao et al.\ uses
-digital ZNE as its single reference \cite{liao2024machine}; the
-neural-network studies of Bennewitz et al.\ and Zhukov and Pogosov report
-improvement over the noisy expectation value
-\cite{bennewitz2022neural,zhukov2024quantum}; and application-driven work
-reports whether the downstream optimisation succeeded rather than an error
-metric against alternatives \cite{sack2024large}. Because ZNE is not one
-method but a family --- linear, Richardson, and exponential fits, over
-pulse-stretched \cite{kandala2019extends}, folded
-\cite{giurgicatiron2020digital} or identity-inserted \cite{he2020zero} noise
-scaling, each with its own bias--variance profile
-\cite{endo2018practical,cai2021multiexponential} --- reporting a win against
-``ZNE'' without specifying which member of the family was used, and without
-tuning it, leaves the comparison unfalsifiable. The contrast with the decoding
-literature, where every paper reports against MWPM under
-\textsc{PyMatching} \cite{higgott2022pymatching} on a stated circuit-level
-noise model, is the clearest evidence that the mitigation field's looseness is
-a choice rather than a necessity. This thesis therefore fixes a single task and
-evaluates nine methods on it --- the unmitigated baseline, linear, Richardson
-and exponential extrapolation, three classical regressors, a fidelity-kernel
-model and a data-reuploading circuit --- with identical data, identical shot
-budgets and tuned hyperparameters for every arm, including the classical ones,
-as Bowles et al.\ recommend \cite{bowles2024better}.
+The benchmark compares ten principal methods on the same held-out circuits,
+including the native measurement, three extrapolation variants, four classical
+regressors, fidelity-kernel ridge regression and data reuploading.
+The kernel comparison matches the feature vector, squared-error objective
+and grouped evaluation. When both kernels are tuned in the same experiment,
+their candidate counts are matched. This design follows the emphasis on
+strong classical controls in quantum machine learning
+\cite{bowles2024better}.
 
-\subsection{Absent cost normalisation}
+\subsection{Accuracy and measurement budgets}
 
-The theory of mitigation is a theory of
-cost: unbiasedness is purchased with sampling overhead, and the fundamental
-results are statements about how that overhead scales
-\cite{takagi2022fundamental,quek2024exponentially}. Yet accuracy is routinely
-reported without the corresponding budget. This matters because the methods
-under comparison consume different numbers of circuit evaluations per
-estimated observable. A three-point extrapolation consumes three; a classical
-regressor trained on noise-scaled features consumes as many evaluations as it
-has features; a fidelity-kernel or data-reuploading model consumes those
-evaluations \emph{plus} the additional circuit executions needed to evaluate
-its feature map or ansatz. An accuracy comparison that ignores this difference
-credits the quantum models with resources it does not count. Liao et al.\ are
-the exception that proves the rule: their central claim is explicitly about
-run-time overhead \cite{liao2024machine}, and once cost is made the axis, the
-conclusion about which method to prefer changes. This thesis therefore reports
-error against circuit evaluations consumed, so that methods are ranked at
-matched budget rather than at matched accuracy, and a model that ties on
-accuracy while consuming more circuit executions is recorded as losing.
+Theory provides sampling lower bounds for certain mitigation settings
+\cite{takagi2022fundamental,quek2024exponentially}, and hardware studies
+report runtime overhead under their own acquisition protocols
+\cite{liao2024machine}. Here the comparison records RMSE and acquisition
+cost at the observed-feature and fidelity-kernel budgets. The finite
+kernel studies count training, validation and prediction acquisitions as
+appropriate to each protocol.
 
-\subsection{No out-of-distribution testing}
+\subsection{Transfer across circuit distributions}
 
-The appeal of a learned mitigator
-is amortisation --- train once, apply to many circuits. That appeal is only
-justified if the learned map survives a change in the circuits it is applied
-to, and almost no study tests this. Training circuits are constructed to
-resemble the target \cite{czarnik2021clifford,lowe2021unified}, evaluation
-draws from the training family, and the two available exceptions are partial:
-the cross-device transfer test of Zlokapa and Gheorghiu, which found most of
-the benefit did not transfer \cite{zlokapa2020deep}, and the extrapolation
-experiments of Liao et al.\ \cite{liao2024machine}. Theory predicts that this
-should be the decisive test for quantum models specifically. A
-data-reuploading circuit is a truncated Fourier series in its inputs
-\cite{schuld2021effect}, so its predictions are periodic beyond the training
-range; a fidelity kernel concentrates unless its bandwidth is tuned
-\cite{thanasilp2024exponential,shaydulin2022importance,canatar2023bandwidth},
-and the tuning that makes it generalise also makes it resemble a classical
-radial basis function kernel \cite{florezablan2025similarity}. That
-out-of-distribution generalisation is nonetheless a tractable and meaningful
-criterion for quantum models is established by Caro et al.\
-\cite{caro2023ood}, alongside the sample-complexity bounds that govern
-in-distribution behaviour \cite{caro2022generalization}. This thesis therefore
-trains every model on circuits up to a fixed depth and tests all nine methods
-on deeper circuits, reporting the degradation explicitly rather than the
-in-distribution number alone.
-
-Taken together, these three corrections define the contribution of this work.
-It is not a new mitigation method, and it does not claim a quantum advantage;
-it is a controlled, cost-normalised, distribution-shift-aware benchmark of
-hybrid quantum-classical and purely classical mitigators on a common
-noisy-to-ideal regression task, complemented by a machine-learned decoding
-study that borrows its evaluation conventions from the more disciplined
-decoding literature
-\cite{varbanov2025neural,lange2025data,bausch2024learning}. The methodology
-that implements these three corrections is set out in the next chapter.
+Existing work includes cross-device and extrapolation tests
+\cite{zlokapa2020deep,liao2024machine}. This study uses explicit grouped
+depth and family holdouts and a controlled change in the simulator's noise
+rates. It records transfer separately from random holdout performance
+and measures the effect of removing structural inputs that extend beyond
+their training range. The repetition-code benchmark studies a distinct
+task with a physical matching graph and an exact posterior reference.
 
 \end{document}

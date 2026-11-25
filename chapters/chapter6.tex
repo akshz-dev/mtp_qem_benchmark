@@ -1,446 +1,341 @@
 %%%%%%%%%%%%%%%%%%%%%---Chapter6 Formatting---%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \documentclass[Thesis.tex]{subfiles}
 \begin{document}
-\newpage
 \setcounter{chapter}{5} %%Chapter Numbering
 
-\titleformat{\chapter}[display]
-{\sffamily\fontsize{27}{27}\bfseries\filleft}{\thechapter}{0pt}{{#1}}
 
-\thispagestyle{empty}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Results: Machine-Learning Syndrome Decoding}\label{chap6:decoding}
 
-Chapter~\ref{chap5:results} asked whether learned models can post-process noisy
-measurements better than an analytic estimator. This chapter asks the corresponding
-question one level up the stack: can learned models decode error-correction
-syndromes better than the established combinatorial decoder? The metric changes from
-expectation-value RMSE to logical error rate per shot, and the baseline changes from
-zero-noise extrapolation to minimum-weight perfect matching, but the structure of
-the question -- learned estimator against principled algorithm, at matched cost -- is
-the same.
+This chapter compares learned syndrome decoders with model-based baselines.
+Minimum-weight perfect matching (MWPM) minimises the fault count for this
+equal-rate noise model. Exact maximum a posteriori (MAP) decoding minimises
+the expected logical error for the known model.
+The comparison asks how much the choice of objective affects performance.
 
 \section{Scope of this chapter}\label{sec:ch6_scope}
 
-\begin{quote}
-\textbf{Scope statement.} This chapter benchmarks decoders for the \emph{distance-$d$
-repetition code under phenomenological noise}, not the rotated surface code under
-circuit-level noise. The repetition code is used because its space-time defect
-graph is known analytically: the noise can be sampled exactly in NumPy, the matching
-graph constructed in closed form and solved by an exact blossom implementation
-(\texttt{networkx}), and the exact decoder validated against brute-force enumeration
-(Section~\ref{sec:ch6_method}). Its syndrome space is also small enough at $d = 3$
-for the training set to cover it almost completely, which makes the coverage
-analysis of Section~\ref{sec:ch6_mlwin} possible. The consequence is that \textbf{the absolute error rates and
-threshold estimates in this chapter are not comparable to published surface-code,
-circuit-level-noise numbers}, and should not be quoted as such. The comparisons
-\emph{between decoders}, which are what this chapter is about, are internally valid:
-every decoder sees identical shots.
-\end{quote}
+The experiment is a simulated bit-flip memory for the distance-$d$ repetition
+code under phenomenological noise. Its fault mechanisms give an explicit
+space-time detector graph, and the small codes allow exact calculation of logical
+class probabilities. The logical error rates and finite-distance crossover
+diagnostics in this chapter refer to this memory experiment and its noise model.
 
 \section{Methodology}\label{sec:ch6_method}
 
-\subsection{Code, noise model and sampling}
+\subsection{Noise model and sampling}
 
-The distance-$d$ bit-flip repetition code encodes one logical qubit in $d$ data
-qubits with $d-1$ parity-check stabilizers. The experiment is a memory experiment:
-prepare the logical state, perform $T = d$ rounds of syndrome extraction, then one
-final noiseless round from a perfect data readout. Under the
-\emph{phenomenological} noise model, in each round every data qubit independently
-bit-flips with probability $p$ -- errors accumulating as a cumulative exclusive-or --
-and every stabilizer measurement is independently misreported with probability $p$.
-Detectors are the time differences of consecutive measured syndromes, giving
-$(T+1)(d-1)$ detector bits per shot: $8$ at $d = 3$, $24$ at $d = 5$, $48$ at
-$d = 7$ and $80$ at $d = 9$. The logical observable is the cumulative error on the
-first data qubit, which a logical-$Z$ representative detects.
+The code uses $d$ data qubits and $d-1$ adjacent parity checks. In each of $T=d$
+rounds, each data qubit incurs a bit flip independently with probability $p$ and each check
+measurement is independently misreported with the same probability. The data
+errors accumulate by exclusive-or. The experiment ends with a perfect data
+readout, giving one final check value for each parity and no additional data or
+measurement faults. A detector records the difference between consecutive
+observed check values, starting from the known zero syndrome. There are
+$(T+1)(d-1)$ detectors per shot and the logical observable is the accumulated
+error on the first data bit.
 
-The sweep covers $d \in \{3, 5, 7, 9\}$ and ten physical error rates
-\[
-  p \in \{0.01,\ 0.02,\ 0.03,\ 0.04,\ 0.05,\ 0.06,\ 0.08,\ 0.10,\ 0.12,\ 0.15\},
-\]
-chosen to
-bracket the threshold on both sides: $40$ configurations in all. Each configuration
-was sampled for $400{,}000$ shots, split into disjoint, independently sampled
-$200{,}000$-shot training and test blocks, for $16$ million shots in total.
+The sweep uses $d\in\{3,5,7,9\}$. The physical error rates are $0.01$, $0.02$,
+$0.03$, $0.04$, $0.05$, $0.06$, $0.08$, $0.10$, $0.12$, and $0.15$.
+For each of the $40$ configurations, the simulator generates $400{,}000$ shots,
+split into disjoint $200{,}000$-shot training and test blocks, for $16$ million
+generated shots. All model-based decoders and classical learned decoders run
+on the entire test block. The MLP reserves $10\%$ of the training block for
+early stopping. The simulator-based VQC uses a $15{,}000$-shot labelled
+training block and reserves $1{,}500$ of those shots for validation. It uses the
+first $50{,}000$ test shots. The result table also records every decoder's
+error on that common $50{,}000$-shot prefix.
 
-\subsection{Decoders}
+\subsection{Matching on the detector graph}
 
-Six decoders were benchmarked. Table~\ref{tab:ch6_decoders} summarizes them.
+A single interior data fault produces a horizontal edge between two adjacent
+detectors in the same noisy round. A data fault on the first or last bit gives
+a spatial-boundary edge, and only a first-bit fault flips the logical
+observable. A check measurement fault connects the corresponding detector
+in that round to its successor. Consequently, the final detector row has only
+vertical links to the preceding row. Its spatial links are absent because the
+simulator injects no data faults at the perfect readout.
+
+MWPM uses the sparse blossom implementation in PyMatching
+2.4.0~\cite{higgott2022pymatching,higgott2025sparseblossom}.
+Each allowed elementary fault has the same weight
+$\log((1-p)/p)>0$, so unit weights give the same minimisers.
+The decoder returns the logical parity of the selected correction. Greedy
+matching first accounts for the forced links at final-row defects. On the
+remaining graph it repeatedly chooses the shortest available defect--defect
+or defect--boundary path, with a fixed ordering for equal lengths. When
+several MWPM corrections have equal cost, they can differ in logical class.
+
+At $d=3$, the $9$ data-fault locations and $6$ measurement-fault locations make
+exhaustive validation possible. Enumerating all $2^{15}=32{,}768$ fault
+histories yields the minimum weight for each logical class for every one of
+the $256$ syndromes. PyMatching attained the physical minimum and returned
+an eligible logical class for every syndrome. The two logical classes have
+equal minimum fault counts for $104$ of the $256$ syndromes. Single-fault
+checks also verified the detector patterns and logical flags at all four
+distances.
+
+\subsection{Exact logical-class posterior}
+
+The exact MAP decoder uses the simulator's value of $p$. It reconstructs the
+observed check string $m_t$ after round $t$ by accumulating detector differences.
+Let $e_t$ be the cumulative data-error string and $s(e_t)$ its adjacent parities.
+Write $w_t(e)$ for the joint probability of state $e_t=e$ and the noisy check
+history through round $t$. With $w_0(e)=\mathbf{1}_{e=0}$ and
+$h_t(e)=|m_t\oplus s(e)|$, the update is given by Eq.~\eqref{eq:ch6_posterior_update},
+\begin{equation}
+  w_t(e)=p^{h_t(e)}(1-p)^{d-1-h_t(e)}
+  \sum_{e'} w_{t-1}(e')\,p^{|e\oplus e'|}(1-p)^{d-|e\oplus e'|},
+  \label{eq:ch6_posterior_update}
+\end{equation}
+where $|\cdot|$ denotes Hamming weight. The implementation factors the transition
+into $d$ single-bit updates over the $2^d$ states. The perfect final check restricts the
+last state to $s(e_T)=m_{T+1}$. This leaves two complementary data-error
+strings, one for each value of the first bit. The decoder predicts the more
+probable logical class after normalising the two remaining weights. The control
+uses no fitted parameters, and the state count grows exponentially with
+distance. The same distance-3 fault enumeration provides an independent
+check of the posterior. The maximum absolute discrepancy in the conditional
+probabilities across all syndromes and sampled rates is below $1.3\times10^{-15}$.
+
+Thus, MWPM minimises the weight of an individual explanation of the syndrome.
+Exact MAP sums the probability of all explanations within each logical class.
+A class with more compatible fault histories can have higher posterior
+probability even when its lightest individual history requires more faults.
+
+\subsection{Model arms and comparisons}
+
+Table~\ref{tab:ch6_decoders} summarises the seven decoders. Code distance and
+physical noise rate are fixed within each train/test comparison.
 
 \begin{table}[htbp]
 \centering
-\caption[Decoders benchmarked]{Decoders benchmarked. Parameter counts are quoted at $d = 3$; for the two
-flat-syndrome models they grow with the syndrome length, to $81$ (logistic
-regression) and $18\,689$ (MLP) at $d = 9$.}
+\caption[Decoders benchmarked]{Trainable predictor parameters at $d=3$. The counts exclude PCA preprocessing. For the flat-syndrome logistic regression and MLP, the counts rise to $81$ and $18{,}689$ at $d=9$.}
 \label{tab:ch6_decoders}
 \small
-\begin{tabular}{>{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{6.7cm} c}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.15cm} >{\raggedright\arraybackslash}p{2.15cm} >{\raggedright\arraybackslash}p{6.1cm} r@{}}
 \toprule
 \textbf{Decoder} & \textbf{Family} & \textbf{Description} & \textbf{Params} \\
 \midrule
-MWPM & combinatorial &
-Exact minimum-weight perfect matching with boundary on the $1{+}1$D space-time
-defect graph, built in closed form and solved by \texttt{networkx}'s blossom
-implementation on negated Manhattan weights & 0 \\
-\addlinespace
-Greedy & combinatorial &
-Greedy nearest-available matching: repeatedly commit the globally cheapest remaining
-defect--defect or defect--boundary connection & 0 \\
-\addlinespace
-Logistic reg. & learned &
-Logistic regression on all $(T{+}1)(d{-}1)$ detector bits & 9 \\
-\addlinespace
-MLP & learned &
-Two hidden layers $(128, 64)$, ReLU, Adam, early stopping, on the flat syndrome & 9473 \\
-\addlinespace
-Logistic reg., PCA & learned &
-Logistic regression on the same six PCA components the quantum model receives --
-a control that separates compression loss from quantum-model behaviour & 7 \\
-\addlinespace
-VQC, PCA & hybrid &
-Six-qubit, three-layer data-reuploading circuit on six PCA components, with a
-sigmoid readout on $\langle Z_0 \rangle$ & 38 \\
+MWPM & combinatorial & Exact matching on the detector graph in PyMatching & 0 \\
+Greedy & combinatorial & Shortest available connection on the same graph & 0 \\
+Exact MAP & model-based & Forward recursion and logical-class marginalisation & 0 \\
+Logistic reg. & learned & Logistic regression on the flattened syndrome & 9 \\
+MLP & learned & Two hidden layers $(128,64)$, ReLU, Adam, early stopping & 9473 \\
+Logistic reg., PCA & learned & Logistic regression on six PCA components & 7 \\
+VQC, PCA & hybrid & Six-qubit, three-layer reuploading circuit with a sigmoid readout on $\langle Z_0\rangle$ & 38 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Because the matching decoder is the baseline that everything else is judged against,
-it was validated rather than assumed correct: on $400$ random instances of one to
-eight defects its output was compared against brute-force enumeration of all
-pairings, and it agreed in $400$ of $400$ cases. The same validation shows the greedy
-decoder finds the optimal matching in only $37\%$ of instances, which is what makes
-it a useful second baseline -- it isolates how much of matching's performance comes
-from solving the optimization exactly rather than from the defect-graph
-representation itself.
+The logical error rate (LER) is the fraction of test shots with an incorrect
+logical bit. Wilson intervals describe the sampling uncertainty of each rate.
+Between-decoder comparisons use paired correctness on the same shots
+and exact McNemar tests on the discordant outcomes. Each comparison uses
+the largest shared test prefix, with Holm's correction across the $280$
+tests of the six alternatives versus MWPM and the MLP versus exact MAP.
+These intervals and tests quantify held-out shot variation for the fitted
+decoders. Training-set and optimiser variability are outside this calculation.
+Very small McNemar $p$-values can round to zero in the result CSV.
 
-\section{Logical error rate and threshold}\label{sec:ch6_threshold}
+\section{Logical error rates and finite-distance crossings}\label{sec:ch6_threshold}
 
-Figure~\ref{fig:ch6_threshold} shows logical error rate against physical error rate
-at each code distance.
-
-\begin{figure}[htbp]
+\begin{figure}[!htb]
 \centering
 \includegraphics[width=\textwidth]{figures/ch6/qec_threshold_fig.png}
-\caption[Logical error rate against physical error rate]{Logical error rate per shot against physical error rate, one panel per code
-distance, for all six decoders. Bands are Wilson $95\%$ confidence intervals. The
-open triangle at $d = 9$, $p = 0.01$ marks a configuration in which the matching
-decoder produced no logical error in any test shot, so only a $95\%$ upper bound can
-be placed.}
+\caption[Logical error rate against physical error rate]{Logical error rate per shot at each physical error rate and code distance. Each arm uses its available test shots. Bands give Wilson $95\%$ intervals, and open triangles mark the Wilson upper bounds for zero observed errors.}
 \label{fig:ch6_threshold}
 \end{figure}
 
-The defining property of a working decoder is that increasing the code distance
-decreases the logical error rate below threshold. Only the two matching decoders have
-it, and only below their own thresholds: exact matching's error falls at every
-distance step for $p \leq 0.08$ and greedy matching's for $p \leq 0.06$, whereas no
-learned decoder falls at every step at any physical error rate. At $p = 0.02$, exact
-matching falls from
-$7.74 \times 10^{-3}$ at $d = 3$ to $8.5 \times 10^{-5}$ at $d = 9$, a suppression
-factor of $91$; greedy matching falls from $5.71 \times 10^{-2}$ to
-$7.91 \times 10^{-3}$. Every learned decoder is net worse at $d = 9$ than at
-$d = 3$: logistic regression rises from $7.42\times 10^{-2}$ to
-$1.57 \times 10^{-1}$, the PCA logistic control from $7.38 \times 10^{-2}$ to
-$1.53 \times 10^{-1}$, the hybrid VQC from $1.24 \times 10^{-2}$ to
-$1.56 \times 10^{-1}$ -- a factor of $12.5$ worse -- and the MLP from
-$7.80 \times 10^{-3}$ to $1.27 \times 10^{-2}$.
+Figure~\ref{fig:ch6_threshold} shows the logical error rate of each decoder against the
+physical error rate at every code distance.
+At $p=0.02$, the simulated logical error falls at each distance step for
+exact MAP, MWPM and greedy matching. From $d=3$ to $d=9$, exact MAP falls from
+$0.007645$ to $0.000060$, and MWPM from $0.008890$ to $0.000085$.
+The MLP improves from $0.007795$ at $d=3$ to $0.004655$ at $d=5$, then
+rises to $0.008760$ at $d=7$ and $0.012670$ at $d=9$.
+Figure~\ref{fig:ch6_comparison} shows the distance trends at this noise rate.
 
-The MLP is a partial exception worth stating precisely, because it is the one learned
-decoder that shows any distance suppression at all. Its error rate does fall from
-$d = 3$ to $d = 5$ at the six lowest physical error rates -- at $p = 0.02$ from
-$7.80 \times 10^{-3}$ to $4.66 \times 10^{-3}$, and at $p = 0.01$ from
-$2.41 \times 10^{-3}$ to $1.09 \times 10^{-3}$ (both on $200{,}000$ test shots) --
-and then reverses through $d = 7$
-and $d = 9$. It therefore reproduces the qualitative behaviour of a working decoder
-over exactly the range its training data supports, and loses it beyond, which is the
-same boundary the coverage analysis of Section~\ref{sec:ch6_mlwin} identifies.
-
-Table~\ref{tab:ch6_threshold} gives the threshold estimates. For each decoder the
-threshold was estimated two ways: by the crossing points of successive
-distance curves, and by a finite-size-scaling fit of the form
-$p_L = F\!\left((p - p_{\text{th}}) d^{1/\nu}\right)$.
+Table~\ref{tab:ch6_threshold} reports two descriptive diagnostics for the
+change in direction with distance. For each adjacent pair, the procedure
+keeps positive, unequal logical error rates and interpolates the first
+reversal of their order in log-log coordinates. It averages the resulting
+crossings over the pairs for which it finds a reversal. The finite-size
+scaling (FSS) fit uses $p_L=F((p-p_{\mathrm{th}})d^{1/\nu})$ and fits a
+quadratic $F$ by unweighted least squares on the measured rates at or above
+$0.01$. It uses a bounded nonlinear fit with multiple initialisations.
+The table omits a scaling fit when the decoder has neither a detected
+crossing nor a lower observed error at $d=9$ than at $d=3$ for any sampled rate.
+Both diagnostics depend on the sampled noise grid and the four tested
+distances. The FSS fit also depends on the error-rate cutoff, and the table
+gives point estimates without uncertainty on $p_{\mathrm{th}}$ or $\nu$.
 
 \begin{table}[htbp]
 \centering
-\caption[Threshold estimates]{Threshold estimates. ``No threshold'' means the logical error rate never
-decreases with distance anywhere in the sampled window, so no crossing exists to
-estimate. Agreement between the two estimators is itself diagnostic: they agree to
-within $4\%$ for exact matching and $5\%$ for greedy matching, and disagree by a
-factor of three for the MLP.}
+\caption[Finite-distance crossover diagnostics]{Finite-distance crossover
+diagnostics. Crossings is the mean over available adjacent-distance pairs.
+A dash marks an estimate omitted by the stated criteria. The MLP scaling
+fit is included as a sensitivity diagnostic for the single observed crossing.}
 \label{tab:ch6_threshold}
 \small
-\begin{tabular}{lcccl}
+\begin{tabular}{lrrr}
 \toprule
-\textbf{Decoder} & \textbf{$p_{\text{th}}$ (crossings)} & \textbf{$p_{\text{th}}$ (FSS)}
-& \textbf{$\nu$} & \textbf{Interpretation} \\
+\textbf{Decoder} & \textbf{Crossings} & \textbf{FSS fit} & \textbf{$\nu$} \\
 \midrule
-MWPM               & 0.1015 & 0.0976 & 1.87 & consistent threshold \\
-Greedy             & 0.0800 & 0.0759 & 2.01 & consistent threshold \\
-MLP                & 0.0701 & 0.0231 & 1.19 & estimators disagree $3\times$ \\
-Logistic reg.      & --- & --- & --- & no threshold in window \\
-Logistic reg., PCA & --- & --- & --- & no threshold in window \\
-VQC, PCA           & --- & --- & --- & no threshold in window \\
+MWPM & 0.1057 & 0.1031 & 1.87 \\
+Greedy & 0.0824 & 0.0803 & 2.07 \\
+Exact MAP & 0.1078 & 0.1047 & 1.91 \\
+MLP & 0.0701 & 0.0231 & 1.19 \\
+Logistic reg. & --- & --- & --- \\
+Logistic reg., PCA & --- & --- & --- \\
+VQC, PCA & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The two matching decoders yield mutually consistent estimates, and the exact
-decoder's threshold is the higher of the two ($0.098$--$0.102$ against
-$0.076$--$0.080$), as it must be: solving the matching exactly tolerates more
-physical error than solving it greedily. The exact-matching estimate also agrees with
-the literature: with equal data and measurement error rates, the space-time
-decoding problem of the repetition code is the same two-dimensional matching problem
-as the surface code under code-capacity noise, for which minimum-weight matching has
-a threshold of about $10.3\%$~\cite{bonillaataides2021xzzx}. This serves as an
-independent check of the matching implementation. The MLP is the interesting case. It does
-produce curve crossings, so a naive crossing estimate returns $0.0701$, but the
-finite-size-scaling fit returns $0.0231$ -- a factor of three apart. Combined with
-its non-monotone distance dependence (at $p = 0.02$ it improves from $d = 3$ to
-$d = 5$ and then degrades through $d = 7$ and $d = 9$), the disagreement is evidence
-that the crossings are artifacts of a decoder whose accuracy is falling with system
-size rather than signatures of a genuine threshold. \textbf{Reporting a threshold
-for a learned decoder without checking that two independent estimators agree, and
-that the distance dependence is monotone, can therefore manufacture a threshold that
-does not exist.}
+The observed logical error rates of exact MAP and MWPM fall at every
+distance step up to $p=0.10$ and rise at every step from $p=0.12$.
+Their pairwise crossing estimates lie within $0.1013$--$0.1110$. Greedy
+matching has a wider spread, $0.0654$--$0.1052$, about a mean of $0.0824$.
+The MLP has one crossing, between $d=3$ and $d=5$, and a substantially lower
+FSS estimate. It shows no monotonic improvement across all four distances at
+any sampled rate. An asymptotic threshold or a critical exponent would
+require a broader distance sweep and an uncertainty analysis.
 
-\section{Where learned decoders win, and why it does not last}
+\section{Comparing matching, learned decoders and MAP}
 \label{sec:ch6_mlwin}
 
-The ML-versus-matching comparison has a clear and narrow answer.
+Across the $40$ configurations on the shared $50{,}000$-shot prefix, exact MAP
+has the lowest observed error in $35$ outright and ties MWPM in one. MWPM and
+the MLP each rank first outright in two configurations. The paired tests
+against each reference use the largest shared prefix for that pair.
+On those $200{,}000$-shot comparisons, exact MAP has lower error than MWPM
+in $37$ configurations, with $34$ differences resolved after Holm
+adjustment. The two methods tie in two configurations. MWPM has lower
+observed error in one configuration, with no resolved difference there.
+The MLP has lower error than MWPM at all ten rates at $d=3$,
+with nine resolved differences, and has higher error at all $30$ larger-code
+configurations. No comparison resolves an MLP improvement over exact MAP.
+Table~\ref{tab:ch6_d3} lists the distance-3 rates of the three methods.
 
 \begin{table}[htbp]
 \centering
-\caption[Distance-3 comparison of the MLP against exact matching]{Distance-3 comparison of the MLP against exact matching, with Wilson $95\%$
-intervals. The MLP is ahead at every $p \geq 0.04$ and the intervals are disjoint for
-$p \geq 0.06$.}
+\caption[Distance-3 comparison on common test shots]{Distance-3 comparison of corrected matching, the MLP and exact logical-class decoding. The three methods were scored on the same $200{,}000$ test shots for each $p$. An asterisk denotes a Holm-adjusted paired test result below $0.05$.}
 \label{tab:ch6_d3}
 \small
-\begin{tabular}{lcccc}
+\begin{tabular}{@{}lrrrr@{}}
 \toprule
-\textbf{$p$} & \textbf{MLP (95\% CI)} & \textbf{MWPM (95\% CI)}
-& \textbf{Ratio} & \textbf{Disjoint?} \\
+\textbf{$p$} & \textbf{MWPM LER} & \textbf{MLP LER} & \textbf{Exact MAP LER}
+& \shortstack{\textbf{MLP minus}\\\textbf{MWPM}} \\
 \midrule
-0.01 & 0.00240 (0.00220--0.00263) & 0.00226 (0.00207--0.00248) & 1.06 & no \\
-0.02 & 0.00780 (0.00742--0.00819) & 0.00774 (0.00737--0.00813) & 1.01 & no \\
-0.03 & 0.01742 (0.01686--0.01800) & 0.01732 (0.01676--0.01791) & 1.01 & no \\
-0.04 & 0.02812 (0.02740--0.02885) & 0.02882 (0.02809--0.02956) & 0.98 & no \\
-0.05 & 0.04300 (0.04212--0.04390) & 0.04404 (0.04315--0.04495) & 0.98 & no \\
-0.06 & 0.05866 (0.05763--0.05969) & 0.06154 (0.06050--0.06261) & 0.95 & \textbf{yes} \\
-0.08 & 0.09474 (0.09346--0.09603) & 0.10008 (0.09878--0.10141) & 0.95 & \textbf{yes} \\
-0.10 & 0.13514 (0.13364--0.13664) & 0.14178 (0.14026--0.14332) & 0.95 & \textbf{yes} \\
-0.12 & 0.17576 (0.17410--0.17743) & 0.18598 (0.18428--0.18769) & 0.95 & \textbf{yes} \\
-0.15 & 0.23874 (0.23687--0.24061) & 0.25076 (0.24887--0.25266) & 0.95 & \textbf{yes} \\
+0.01 & 0.002485 & 0.002405 & 0.002185 & $-0.000080$ \\
+0.02 & 0.008890 & 0.007795 & 0.007645 & $-0.001095^{*}$ \\
+0.03 & 0.019425 & 0.017420 & 0.016905 & $-0.002005^{*}$ \\
+0.04 & 0.032360 & 0.028120 & 0.027635 & $-0.004240^{*}$ \\
+0.05 & 0.048790 & 0.043000 & 0.042290 & $-0.005790^{*}$ \\
+0.06 & 0.065785 & 0.058655 & 0.057930 & $-0.007130^{*}$ \\
+0.08 & 0.106330 & 0.094740 & 0.094905 & $-0.011590^{*}$ \\
+0.10 & 0.149035 & 0.135135 & 0.133345 & $-0.013900^{*}$ \\
+0.12 & 0.192845 & 0.175760 & 0.175525 & $-0.017085^{*}$ \\
+0.15 & 0.256485 & 0.238735 & 0.237845 & $-0.017750^{*}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Exact matching has the lowest logical error rate in $33$ of the $40$ configurations.
-The MLP takes the remaining seven, and all seven are at $d = 3$; in five of them
-(all $p \geq 0.06$) the Wilson intervals are disjoint, so the win is statistically
-real and not a point-estimate accident. At $p = 0.15$, $d = 3$ the MLP reaches
-$0.2387$ against matching's $0.2508$, a $5\%$ relative reduction in logical error
-rate.
+At $d=3$ and $p=0.15$, PyMatching, the MLP and exact MAP have test logical error
+rates of $25.6485\%$, $23.8735\%$ and $23.7845\%$, respectively. At $p=0.08$
+the MLP is $0.0165$ percentage points below exact MAP on the test sample.
+The paired comparison has an unadjusted $p$-value of $0.56$ and the sampled reversal is
+consistent with finite-shot variation.
 
-This is a genuine result with a clear interpretation. Minimum-weight matching is
-optimal for the \emph{decoding problem it solves} -- find the lowest-weight error
-consistent with the syndrome -- but that is not the same as maximizing the
-probability of correctly identifying the logical class, and the gap between the two
-is largest when errors are dense and degenerate. A learned decoder that has seen
-enough examples can capture the difference. The condition is having seen enough
-examples, and Table~\ref{tab:ch6_coverage} shows how sharply that condition fails.
+The model gives an analytical check on the distance-3 result.
+At $p=0.15$, the expected logical error of PyMatching is $25.6373\%$. Across
+all legal choices among tied minimum-weight corrections, expected error
+spans $23.7777\%$ to $27.1637\%$. At each of the ten sampled noise rates, the lower end of this tie range equals the exact MAP risk. Hence tie resolution accounts for
+the gap between fixed PyMatching and exact MAP at this distance. The MLP's
+performance falls between them at $p=0.15$. Figure~\ref{fig:ch6_comparison}
+shows the analytical range across the sweep.
 
-\begin{table}[htbp]
-\centering
-\caption[Syndrome-space coverage of the training set]{Syndrome-space coverage of the $200{,}000$-shot training set. As distance
-grows, the fraction of the detector space that appears in training collapses and the
-number of training shots per observed pattern falls to one.}
-\label{tab:ch6_coverage}
-\small
-\begin{tabular}{ccccc}
-\toprule
-\textbf{$d$} & \textbf{Detectors} & \textbf{Syndrome space}
-& \textbf{Distinct patterns seen} & \textbf{Shots per pattern} \\
-\midrule
-3 & 8  & $2.6 \times 10^{2}$  & 242     & 826.4 \\
-5 & 24 & $1.7 \times 10^{7}$  & 54{,}778  & 3.65 \\
-7 & 48 & $2.8 \times 10^{14}$ & 183{,}049 & 1.09 \\
-9 & 80 & $1.2 \times 10^{24}$ & 199{,}918 & 1.0004 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-At $d = 3$ the training set covers $94.5\%$ of the $256$ possible syndromes, with
-$826$ shots per pattern: the decoder can estimate the optimal logical class for
-essentially every syndrome it will ever see, and it does -- which is exactly the
-regime in which it beats matching. At $d = 9$ the $200{,}000$ training shots produce
-$199{,}918$ distinct patterns out of $1.2 \times 10^{24}$, or $1.0004$ shots per
-pattern. Every test syndrome is effectively unseen, and a model with no structural
-knowledge of the code has nothing to generalize with.
-
-The degradation is quantitative and orderly. Taking the median over $p$ of the ratio
-of each learned decoder's logical error rate to exact matching's:
-
-\begin{center}
-\small
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Decoder} & \textbf{$d=3$} & \textbf{$d=5$} & \textbf{$d=7$} & \textbf{$d=9$} \\
-\midrule
-MLP                & 0.96 & 1.35 & 2.97 & 10.11 \\
-VQC, PCA (hybrid)  & 1.31 & 6.04 & 14.51 & 29.25 \\
-Logistic reg.      & 2.88 & 6.80 & 14.62 & 30.50 \\
-Logistic reg., PCA & 2.87 & 6.88 & 14.45 & 29.45 \\
-Greedy matching    & 2.83 & 3.14 & 5.02 & 7.85 \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-The learned decoders start at or near parity and end an order of magnitude behind;
-the greedy \emph{matching} decoder, which knows the defect-graph structure but solves
-the optimization badly, degrades far more slowly than the flat learned models, which
-know the structure not at all. This is the decoding-track analogue of the
-out-of-distribution finding in Chapter~\ref{chap5:results}: what distinguishes
-methods that scale from methods that do not is how much problem structure they
-encode, not how much capacity they have.
-
-\section{The hybrid decoder}\label{sec:ch6_hybrid}
-
-The hybrid arm deserves a separate note, because its comparison is the cleanest in
-the thesis. The VQC and the PCA logistic regression receive \emph{identical} inputs:
-the same six PCA components, fit on the same training data. Any difference between
-them is attributable to the model, not the features.
-
-At $d = 3$ the VQC is better -- median ratio to matching $1.31$ against the classical
-control's $2.87$, and at $p = 0.02$ a logical error rate of $1.24 \times 10^{-2}$
-against $7.38 \times 10^{-2}$, a factor of $5.9$. With only $38$ trainable
-parameters against the control's $7$, the reuploading circuit is a genuinely more
-expressive model on the same compressed features, and here that expressivity pays.
-The advantage shrinks rapidly with distance. At $d = 5$ the VQC is still better by
-a factor of $3.3$ at $p = 0.01$ and $1.8$ at $p = 0.02$, but by less than $10\%$
-from $p = 0.06$ upward; at $d = 7$ and $d = 9$ a residual advantage remains only at the
-lowest noise rate ($1.63\times$ and $1.20\times$ at $p = 0.01$), and from $p = 0.03$
-upward the two are within $3\%$ of each other. At $d = 9$ both are roughly
-$30\times$ worse than matching ($29.25$ against $29.45$). Once the features no longer carry the information needed to decode, a
-better model of them cannot help.
-
-So the hybrid decoder result mirrors the mitigation result rather than contradicting
-it: the quantum model is competitive in the small, well-sampled regime, provides no
-advantage where the problem is actually hard, and costs more to evaluate --
-$7.1 \times 10^{-2}$~s per $1000$ shots against $6.2 \times 10^{-6}$~s for the
-logistic control, a factor of $10^{4}$.
-
-\section{Decoding cost}\label{sec:ch6_cost}
-
-For a real quantum computer the decoder must keep pace with syndrome extraction, so
-latency is not a secondary consideration. Figure~\ref{fig:ch6_comparison}(b) plots
-accuracy against decode time.
-
-\begin{figure}[htbp]
+\begin{figure}[!htb]
 \centering
 \includegraphics[width=\textwidth]{figures/ch6/qec_decoder_comparison_fig.png}
-\caption[Logical error rate against distance, and accuracy against decode time]{Panel~a: logical error rate against code distance at $p = 0.02$, with
-Wilson $95\%$ bands. At this error rate, which is below every decoder's threshold,
-both matching decoders improve monotonically with distance while every learned
-decoder ends worse at $d = 9$ than at $d = 3$, though the MLP does improve over the
-first segment from $d = 3$ to $d = 5$. Above threshold matching loses its distance
-suppression as well: exact matching is flat and non-monotone in $d$ at $p = 0.10$
-and clearly worse at larger $d$ for $p \geq 0.12$, and greedy matching degrades with
-distance from $p = 0.10$ upward (Figure~\ref{fig:ch6_threshold}). Panel~b:
-accuracy against decode time at $d = 9$, $p = 0.02$; the lower-left corner is
-better. Exact matching is the most accurate and the slowest: about $4\times$ slower
-than greedy matching, $5\times$ slower than the hybrid VQC and $740\times$ slower
-than the MLP, on average over all configurations.}
+\caption[Distance dependence and matching ties]{Panel a shows the logical error rate against code distance at $p=0.02$ with Wilson $95\%$ intervals. Panel b shows the analytical excess error above exact MAP at $d=3$. The range spans the best and worst legal MWPM tie choices and the line shows the fixed PyMatching solution.}
 \label{fig:ch6_comparison}
 \end{figure}
 
-Mean decode time per $1000$ shots is $0.346$~s for exact matching (rising to
-$3.04$~s at the highest defect densities), $0.089$~s for greedy matching,
-$7.1 \times 10^{-2}$~s for the hybrid VQC, $4.7 \times 10^{-4}$~s for the MLP and
-$3.7 \times 10^{-5}$~s for logistic regression on the full syndrome. The MLP is
-therefore roughly $740\times$ faster
-than exact matching, and this -- not accuracy -- is the strongest argument in favour
-of learned decoders that this benchmark supports. Latency is the motivation given in
-much of the neural-decoder literature, and the numbers here are consistent with it:
-a decoder that is $10\times$ less accurate but $740\times$ faster may still be the
-right choice if the alternative is a matching decoder that cannot finish within a
-syndrome-extraction round. That trade-off is a systems-engineering question this
-benchmark can inform but not settle.
+The fraction of held-out shots whose detector string appeared in training
+measures how often a test syndrome is familiar to a decoder trained on the
+full $200{,}000$-shot pool. Table~\ref{tab:ch6_coverage} reports that fraction
+at three physical error rates. At a fixed distance, the frequency of an exact
+syndrome repeat depends strongly on noise. At $d=9$, $p=0.02$, the MLP errs
+on $7$ of $84{,}932$ seen-pattern shots and $2{,}527$ of $115{,}068$
+unseen-pattern shots. The conditional rates combine the effect of pattern
+familiarity with differences in which patterns occur in each group.
 
-\section{Limitations of this chapter}\label{sec:ch6_limits}
+\begin{table}[htbp]
+\centering
+\caption[Syndrome patterns shared by training and test shots]{Percentage of full test shots whose complete detector pattern appeared in the full training block. The artifact for this experiment also records counts and coverage at every sampled $p$.}
+\label{tab:ch6_coverage}
+\small
+\begin{tabular}{rrrrr}
+\toprule
+\textbf{$d$} & \textbf{Detector bits}
+& \textbf{$p=0.01$} & \textbf{$p=0.02$} & \textbf{$p=0.06$} \\
+\midrule
+3 & 8 & 99.989 & 99.992 & 99.990 \\
+5 & 24 & 99.163 & 97.108 & 80.679 \\
+7 & 48 & 94.202 & 77.621 & 11.637 \\
+9 & 80 & 80.490 & 42.466 & 0.088 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-The scope substitution of Section~\ref{sec:ch6_scope} is the dominant limitation:
-the repetition code has a one-dimensional defect graph and no degenerate matching
-structure in the space directions, so it is the easiest possible setting for
-matching and the least demanding for a learned decoder. Surface-code circuit-level
-decoding is a substantially harder problem, and results here do not transfer to it
-quantitatively.
+\section{The hybrid decoder}\label{sec:ch6_hybrid}
 
-Four further limitations follow from the tool chain used, and each one biases the
-comparison in a stated direction.
+The VQC and PCA logistic regression use the same six principal components,
+fit on the first $100{,}000$ training syndromes. The VQC uses means and standard
+deviations from the first $15{,}000$ scores, clips standardised scores to
+$[-3,3]$, and maps them to angles in $[-\pi,\pi]$. Logistic regression uses
+unscaled scores and the full training block. The preprocessing uses only
+training-block syndromes, including the VQC's validation inputs.
+The comparison combines differences in predictor, input transforms and
+training budget. An attribution to the circuit would require a nonlinear
+classical control with the same preprocessing and training budget.
+On the same $50{,}000$ test
+shots at $d=3$, $p=0.02$, the VQC has $1.244\%$ logical error against $7.538\%$
+for PCA logistic regression, $0.864\%$ for MWPM and $0.746\%$ for
+exact MAP. At $d=9$ and the same $p$, the VQC and PCA logistic regression
+have $15.554\%$ and $15.558\%$ error on the shared prefix. The fraction of
+training variance retained by six components falls from $93.86\%$ at $d=3$
+to $14.32\%$ at $d=9$ for this noise rate.
 
-\begin{enumerate}
-    \item \textbf{No recurrent or convolutional decoder was trained.} The learned
-    decoders were built with scikit-learn, which has no sequence model, so the neural
-    arm is a feed-forward network on a flattened syndrome. Round-structured architectures are
-    what the neural-decoder literature reports as strongest, precisely because they
-    build in the time-translation symmetry that the flat MLP lacks. The learned
-    decoders here are therefore a \emph{lower bound} on what learned decoding can
-    achieve, and the coverage argument of Section~\ref{sec:ch6_mlwin} is the reason
-    to expect a structured architecture to do better: it would not need to see each
-    syndrome pattern to generalize.
+\section{Decoding cost}\label{sec:ch6_cost}
 
-    \item \textbf{No union-find or belief-propagation decoder.} Neither was
-    implemented, so greedy matching stands as the second classical baseline. The comparison against exact
-    matching is unaffected.
+The timing column records batched CPU elapsed time per $1{,}000$ decoded
+shots. It includes prediction-time preprocessing. The MWPM timer includes
+graph construction, and the exact MAP timer starts after construction of
+its likelihood tables. At $d=3$ it measures a lookup table over all
+$256$ detector strings. The concurrent configurations, batch sizes
+and initialisation conventions limit the timings to the implemented batch
+workload. Single-shot latency under a syndrome-extraction cycle remains
+unmeasured.
 
-    \item \textbf{The hybrid arm used reduced shots.} State-vector simulation
-    dominates runtime, so the VQC was trained on $15{,}000$ and evaluated on
-    $50{,}000$ shots rather than $200{,}000$. Its confidence intervals are computed
-    from the actual counts and are correspondingly wider; the $d = 3$ advantage
-    reported in Section~\ref{sec:ch6_hybrid} is larger than that interval.
+\section{Limitations and conclusion}\label{sec:ch6_limits}
 
-    \item \textbf{Eight of $240$ rows used fewer test shots.} The matching decoders
-    hit a per-configuration wall-clock budget at the highest defect densities:
-    exact matching used $50{,}176$--$157{,}696$ test shots in five of $40$
-    configurations and greedy $69{,}632$--$134{,}144$ in three. Every affected row
-    records its actual shot count and all intervals use it. No configuration was
-    dropped and no training set was reduced.
-\end{enumerate}
+The results cover phenomenological bit-flip faults on a repetition code. The
+exact posterior supplies a reference for this known model at the tested
+distances. Circuit-level noise, other error mechanisms, and codes with more
+complex detector graphs require separate evaluation. The learned decoders are
+trained per noise and distance configuration, and they receive flattened
+detector strings or their PCA scores. These fits measure performance within
+each configuration. Transfer across distances or noise rates remains outside
+this evaluation. The VQC uses analytic state-vector readout, so its reported
+LER applies to simulator inference.
 
-Finally, assumption diagnostics for the finite-size-scaling fits -- residual
-structure and parameter identifiability -- were not assessed. The threshold estimates
-should be read as the two-estimator comparison presented in
-Table~\ref{tab:ch6_threshold} rather than as fits with characterized uncertainty.
-
-\section{Summary}\label{sec:ch6_summary}
-
-\begin{enumerate}
-    \item Exact matching has the lowest logical error rate in $33$ of $40$
-    configurations, and matching is the only decoder family whose error rate falls at
-    every distance step below threshold (exact matching for $p \leq 0.08$, greedy for
-    $p \leq 0.06$). Every learned decoder is worse at $d = 9$ than at $d = 3$ at all
-    ten physical error rates; the MLP improves over the first distance step
-    ($d = 3 \rightarrow 5$) at the six lowest of them and then reverses.
-
-    \item A feed-forward network beats exact matching in seven configurations, all at
-    distance 3 and five of them with disjoint confidence intervals, by about $5\%$
-    relative. The win is real and it is confined to the regime where the training set
-    covers the syndrome space.
-
-    \item That regime is quantified: training covers $94.5\%$ of the syndrome space
-    at $d = 3$ and $1.65 \times 10^{-19}$ of it at $d = 9$, where the learned
-    decoders are $10$--$30\times$ worse than matching.
-
-    \item The hybrid VQC beats its own classical control on identical compressed
-    features at $d = 3$ by a factor of $5.9$, and is indistinguishable from it at
-    $d = 9$. As in Chapter~\ref{chap5:results}, the quantum model is competitive
-    where the problem is easy and offers nothing where it is hard.
-
-        \item The MLP decodes about $740\times$ faster than exact matching on average,
-    measured against a pure-Python blossom implementation rather than an optimized
-    matcher, so the ratio is an upper bound on what a production comparison would
-    show. Latency, not accuracy, is the defensible argument for learned decoders.
-    The hybrid VQC is only $5\times$ faster than this matcher.
-\end{enumerate}
+The distance-3 enumeration permits a comparison with the full range of
+minimum-weight tie choices. At larger distances, the posterior decoder
+provides the same model-based accuracy reference without enumerating all
+fault histories, although its state space still grows exponentially.
 
 \end{document}

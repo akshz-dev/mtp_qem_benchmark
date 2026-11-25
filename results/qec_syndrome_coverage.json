@@ -1,30 +1,2202 @@
 {
-  "3": {
-    "n_det": 8,
-    "space": 256.0,
+  "d3_p0.01": {
+    "d": 3,
+    "p": 0.01,
+    "n_detectors": 8,
+    "possible_syndromes": 256,
+    "n_train_shots": 200000,
+    "distinct_train": 107,
+    "n_test_shots": 200000,
+    "n_test_seen": 199978,
+    "test_seen_fraction": 0.99989,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 199978,
+        "n_unseen": 22,
+        "n_errors_seen": 494,
+        "n_errors_unseen": 3
+      },
+      "Greedy": {
+        "n_seen": 199978,
+        "n_unseen": 22,
+        "n_errors_seen": 5887,
+        "n_errors_unseen": 6
+      },
+      "Exact-MAP": {
+        "n_seen": 199978,
+        "n_unseen": 22,
+        "n_errors_seen": 433,
+        "n_errors_unseen": 4
+      },
+      "LogReg": {
+        "n_seen": 199978,
+        "n_unseen": 22,
+        "n_errors_seen": 9567,
+        "n_errors_unseen": 8
+      },
+      "MLP": {
+        "n_seen": 199978,
+        "n_unseen": 22,
+        "n_errors_seen": 471,
+        "n_errors_unseen": 10
+      },
+      "LogReg-PCA": {
+        "n_seen": 199978,
+        "n_unseen": 22,
+        "n_errors_seen": 7734,
+        "n_errors_unseen": 8
+      },
+      "VQC-PCA": {
+        "n_seen": 49997,
+        "n_unseen": 3,
+        "n_errors_seen": 152,
+        "n_errors_unseen": 1
+      }
+    }
+  },
+  "d3_p0.02": {
+    "d": 3,
+    "p": 0.02,
+    "n_detectors": 8,
+    "possible_syndromes": 256,
+    "n_train_shots": 200000,
+    "distinct_train": 165,
+    "n_test_shots": 200000,
+    "n_test_seen": 199983,
+    "test_seen_fraction": 0.999915,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 199983,
+        "n_unseen": 17,
+        "n_errors_seen": 1775,
+        "n_errors_unseen": 3
+      },
+      "Greedy": {
+        "n_seen": 199983,
+        "n_unseen": 17,
+        "n_errors_seen": 11403,
+        "n_errors_unseen": 7
+      },
+      "Exact-MAP": {
+        "n_seen": 199983,
+        "n_unseen": 17,
+        "n_errors_seen": 1524,
+        "n_errors_unseen": 5
+      },
+      "LogReg": {
+        "n_seen": 199983,
+        "n_unseen": 17,
+        "n_errors_seen": 14838,
+        "n_errors_unseen": 7
+      },
+      "MLP": {
+        "n_seen": 199983,
+        "n_unseen": 17,
+        "n_errors_seen": 1556,
+        "n_errors_unseen": 3
+      },
+      "LogReg-PCA": {
+        "n_seen": 199983,
+        "n_unseen": 17,
+        "n_errors_seen": 14748,
+        "n_errors_unseen": 7
+      },
+      "VQC-PCA": {
+        "n_seen": 49998,
+        "n_unseen": 2,
+        "n_errors_seen": 621,
+        "n_errors_unseen": 1
+      }
+    }
+  },
+  "d3_p0.03": {
+    "d": 3,
+    "p": 0.03,
+    "n_detectors": 8,
+    "possible_syndromes": 256,
+    "n_train_shots": 200000,
+    "distinct_train": 203,
+    "n_test_shots": 200000,
+    "n_test_seen": 199986,
+    "test_seen_fraction": 0.99993,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 199986,
+        "n_unseen": 14,
+        "n_errors_seen": 3879,
+        "n_errors_unseen": 6
+      },
+      "Greedy": {
+        "n_seen": 199986,
+        "n_unseen": 14,
+        "n_errors_seen": 16646,
+        "n_errors_unseen": 10
+      },
+      "Exact-MAP": {
+        "n_seen": 199986,
+        "n_unseen": 14,
+        "n_errors_seen": 3380,
+        "n_errors_unseen": 1
+      },
+      "LogReg": {
+        "n_seen": 199986,
+        "n_unseen": 14,
+        "n_errors_seen": 17163,
+        "n_errors_unseen": 6
+      },
+      "MLP": {
+        "n_seen": 199986,
+        "n_unseen": 14,
+        "n_errors_seen": 3477,
+        "n_errors_unseen": 7
+      },
+      "LogReg-PCA": {
+        "n_seen": 199986,
+        "n_unseen": 14,
+        "n_errors_seen": 21269,
+        "n_errors_unseen": 6
+      },
+      "VQC-PCA": {
+        "n_seen": 49996,
+        "n_unseen": 4,
+        "n_errors_seen": 1306,
+        "n_errors_unseen": 1
+      }
+    }
+  },
+  "d3_p0.04": {
+    "d": 3,
+    "p": 0.04,
+    "n_detectors": 8,
+    "possible_syndromes": 256,
+    "n_train_shots": 200000,
+    "distinct_train": 223,
+    "n_test_shots": 200000,
+    "n_test_seen": 199990,
+    "test_seen_fraction": 0.99995,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 199990,
+        "n_unseen": 10,
+        "n_errors_seen": 6471,
+        "n_errors_unseen": 1
+      },
+      "Greedy": {
+        "n_seen": 199990,
+        "n_unseen": 10,
+        "n_errors_seen": 21986,
+        "n_errors_unseen": 1
+      },
+      "Exact-MAP": {
+        "n_seen": 199990,
+        "n_unseen": 10,
+        "n_errors_seen": 5523,
+        "n_errors_unseen": 4
+      },
+      "LogReg": {
+        "n_seen": 199990,
+        "n_unseen": 10,
+        "n_errors_seen": 22368,
+        "n_errors_unseen": 7
+      },
+      "MLP": {
+        "n_seen": 199990,
+        "n_unseen": 10,
+        "n_errors_seen": 5620,
+        "n_errors_unseen": 4
+      },
+      "LogReg-PCA": {
+        "n_seen": 199990,
+        "n_unseen": 10,
+        "n_errors_seen": 27319,
+        "n_errors_unseen": 6
+      },
+      "VQC-PCA": {
+        "n_seen": 49997,
+        "n_unseen": 3,
+        "n_errors_seen": 1873,
+        "n_errors_unseen": 2
+      }
+    }
+  },
+  "d3_p0.05": {
+    "d": 3,
+    "p": 0.05,
+    "n_detectors": 8,
+    "possible_syndromes": 256,
+    "n_train_shots": 200000,
+    "distinct_train": 231,
+    "n_test_shots": 200000,
+    "n_test_seen": 199983,
+    "test_seen_fraction": 0.999915,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 199983,
+        "n_unseen": 17,
+        "n_errors_seen": 9754,
+        "n_errors_unseen": 4
+      },
+      "Greedy": {
+        "n_seen": 199983,
+        "n_unseen": 17,
+        "n_errors_seen": 27065,
+        "n_errors_unseen": 3
+      },
+      "Exact-MAP": {
+        "n_seen": 199983,
+        "n_unseen": 17,
+        "n_errors_seen": 8454,
+        "n_errors_unseen": 4
+      },
+      "LogReg": {
+        "n_seen": 199983,
+        "n_unseen": 17,
+        "n_errors_seen": 27642,
+        "n_errors_unseen": 8
+      },
+      "MLP": {
+        "n_seen": 199983,
+        "n_unseen": 17,
+        "n_errors_seen": 8596,
+        "n_errors_unseen": 4
+      },
+      "LogReg-PCA": {
+        "n_seen": 199983,
+        "n_unseen": 17,
+        "n_errors_seen": 27444,
+        "n_errors_unseen": 8
+      },
+      "VQC-PCA": {
+        "n_seen": 49998,
+        "n_unseen": 2,
+        "n_errors_seen": 3118,
+        "n_errors_unseen": 1
+      }
+    }
+  },
+  "d3_p0.06": {
+    "d": 3,
+    "p": 0.06,
+    "n_detectors": 8,
+    "possible_syndromes": 256,
+    "n_train_shots": 200000,
     "distinct_train": 242,
-    "frac": 0.9453125,
-    "shots_per_pattern": 826.4462809917355
+    "n_test_shots": 200000,
+    "n_test_seen": 199980,
+    "test_seen_fraction": 0.9999,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 199980,
+        "n_unseen": 20,
+        "n_errors_seen": 13151,
+        "n_errors_unseen": 6
+      },
+      "Greedy": {
+        "n_seen": 199980,
+        "n_unseen": 20,
+        "n_errors_seen": 31923,
+        "n_errors_unseen": 11
+      },
+      "Exact-MAP": {
+        "n_seen": 199980,
+        "n_unseen": 20,
+        "n_errors_seen": 11580,
+        "n_errors_unseen": 6
+      },
+      "LogReg": {
+        "n_seen": 199980,
+        "n_unseen": 20,
+        "n_errors_seen": 32272,
+        "n_errors_unseen": 6
+      },
+      "MLP": {
+        "n_seen": 199980,
+        "n_unseen": 20,
+        "n_errors_seen": 11722,
+        "n_errors_unseen": 9
+      },
+      "LogReg-PCA": {
+        "n_seen": 199980,
+        "n_unseen": 20,
+        "n_errors_seen": 32322,
+        "n_errors_unseen": 6
+      },
+      "VQC-PCA": {
+        "n_seen": 49995,
+        "n_unseen": 5,
+        "n_errors_seen": 4027,
+        "n_errors_unseen": 3
+      }
+    }
   },
-  "5": {
-    "n_det": 24,
-    "space": 16777216.0,
+  "d3_p0.08": {
+    "d": 3,
+    "p": 0.08,
+    "n_detectors": 8,
+    "possible_syndromes": 256,
+    "n_train_shots": 200000,
+    "distinct_train": 254,
+    "n_test_shots": 200000,
+    "n_test_seen": 199999,
+    "test_seen_fraction": 0.999995,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 199999,
+        "n_unseen": 1,
+        "n_errors_seen": 21266,
+        "n_errors_unseen": 0
+      },
+      "Greedy": {
+        "n_seen": 199999,
+        "n_unseen": 1,
+        "n_errors_seen": 40799,
+        "n_errors_unseen": 1
+      },
+      "Exact-MAP": {
+        "n_seen": 199999,
+        "n_unseen": 1,
+        "n_errors_seen": 18981,
+        "n_errors_unseen": 0
+      },
+      "LogReg": {
+        "n_seen": 199999,
+        "n_unseen": 1,
+        "n_errors_seen": 42291,
+        "n_errors_unseen": 0
+      },
+      "MLP": {
+        "n_seen": 199999,
+        "n_unseen": 1,
+        "n_errors_seen": 18948,
+        "n_errors_unseen": 0
+      },
+      "LogReg-PCA": {
+        "n_seen": 199999,
+        "n_unseen": 1,
+        "n_errors_seen": 41233,
+        "n_errors_unseen": 0
+      },
+      "VQC-PCA": {
+        "n_seen": 50000,
+        "n_unseen": 0,
+        "n_errors_seen": 5888,
+        "n_errors_unseen": 0
+      }
+    }
+  },
+  "d3_p0.1": {
+    "d": 3,
+    "p": 0.1,
+    "n_detectors": 8,
+    "possible_syndromes": 256,
+    "n_train_shots": 200000,
+    "distinct_train": 256,
+    "n_test_shots": 200000,
+    "n_test_seen": 200000,
+    "test_seen_fraction": 1.0,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 29807,
+        "n_errors_unseen": 0
+      },
+      "Greedy": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 48705,
+        "n_errors_unseen": 0
+      },
+      "Exact-MAP": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 26669,
+        "n_errors_unseen": 0
+      },
+      "LogReg": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 50440,
+        "n_errors_unseen": 0
+      },
+      "MLP": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 27027,
+        "n_errors_unseen": 0
+      },
+      "LogReg-PCA": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 49048,
+        "n_errors_unseen": 0
+      },
+      "VQC-PCA": {
+        "n_seen": 50000,
+        "n_unseen": 0,
+        "n_errors_seen": 8216,
+        "n_errors_unseen": 0
+      }
+    }
+  },
+  "d3_p0.12": {
+    "d": 3,
+    "p": 0.12,
+    "n_detectors": 8,
+    "possible_syndromes": 256,
+    "n_train_shots": 200000,
+    "distinct_train": 256,
+    "n_test_shots": 200000,
+    "n_test_seen": 200000,
+    "test_seen_fraction": 1.0,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 38569,
+        "n_errors_unseen": 0
+      },
+      "Greedy": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 56235,
+        "n_errors_unseen": 0
+      },
+      "Exact-MAP": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 35105,
+        "n_errors_unseen": 0
+      },
+      "LogReg": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 56886,
+        "n_errors_unseen": 0
+      },
+      "MLP": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 35152,
+        "n_errors_unseen": 0
+      },
+      "LogReg-PCA": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 57085,
+        "n_errors_unseen": 0
+      },
+      "VQC-PCA": {
+        "n_seen": 50000,
+        "n_unseen": 0,
+        "n_errors_seen": 10509,
+        "n_errors_unseen": 0
+      }
+    }
+  },
+  "d3_p0.15": {
+    "d": 3,
+    "p": 0.15,
+    "n_detectors": 8,
+    "possible_syndromes": 256,
+    "n_train_shots": 200000,
+    "distinct_train": 256,
+    "n_test_shots": 200000,
+    "n_test_seen": 200000,
+    "test_seen_fraction": 1.0,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 51297,
+        "n_errors_unseen": 0
+      },
+      "Greedy": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 65848,
+        "n_errors_unseen": 0
+      },
+      "Exact-MAP": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 47569,
+        "n_errors_unseen": 0
+      },
+      "LogReg": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 66755,
+        "n_errors_unseen": 0
+      },
+      "MLP": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 47747,
+        "n_errors_unseen": 0
+      },
+      "LogReg-PCA": {
+        "n_seen": 200000,
+        "n_unseen": 0,
+        "n_errors_seen": 67191,
+        "n_errors_unseen": 0
+      },
+      "VQC-PCA": {
+        "n_seen": 50000,
+        "n_unseen": 0,
+        "n_errors_seen": 14238,
+        "n_errors_unseen": 0
+      }
+    }
+  },
+  "d5_p0.01": {
+    "d": 5,
+    "p": 0.01,
+    "n_detectors": 24,
+    "possible_syndromes": 16777216,
+    "n_train_shots": 200000,
+    "distinct_train": 2653,
+    "n_test_shots": 200000,
+    "n_test_seen": 198327,
+    "test_seen_fraction": 0.991635,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 198327,
+        "n_unseen": 1673,
+        "n_errors_seen": 13,
+        "n_errors_unseen": 27
+      },
+      "Greedy": {
+        "n_seen": 198327,
+        "n_unseen": 1673,
+        "n_errors_seen": 619,
+        "n_errors_unseen": 222
+      },
+      "Exact-MAP": {
+        "n_seen": 198327,
+        "n_unseen": 1673,
+        "n_errors_seen": 10,
+        "n_errors_unseen": 28
+      },
+      "LogReg": {
+        "n_seen": 198327,
+        "n_unseen": 1673,
+        "n_errors_seen": 12264,
+        "n_errors_unseen": 516
+      },
+      "MLP": {
+        "n_seen": 198327,
+        "n_unseen": 1673,
+        "n_errors_seen": 15,
+        "n_errors_unseen": 202
+      },
+      "LogReg-PCA": {
+        "n_seen": 198327,
+        "n_unseen": 1673,
+        "n_errors_seen": 9611,
+        "n_errors_unseen": 522
+      },
+      "VQC-PCA": {
+        "n_seen": 49586,
+        "n_unseen": 414,
+        "n_errors_seen": 662,
+        "n_errors_unseen": 106
+      }
+    }
+  },
+  "d5_p0.02": {
+    "d": 5,
+    "p": 0.02,
+    "n_detectors": 24,
+    "possible_syndromes": 16777216,
+    "n_train_shots": 200000,
+    "distinct_train": 9071,
+    "n_test_shots": 200000,
+    "n_test_seen": 194217,
+    "test_seen_fraction": 0.971085,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 194217,
+        "n_unseen": 5783,
+        "n_errors_seen": 165,
+        "n_errors_unseen": 164
+      },
+      "Greedy": {
+        "n_seen": 194217,
+        "n_unseen": 5783,
+        "n_errors_seen": 2246,
+        "n_errors_unseen": 838
+      },
+      "Exact-MAP": {
+        "n_seen": 194217,
+        "n_unseen": 5783,
+        "n_errors_seen": 151,
+        "n_errors_unseen": 135
+      },
+      "LogReg": {
+        "n_seen": 194217,
+        "n_unseen": 5783,
+        "n_errors_seen": 17239,
+        "n_errors_unseen": 1890
+      },
+      "MLP": {
+        "n_seen": 194217,
+        "n_unseen": 5783,
+        "n_errors_seen": 306,
+        "n_errors_unseen": 625
+      },
+      "LogReg-PCA": {
+        "n_seen": 194217,
+        "n_unseen": 5783,
+        "n_errors_seen": 17011,
+        "n_errors_unseen": 1933
+      },
+      "VQC-PCA": {
+        "n_seen": 48535,
+        "n_unseen": 1465,
+        "n_errors_seen": 2161,
+        "n_errors_unseen": 467
+      }
+    }
+  },
+  "d5_p0.03": {
+    "d": 5,
+    "p": 0.03,
+    "n_detectors": 24,
+    "possible_syndromes": 16777216,
+    "n_train_shots": 200000,
+    "distinct_train": 17200,
+    "n_test_shots": 200000,
+    "n_test_seen": 189615,
+    "test_seen_fraction": 0.948075,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 189615,
+        "n_unseen": 10385,
+        "n_errors_seen": 613,
+        "n_errors_unseen": 595
+      },
+      "Greedy": {
+        "n_seen": 189615,
+        "n_unseen": 10385,
+        "n_errors_seen": 4764,
+        "n_errors_unseen": 2050
+      },
+      "Exact-MAP": {
+        "n_seen": 189615,
+        "n_unseen": 10385,
+        "n_errors_seen": 577,
+        "n_errors_unseen": 524
+      },
+      "LogReg": {
+        "n_seen": 189615,
+        "n_unseen": 10385,
+        "n_errors_seen": 23936,
+        "n_errors_unseen": 3460
+      },
+      "MLP": {
+        "n_seen": 189615,
+        "n_unseen": 10385,
+        "n_errors_seen": 805,
+        "n_errors_unseen": 1340
+      },
+      "LogReg-PCA": {
+        "n_seen": 189615,
+        "n_unseen": 10385,
+        "n_errors_seen": 23866,
+        "n_errors_unseen": 3537
+      },
+      "VQC-PCA": {
+        "n_seen": 47328,
+        "n_unseen": 2672,
+        "n_errors_seen": 3923,
+        "n_errors_unseen": 846
+      }
+    }
+  },
+  "d5_p0.04": {
+    "d": 5,
+    "p": 0.04,
+    "n_detectors": 24,
+    "possible_syndromes": 16777216,
+    "n_train_shots": 200000,
+    "distinct_train": 27660,
+    "n_test_shots": 200000,
+    "n_test_seen": 182848,
+    "test_seen_fraction": 0.91424,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 182848,
+        "n_unseen": 17152,
+        "n_errors_seen": 1232,
+        "n_errors_unseen": 1481
+      },
+      "Greedy": {
+        "n_seen": 182848,
+        "n_unseen": 17152,
+        "n_errors_seen": 7136,
+        "n_errors_unseen": 3965
+      },
+      "Exact-MAP": {
+        "n_seen": 182848,
+        "n_unseen": 17152,
+        "n_errors_seen": 1140,
+        "n_errors_unseen": 1286
+      },
+      "LogReg": {
+        "n_seen": 182848,
+        "n_unseen": 17152,
+        "n_errors_seen": 29075,
+        "n_errors_unseen": 6128
+      },
+      "MLP": {
+        "n_seen": 182848,
+        "n_unseen": 17152,
+        "n_errors_seen": 1339,
+        "n_errors_unseen": 2568
+      },
+      "LogReg-PCA": {
+        "n_seen": 182848,
+        "n_unseen": 17152,
+        "n_errors_seen": 29442,
+        "n_errors_unseen": 6226
+      },
+      "VQC-PCA": {
+        "n_seen": 45730,
+        "n_unseen": 4270,
+        "n_errors_seen": 5862,
+        "n_errors_unseen": 1454
+      }
+    }
+  },
+  "d5_p0.05": {
+    "d": 5,
+    "p": 0.05,
+    "n_detectors": 24,
+    "possible_syndromes": 16777216,
+    "n_train_shots": 200000,
+    "distinct_train": 40186,
+    "n_test_shots": 200000,
+    "n_test_seen": 173057,
+    "test_seen_fraction": 0.865285,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 173057,
+        "n_unseen": 26943,
+        "n_errors_seen": 2211,
+        "n_errors_unseen": 2856
+      },
+      "Greedy": {
+        "n_seen": 173057,
+        "n_unseen": 26943,
+        "n_errors_seen": 9738,
+        "n_errors_unseen": 6984
+      },
+      "Exact-MAP": {
+        "n_seen": 173057,
+        "n_unseen": 26943,
+        "n_errors_seen": 2031,
+        "n_errors_unseen": 2550
+      },
+      "LogReg": {
+        "n_seen": 173057,
+        "n_unseen": 26943,
+        "n_errors_seen": 32081,
+        "n_errors_unseen": 9724
+      },
+      "MLP": {
+        "n_seen": 173057,
+        "n_unseen": 26943,
+        "n_errors_seen": 2496,
+        "n_errors_unseen": 4833
+      },
+      "LogReg-PCA": {
+        "n_seen": 173057,
+        "n_unseen": 26943,
+        "n_errors_seen": 32322,
+        "n_errors_unseen": 9922
+      },
+      "VQC-PCA": {
+        "n_seen": 43310,
+        "n_unseen": 6690,
+        "n_errors_seen": 6454,
+        "n_errors_unseen": 2481
+      }
+    }
+  },
+  "d5_p0.06": {
+    "d": 5,
+    "p": 0.06,
+    "n_detectors": 24,
+    "possible_syndromes": 16777216,
+    "n_train_shots": 200000,
     "distinct_train": 54778,
-    "frac": 0.0032650232315063477,
-    "shots_per_pattern": 3.6511008068932784
+    "n_test_shots": 200000,
+    "n_test_seen": 161358,
+    "test_seen_fraction": 0.80679,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 161358,
+        "n_unseen": 38642,
+        "n_errors_seen": 3356,
+        "n_errors_unseen": 4823
+      },
+      "Greedy": {
+        "n_seen": 161358,
+        "n_unseen": 38642,
+        "n_errors_seen": 11979,
+        "n_errors_unseen": 10736
+      },
+      "Exact-MAP": {
+        "n_seen": 161358,
+        "n_unseen": 38642,
+        "n_errors_seen": 3152,
+        "n_errors_unseen": 4335
+      },
+      "LogReg": {
+        "n_seen": 161358,
+        "n_unseen": 38642,
+        "n_errors_seen": 33711,
+        "n_errors_unseen": 14592
+      },
+      "MLP": {
+        "n_seen": 161358,
+        "n_unseen": 38642,
+        "n_errors_seen": 3715,
+        "n_errors_unseen": 7449
+      },
+      "LogReg-PCA": {
+        "n_seen": 161358,
+        "n_unseen": 38642,
+        "n_errors_seen": 33987,
+        "n_errors_unseen": 14866
+      },
+      "VQC-PCA": {
+        "n_seen": 40373,
+        "n_unseen": 9627,
+        "n_errors_seen": 7699,
+        "n_errors_unseen": 3567
+      }
+    }
   },
-  "7": {
-    "n_det": 48,
-    "space": 281474976710656.0,
+  "d5_p0.08": {
+    "d": 5,
+    "p": 0.08,
+    "n_detectors": 24,
+    "possible_syndromes": 16777216,
+    "n_train_shots": 200000,
+    "distinct_train": 85801,
+    "n_test_shots": 200000,
+    "n_test_seen": 134960,
+    "test_seen_fraction": 0.6748,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 134960,
+        "n_unseen": 65040,
+        "n_errors_seen": 6069,
+        "n_errors_unseen": 10918
+      },
+      "Greedy": {
+        "n_seen": 134960,
+        "n_unseen": 65040,
+        "n_errors_seen": 15131,
+        "n_errors_unseen": 20242
+      },
+      "Exact-MAP": {
+        "n_seen": 134960,
+        "n_unseen": 65040,
+        "n_errors_seen": 5686,
+        "n_errors_unseen": 9967
+      },
+      "LogReg": {
+        "n_seen": 134960,
+        "n_unseen": 65040,
+        "n_errors_seen": 33645,
+        "n_errors_unseen": 24955
+      },
+      "MLP": {
+        "n_seen": 134960,
+        "n_unseen": 65040,
+        "n_errors_seen": 6345,
+        "n_errors_unseen": 13411
+      },
+      "LogReg-PCA": {
+        "n_seen": 134960,
+        "n_unseen": 65040,
+        "n_errors_seen": 34165,
+        "n_errors_unseen": 25366
+      },
+      "VQC-PCA": {
+        "n_seen": 33675,
+        "n_unseen": 16325,
+        "n_errors_seen": 7994,
+        "n_errors_unseen": 6227
+      }
+    }
+  },
+  "d5_p0.1": {
+    "d": 5,
+    "p": 0.1,
+    "n_detectors": 24,
+    "possible_syndromes": 16777216,
+    "n_train_shots": 200000,
+    "distinct_train": 116604,
+    "n_test_shots": 200000,
+    "n_test_seen": 106704,
+    "test_seen_fraction": 0.53352,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 106704,
+        "n_unseen": 93296,
+        "n_errors_seen": 7977,
+        "n_errors_unseen": 20089
+      },
+      "Greedy": {
+        "n_seen": 106704,
+        "n_unseen": 93296,
+        "n_errors_seen": 16117,
+        "n_errors_unseen": 31700
+      },
+      "Exact-MAP": {
+        "n_seen": 106704,
+        "n_unseen": 93296,
+        "n_errors_seen": 7513,
+        "n_errors_unseen": 18615
+      },
+      "LogReg": {
+        "n_seen": 106704,
+        "n_unseen": 93296,
+        "n_errors_seen": 30423,
+        "n_errors_unseen": 37612
+      },
+      "MLP": {
+        "n_seen": 106704,
+        "n_unseen": 93296,
+        "n_errors_seen": 8374,
+        "n_errors_unseen": 23414
+      },
+      "LogReg-PCA": {
+        "n_seen": 106704,
+        "n_unseen": 93296,
+        "n_errors_seen": 30693,
+        "n_errors_unseen": 37681
+      },
+      "VQC-PCA": {
+        "n_seen": 26628,
+        "n_unseen": 23372,
+        "n_errors_seen": 7652,
+        "n_errors_unseen": 9321
+      }
+    }
+  },
+  "d5_p0.12": {
+    "d": 5,
+    "p": 0.12,
+    "n_detectors": 24,
+    "possible_syndromes": 16777216,
+    "n_train_shots": 200000,
+    "distinct_train": 143513,
+    "n_test_shots": 200000,
+    "n_test_seen": 79566,
+    "test_seen_fraction": 0.39783,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 79566,
+        "n_unseen": 120434,
+        "n_errors_seen": 9016,
+        "n_errors_unseen": 31322
+      },
+      "Greedy": {
+        "n_seen": 79566,
+        "n_unseen": 120434,
+        "n_errors_seen": 15375,
+        "n_errors_unseen": 43642
+      },
+      "Exact-MAP": {
+        "n_seen": 79566,
+        "n_unseen": 120434,
+        "n_errors_seen": 8569,
+        "n_errors_unseen": 29255
+      },
+      "LogReg": {
+        "n_seen": 79566,
+        "n_unseen": 120434,
+        "n_errors_seen": 25479,
+        "n_errors_unseen": 49927
+      },
+      "MLP": {
+        "n_seen": 79566,
+        "n_unseen": 120434,
+        "n_errors_seen": 9834,
+        "n_errors_unseen": 36363
+      },
+      "LogReg-PCA": {
+        "n_seen": 79566,
+        "n_unseen": 120434,
+        "n_errors_seen": 25387,
+        "n_errors_unseen": 49573
+      },
+      "VQC-PCA": {
+        "n_seen": 20088,
+        "n_unseen": 29912,
+        "n_errors_seen": 6381,
+        "n_errors_unseen": 12092
+      }
+    }
+  },
+  "d5_p0.15": {
+    "d": 5,
+    "p": 0.15,
+    "n_detectors": 24,
+    "possible_syndromes": 16777216,
+    "n_train_shots": 200000,
+    "distinct_train": 171735,
+    "n_test_shots": 200000,
+    "n_test_seen": 45292,
+    "test_seen_fraction": 0.22646,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 45292,
+        "n_unseen": 154708,
+        "n_errors_seen": 8734,
+        "n_errors_unseen": 49888
+      },
+      "Greedy": {
+        "n_seen": 45292,
+        "n_unseen": 154708,
+        "n_errors_seen": 11994,
+        "n_errors_unseen": 61412
+      },
+      "Exact-MAP": {
+        "n_seen": 45292,
+        "n_unseen": 154708,
+        "n_errors_seen": 8371,
+        "n_errors_unseen": 47278
+      },
+      "LogReg": {
+        "n_seen": 45292,
+        "n_unseen": 154708,
+        "n_errors_seen": 16918,
+        "n_errors_unseen": 67591
+      },
+      "MLP": {
+        "n_seen": 45292,
+        "n_unseen": 154708,
+        "n_errors_seen": 9609,
+        "n_errors_unseen": 56220
+      },
+      "LogReg-PCA": {
+        "n_seen": 45292,
+        "n_unseen": 154708,
+        "n_errors_seen": 16753,
+        "n_errors_unseen": 66707
+      },
+      "VQC-PCA": {
+        "n_seen": 11372,
+        "n_unseen": 38628,
+        "n_errors_seen": 4205,
+        "n_errors_unseen": 16620
+      }
+    }
+  },
+  "d7_p0.01": {
+    "d": 7,
+    "p": 0.01,
+    "n_detectors": 48,
+    "possible_syndromes": 281474976710656,
+    "n_train_shots": 200000,
+    "distinct_train": 15944,
+    "n_test_shots": 200000,
+    "n_test_seen": 188403,
+    "test_seen_fraction": 0.942015,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 188403,
+        "n_unseen": 11597,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 3
+      },
+      "Greedy": {
+        "n_seen": 188403,
+        "n_unseen": 11597,
+        "n_errors_seen": 234,
+        "n_errors_unseen": 336
+      },
+      "Exact-MAP": {
+        "n_seen": 188403,
+        "n_unseen": 11597,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 3
+      },
+      "LogReg": {
+        "n_seen": 188403,
+        "n_unseen": 11597,
+        "n_errors_seen": 12194,
+        "n_errors_unseen": 2828
+      },
+      "MLP": {
+        "n_seen": 188403,
+        "n_unseen": 11597,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 476
+      },
+      "LogReg-PCA": {
+        "n_seen": 188403,
+        "n_unseen": 11597,
+        "n_errors_seen": 10945,
+        "n_errors_unseen": 2697
+      },
+      "VQC-PCA": {
+        "n_seen": 47050,
+        "n_unseen": 2950,
+        "n_errors_seen": 1473,
+        "n_errors_unseen": 621
+      }
+    }
+  },
+  "d7_p0.02": {
+    "d": 7,
+    "p": 0.02,
+    "n_detectors": 48,
+    "possible_syndromes": 281474976710656,
+    "n_train_shots": 200000,
+    "distinct_train": 53162,
+    "n_test_shots": 200000,
+    "n_test_seen": 155243,
+    "test_seen_fraction": 0.776215,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 155243,
+        "n_unseen": 44757,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 65
+      },
+      "Greedy": {
+        "n_seen": 155243,
+        "n_unseen": 44757,
+        "n_errors_seen": 564,
+        "n_errors_unseen": 1895
+      },
+      "Exact-MAP": {
+        "n_seen": 155243,
+        "n_unseen": 44757,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 66
+      },
+      "LogReg": {
+        "n_seen": 155243,
+        "n_unseen": 44757,
+        "n_errors_seen": 14853,
+        "n_errors_unseen": 10951
+      },
+      "MLP": {
+        "n_seen": 155243,
+        "n_unseen": 44757,
+        "n_errors_seen": 41,
+        "n_errors_unseen": 1711
+      },
+      "LogReg-PCA": {
+        "n_seen": 155243,
+        "n_unseen": 44757,
+        "n_errors_seen": 14698,
+        "n_errors_unseen": 10715
+      },
+      "VQC-PCA": {
+        "n_seen": 38759,
+        "n_unseen": 11241,
+        "n_errors_seen": 2884,
+        "n_errors_unseen": 2758
+      }
+    }
+  },
+  "d7_p0.03": {
+    "d": 7,
+    "p": 0.03,
+    "n_detectors": 48,
+    "possible_syndromes": 281474976710656,
+    "n_train_shots": 200000,
+    "distinct_train": 97029,
+    "n_test_shots": 200000,
+    "n_test_seen": 114831,
+    "test_seen_fraction": 0.574155,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 114831,
+        "n_unseen": 85169,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 372
+      },
+      "Greedy": {
+        "n_seen": 114831,
+        "n_unseen": 85169,
+        "n_errors_seen": 669,
+        "n_errors_unseen": 4918
+      },
+      "Exact-MAP": {
+        "n_seen": 114831,
+        "n_unseen": 85169,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 320
+      },
+      "LogReg": {
+        "n_seen": 114831,
+        "n_unseen": 85169,
+        "n_errors_seen": 13876,
+        "n_errors_unseen": 21943
+      },
+      "MLP": {
+        "n_seen": 114831,
+        "n_unseen": 85169,
+        "n_errors_seen": 43,
+        "n_errors_unseen": 3841
+      },
+      "LogReg-PCA": {
+        "n_seen": 114831,
+        "n_unseen": 85169,
+        "n_errors_seen": 13768,
+        "n_errors_unseen": 21744
+      },
+      "VQC-PCA": {
+        "n_seen": 28735,
+        "n_unseen": 21265,
+        "n_errors_seen": 3275,
+        "n_errors_unseen": 5394
+      }
+    }
+  },
+  "d7_p0.04": {
+    "d": 7,
+    "p": 0.04,
+    "n_detectors": 48,
+    "possible_syndromes": 281474976710656,
+    "n_train_shots": 200000,
+    "distinct_train": 135903,
+    "n_test_shots": 200000,
+    "n_test_seen": 75540,
+    "test_seen_fraction": 0.3777,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 75540,
+        "n_unseen": 124460,
+        "n_errors_seen": 11,
+        "n_errors_unseen": 1180
+      },
+      "Greedy": {
+        "n_seen": 75540,
+        "n_unseen": 124460,
+        "n_errors_seen": 595,
+        "n_errors_unseen": 9469
+      },
+      "Exact-MAP": {
+        "n_seen": 75540,
+        "n_unseen": 124460,
+        "n_errors_seen": 10,
+        "n_errors_unseen": 997
+      },
+      "LogReg": {
+        "n_seen": 75540,
+        "n_unseen": 124460,
+        "n_errors_seen": 10394,
+        "n_errors_unseen": 34882
+      },
+      "MLP": {
+        "n_seen": 75540,
+        "n_unseen": 124460,
+        "n_errors_seen": 42,
+        "n_errors_unseen": 6930
+      },
+      "LogReg-PCA": {
+        "n_seen": 75540,
+        "n_unseen": 124460,
+        "n_errors_seen": 10359,
+        "n_errors_unseen": 34287
+      },
+      "VQC-PCA": {
+        "n_seen": 18768,
+        "n_unseen": 31232,
+        "n_errors_seen": 2605,
+        "n_errors_unseen": 8605
+      }
+    }
+  },
+  "d7_p0.05": {
+    "d": 7,
+    "p": 0.05,
+    "n_detectors": 48,
+    "possible_syndromes": 281474976710656,
+    "n_train_shots": 200000,
+    "distinct_train": 164629,
+    "n_test_shots": 200000,
+    "n_test_seen": 44553,
+    "test_seen_fraction": 0.222765,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 44553,
+        "n_unseen": 155447,
+        "n_errors_seen": 5,
+        "n_errors_unseen": 2776
+      },
+      "Greedy": {
+        "n_seen": 44553,
+        "n_unseen": 155447,
+        "n_errors_seen": 376,
+        "n_errors_unseen": 15358
+      },
+      "Exact-MAP": {
+        "n_seen": 44553,
+        "n_unseen": 155447,
+        "n_errors_seen": 4,
+        "n_errors_unseen": 2371
+      },
+      "LogReg": {
+        "n_seen": 44553,
+        "n_unseen": 155447,
+        "n_errors_seen": 6475,
+        "n_errors_unseen": 46077
+      },
+      "MLP": {
+        "n_seen": 44553,
+        "n_unseen": 155447,
+        "n_errors_seen": 10,
+        "n_errors_unseen": 9094
+      },
+      "LogReg-PCA": {
+        "n_seen": 44553,
+        "n_unseen": 155447,
+        "n_errors_seen": 6509,
+        "n_errors_unseen": 45643
+      },
+      "VQC-PCA": {
+        "n_seen": 11165,
+        "n_unseen": 38835,
+        "n_errors_seen": 1612,
+        "n_errors_unseen": 11520
+      }
+    }
+  },
+  "d7_p0.06": {
+    "d": 7,
+    "p": 0.06,
+    "n_detectors": 48,
+    "possible_syndromes": 281474976710656,
+    "n_train_shots": 200000,
     "distinct_train": 183049,
-    "frac": 6.503206861907529e-10,
-    "shots_per_pattern": 1.0926036197957925
+    "n_test_shots": 200000,
+    "n_test_seen": 23274,
+    "test_seen_fraction": 0.11637,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 23274,
+        "n_unseen": 176726,
+        "n_errors_seen": 5,
+        "n_errors_unseen": 5432
+      },
+      "Greedy": {
+        "n_seen": 23274,
+        "n_unseen": 176726,
+        "n_errors_seen": 225,
+        "n_errors_unseen": 22025
+      },
+      "Exact-MAP": {
+        "n_seen": 23274,
+        "n_unseen": 176726,
+        "n_errors_seen": 4,
+        "n_errors_unseen": 4724
+      },
+      "LogReg": {
+        "n_seen": 23274,
+        "n_unseen": 176726,
+        "n_errors_seen": 3587,
+        "n_errors_unseen": 56872
+      },
+      "MLP": {
+        "n_seen": 23274,
+        "n_unseen": 176726,
+        "n_errors_seen": 14,
+        "n_errors_unseen": 15455
+      },
+      "LogReg-PCA": {
+        "n_seen": 23274,
+        "n_unseen": 176726,
+        "n_errors_seen": 3552,
+        "n_errors_unseen": 55718
+      },
+      "VQC-PCA": {
+        "n_seen": 5792,
+        "n_unseen": 44208,
+        "n_errors_seen": 915,
+        "n_errors_unseen": 13894
+      }
+    }
   },
-  "9": {
-    "n_det": 80,
-    "space": 1.2089258196146292e+24,
+  "d7_p0.08": {
+    "d": 7,
+    "p": 0.08,
+    "n_detectors": 48,
+    "possible_syndromes": 281474976710656,
+    "n_train_shots": 200000,
+    "distinct_train": 197489,
+    "n_test_shots": 200000,
+    "n_test_seen": 3900,
+    "test_seen_fraction": 0.0195,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 3900,
+        "n_unseen": 196100,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 14314
+      },
+      "Greedy": {
+        "n_seen": 3900,
+        "n_unseen": 196100,
+        "n_errors_seen": 46,
+        "n_errors_unseen": 37062
+      },
+      "Exact-MAP": {
+        "n_seen": 3900,
+        "n_unseen": 196100,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 12607
+      },
+      "LogReg": {
+        "n_seen": 3900,
+        "n_unseen": 196100,
+        "n_errors_seen": 627,
+        "n_errors_unseen": 71911
+      },
+      "MLP": {
+        "n_seen": 3900,
+        "n_unseen": 196100,
+        "n_errors_seen": 7,
+        "n_errors_unseen": 31638
+      },
+      "LogReg-PCA": {
+        "n_seen": 3900,
+        "n_unseen": 196100,
+        "n_errors_seen": 615,
+        "n_errors_unseen": 69968
+      },
+      "VQC-PCA": {
+        "n_seen": 944,
+        "n_unseen": 49056,
+        "n_errors_seen": 172,
+        "n_errors_unseen": 17634
+      }
+    }
+  },
+  "d7_p0.1": {
+    "d": 7,
+    "p": 0.1,
+    "n_detectors": 48,
+    "possible_syndromes": 281474976710656,
+    "n_train_shots": 200000,
+    "distinct_train": 199781,
+    "n_test_shots": 200000,
+    "n_test_seen": 394,
+    "test_seen_fraction": 0.00197,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 394,
+        "n_unseen": 199606,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 27904
+      },
+      "Greedy": {
+        "n_seen": 394,
+        "n_unseen": 199606,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 52678
+      },
+      "Exact-MAP": {
+        "n_seen": 394,
+        "n_unseen": 199606,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 25050
+      },
+      "LogReg": {
+        "n_seen": 394,
+        "n_unseen": 199606,
+        "n_errors_seen": 66,
+        "n_errors_unseen": 80596
+      },
+      "MLP": {
+        "n_seen": 394,
+        "n_unseen": 199606,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 54942
+      },
+      "LogReg-PCA": {
+        "n_seen": 394,
+        "n_unseen": 199606,
+        "n_errors_seen": 65,
+        "n_errors_unseen": 79165
+      },
+      "VQC-PCA": {
+        "n_seen": 102,
+        "n_unseen": 49898,
+        "n_errors_seen": 12,
+        "n_errors_unseen": 19642
+      }
+    }
+  },
+  "d7_p0.12": {
+    "d": 7,
+    "p": 0.12,
+    "n_detectors": 48,
+    "possible_syndromes": 281474976710656,
+    "n_train_shots": 200000,
+    "distinct_train": 199983,
+    "n_test_shots": 200000,
+    "n_test_seen": 26,
+    "test_seen_fraction": 0.00013,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 26,
+        "n_unseen": 199974,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 43411
+      },
+      "Greedy": {
+        "n_seen": 26,
+        "n_unseen": 199974,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 65879
+      },
+      "Exact-MAP": {
+        "n_seen": 26,
+        "n_unseen": 199974,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 39772
+      },
+      "LogReg": {
+        "n_seen": 26,
+        "n_unseen": 199974,
+        "n_errors_seen": 4,
+        "n_errors_unseen": 86469
+      },
+      "MLP": {
+        "n_seen": 26,
+        "n_unseen": 199974,
+        "n_errors_seen": 2,
+        "n_errors_unseen": 73897
+      },
+      "LogReg-PCA": {
+        "n_seen": 26,
+        "n_unseen": 199974,
+        "n_errors_seen": 4,
+        "n_errors_unseen": 85500
+      },
+      "VQC-PCA": {
+        "n_seen": 5,
+        "n_unseen": 49995,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 21305
+      }
+    }
+  },
+  "d7_p0.15": {
+    "d": 7,
+    "p": 0.15,
+    "n_detectors": 48,
+    "possible_syndromes": 281474976710656,
+    "n_train_shots": 200000,
+    "distinct_train": 200000,
+    "n_test_shots": 200000,
+    "n_test_seen": 0,
+    "test_seen_fraction": 0.0,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 65901
+      },
+      "Greedy": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 81061
+      },
+      "Exact-MAP": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 61881
+      },
+      "LogReg": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 92957
+      },
+      "MLP": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 92456
+      },
+      "LogReg-PCA": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 92084
+      },
+      "VQC-PCA": {
+        "n_seen": 0,
+        "n_unseen": 50000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 23323
+      }
+    }
+  },
+  "d9_p0.01": {
+    "d": 9,
+    "p": 0.01,
+    "n_detectors": 80,
+    "possible_syndromes": 1208925819614629174706176,
+    "n_train_shots": 200000,
+    "distinct_train": 49725,
+    "n_test_shots": 200000,
+    "n_test_seen": 160979,
+    "test_seen_fraction": 0.804895,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 160979,
+        "n_unseen": 39021,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 0
+      },
+      "Greedy": {
+        "n_seen": 160979,
+        "n_unseen": 39021,
+        "n_errors_seen": 42,
+        "n_errors_unseen": 218
+      },
+      "Exact-MAP": {
+        "n_seen": 160979,
+        "n_unseen": 39021,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 0
+      },
+      "LogReg": {
+        "n_seen": 160979,
+        "n_unseen": 39021,
+        "n_errors_seen": 10613,
+        "n_errors_unseen": 7339
+      },
+      "MLP": {
+        "n_seen": 160979,
+        "n_unseen": 39021,
+        "n_errors_seen": 6,
+        "n_errors_unseen": 981
+      },
+      "LogReg-PCA": {
+        "n_seen": 160979,
+        "n_unseen": 39021,
+        "n_errors_seen": 9782,
+        "n_errors_unseen": 6850
+      },
+      "VQC-PCA": {
+        "n_seen": 40189,
+        "n_unseen": 9811,
+        "n_errors_seen": 1734,
+        "n_errors_unseen": 1719
+      }
+    }
+  },
+  "d9_p0.02": {
+    "d": 9,
+    "p": 0.02,
+    "n_detectors": 80,
+    "possible_syndromes": 1208925819614629174706176,
+    "n_train_shots": 200000,
+    "distinct_train": 127195,
+    "n_test_shots": 200000,
+    "n_test_seen": 84932,
+    "test_seen_fraction": 0.42466,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 84932,
+        "n_unseen": 115068,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 17
+      },
+      "Greedy": {
+        "n_seen": 84932,
+        "n_unseen": 115068,
+        "n_errors_seen": 52,
+        "n_errors_unseen": 1432
+      },
+      "Exact-MAP": {
+        "n_seen": 84932,
+        "n_unseen": 115068,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 12
+      },
+      "LogReg": {
+        "n_seen": 84932,
+        "n_unseen": 115068,
+        "n_errors_seen": 7312,
+        "n_errors_unseen": 24154
+      },
+      "MLP": {
+        "n_seen": 84932,
+        "n_unseen": 115068,
+        "n_errors_seen": 7,
+        "n_errors_unseen": 2527
+      },
+      "LogReg-PCA": {
+        "n_seen": 84932,
+        "n_unseen": 115068,
+        "n_errors_seen": 7245,
+        "n_errors_unseen": 23426
+      },
+      "VQC-PCA": {
+        "n_seen": 21232,
+        "n_unseen": 28768,
+        "n_errors_seen": 1825,
+        "n_errors_unseen": 5952
+      }
+    }
+  },
+  "d9_p0.03": {
+    "d": 9,
+    "p": 0.03,
+    "n_detectors": 80,
+    "possible_syndromes": 1208925819614629174706176,
+    "n_train_shots": 200000,
+    "distinct_train": 176246,
+    "n_test_shots": 200000,
+    "n_test_seen": 31434,
+    "test_seen_fraction": 0.15717,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 31434,
+        "n_unseen": 168566,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 84
+      },
+      "Greedy": {
+        "n_seen": 31434,
+        "n_unseen": 168566,
+        "n_errors_seen": 14,
+        "n_errors_unseen": 3961
+      },
+      "Exact-MAP": {
+        "n_seen": 31434,
+        "n_unseen": 168566,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 74
+      },
+      "LogReg": {
+        "n_seen": 31434,
+        "n_unseen": 168566,
+        "n_errors_seen": 3061,
+        "n_errors_unseen": 40267
+      },
+      "MLP": {
+        "n_seen": 31434,
+        "n_unseen": 168566,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 5263
+      },
+      "LogReg-PCA": {
+        "n_seen": 31434,
+        "n_unseen": 168566,
+        "n_errors_seen": 3012,
+        "n_errors_unseen": 39393
+      },
+      "VQC-PCA": {
+        "n_seen": 7870,
+        "n_unseen": 42130,
+        "n_errors_seen": 720,
+        "n_errors_unseen": 9797
+      }
+    }
+  },
+  "d9_p0.04": {
+    "d": 9,
+    "p": 0.04,
+    "n_detectors": 80,
+    "possible_syndromes": 1208925819614629174706176,
+    "n_train_shots": 200000,
+    "distinct_train": 194642,
+    "n_test_shots": 200000,
+    "n_test_seen": 7506,
+    "test_seen_fraction": 0.03753,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 7506,
+        "n_unseen": 192494,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 491
+      },
+      "Greedy": {
+        "n_seen": 7506,
+        "n_unseen": 192494,
+        "n_errors_seen": 5,
+        "n_errors_unseen": 8151
+      },
+      "Exact-MAP": {
+        "n_seen": 7506,
+        "n_unseen": 192494,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 412
+      },
+      "LogReg": {
+        "n_seen": 7506,
+        "n_unseen": 192494,
+        "n_errors_seen": 737,
+        "n_errors_unseen": 53389
+      },
+      "MLP": {
+        "n_seen": 7506,
+        "n_unseen": 192494,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 10245
+      },
+      "LogReg-PCA": {
+        "n_seen": 7506,
+        "n_unseen": 192494,
+        "n_errors_seen": 733,
+        "n_errors_unseen": 52205
+      },
+      "VQC-PCA": {
+        "n_seen": 1859,
+        "n_unseen": 48141,
+        "n_errors_seen": 173,
+        "n_errors_unseen": 13124
+      }
+    }
+  },
+  "d9_p0.05": {
+    "d": 9,
+    "p": 0.05,
+    "n_detectors": 80,
+    "possible_syndromes": 1208925819614629174706176,
+    "n_train_shots": 200000,
+    "distinct_train": 199061,
+    "n_test_shots": 200000,
+    "n_test_seen": 1281,
+    "test_seen_fraction": 0.006405,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 1281,
+        "n_unseen": 198719,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 1507
+      },
+      "Greedy": {
+        "n_seen": 1281,
+        "n_unseen": 198719,
+        "n_errors_seen": 2,
+        "n_errors_unseen": 13845
+      },
+      "Exact-MAP": {
+        "n_seen": 1281,
+        "n_unseen": 198719,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 1232
+      },
+      "LogReg": {
+        "n_seen": 1281,
+        "n_unseen": 198719,
+        "n_errors_seen": 110,
+        "n_errors_unseen": 63452
+      },
+      "MLP": {
+        "n_seen": 1281,
+        "n_unseen": 198719,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 19045
+      },
+      "LogReg-PCA": {
+        "n_seen": 1281,
+        "n_unseen": 198719,
+        "n_errors_seen": 108,
+        "n_errors_unseen": 61126
+      },
+      "VQC-PCA": {
+        "n_seen": 315,
+        "n_unseen": 49685,
+        "n_errors_seen": 26,
+        "n_errors_unseen": 15139
+      }
+    }
+  },
+  "d9_p0.06": {
+    "d": 9,
+    "p": 0.06,
+    "n_detectors": 80,
+    "possible_syndromes": 1208925819614629174706176,
+    "n_train_shots": 200000,
     "distinct_train": 199918,
-    "frac": 1.6536829370037619e-19,
-    "shots_per_pattern": 1.0004101681689492
+    "n_test_shots": 200000,
+    "n_test_seen": 176,
+    "test_seen_fraction": 0.00088,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 176,
+        "n_unseen": 199824,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 3493
+      },
+      "Greedy": {
+        "n_seen": 176,
+        "n_unseen": 199824,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 20859
+      },
+      "Exact-MAP": {
+        "n_seen": 176,
+        "n_unseen": 199824,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 2947
+      },
+      "LogReg": {
+        "n_seen": 176,
+        "n_unseen": 199824,
+        "n_errors_seen": 15,
+        "n_errors_unseen": 70544
+      },
+      "MLP": {
+        "n_seen": 176,
+        "n_unseen": 199824,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 28175
+      },
+      "LogReg-PCA": {
+        "n_seen": 176,
+        "n_unseen": 199824,
+        "n_errors_seen": 15,
+        "n_errors_unseen": 68416
+      },
+      "VQC-PCA": {
+        "n_seen": 48,
+        "n_unseen": 49952,
+        "n_errors_seen": 9,
+        "n_errors_unseen": 17088
+      }
+    }
+  },
+  "d9_p0.08": {
+    "d": 9,
+    "p": 0.08,
+    "n_detectors": 80,
+    "possible_syndromes": 1208925819614629174706176,
+    "n_train_shots": 200000,
+    "distinct_train": 200000,
+    "n_test_shots": 200000,
+    "n_test_seen": 2,
+    "test_seen_fraction": 1e-05,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 2,
+        "n_unseen": 199998,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 12166
+      },
+      "Greedy": {
+        "n_seen": 2,
+        "n_unseen": 199998,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 37553
+      },
+      "Exact-MAP": {
+        "n_seen": 2,
+        "n_unseen": 199998,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 10514
+      },
+      "LogReg": {
+        "n_seen": 2,
+        "n_unseen": 199998,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 80357
+      },
+      "MLP": {
+        "n_seen": 2,
+        "n_unseen": 199998,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 50667
+      },
+      "LogReg-PCA": {
+        "n_seen": 2,
+        "n_unseen": 199998,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 79215
+      },
+      "VQC-PCA": {
+        "n_seen": 1,
+        "n_unseen": 49999,
+        "n_errors_seen": 1,
+        "n_errors_unseen": 19822
+      }
+    }
+  },
+  "d9_p0.1": {
+    "d": 9,
+    "p": 0.1,
+    "n_detectors": 80,
+    "possible_syndromes": 1208925819614629174706176,
+    "n_train_shots": 200000,
+    "distinct_train": 200000,
+    "n_test_shots": 200000,
+    "n_test_seen": 0,
+    "test_seen_fraction": 0.0,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 27401
+      },
+      "Greedy": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 55069
+      },
+      "Exact-MAP": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 24010
+      },
+      "LogReg": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 87403
+      },
+      "MLP": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 81856
+      },
+      "LogReg-PCA": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 86591
+      },
+      "VQC-PCA": {
+        "n_seen": 0,
+        "n_unseen": 50000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 21751
+      }
+    }
+  },
+  "d9_p0.12": {
+    "d": 9,
+    "p": 0.12,
+    "n_detectors": 80,
+    "possible_syndromes": 1208925819614629174706176,
+    "n_train_shots": 200000,
+    "distinct_train": 200000,
+    "n_test_shots": 200000,
+    "n_test_seen": 0,
+    "test_seen_fraction": 0.0,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 45790
+      },
+      "Greedy": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 70663
+      },
+      "Exact-MAP": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 41169
+      },
+      "LogReg": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 92241
+      },
+      "MLP": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 92411
+      },
+      "LogReg-PCA": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 91793
+      },
+      "VQC-PCA": {
+        "n_seen": 0,
+        "n_unseen": 50000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 23115
+      }
+    }
+  },
+  "d9_p0.15": {
+    "d": 9,
+    "p": 0.15,
+    "n_detectors": 80,
+    "possible_syndromes": 1208925819614629174706176,
+    "n_train_shots": 200000,
+    "distinct_train": 200000,
+    "n_test_shots": 200000,
+    "n_test_seen": 0,
+    "test_seen_fraction": 0.0,
+    "decoder_counts": {
+      "MWPM": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 72047
+      },
+      "Greedy": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 86447
+      },
+      "Exact-MAP": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 67119
+      },
+      "LogReg": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 96292
+      },
+      "MLP": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 97047
+      },
+      "LogReg-PCA": {
+        "n_seen": 0,
+        "n_unseen": 200000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 95985
+      },
+      "VQC-PCA": {
+        "n_seen": 0,
+        "n_unseen": 50000,
+        "n_errors_seen": 0,
+        "n_errors_unseen": 24728
+      }
+    }
   }
 }

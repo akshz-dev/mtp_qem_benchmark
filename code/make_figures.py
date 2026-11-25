@@ -15,7 +15,8 @@ import pandas as pd
 NAME = {"no_mitigation": "No mitigation", "zne_linear": "ZNE, linear",
         "zne_richardson2": "ZNE, Richardson (deg 2)", "zne_exponential": "ZNE, exponential",
         "ridge": "Ridge regression", "hist_gbm": "Gradient-boosted trees",
-        "mlp": "Neural net (64,64)", "qk_ridge_quantum": "Quantum kernel ridge",
+        "mlp": "Neural net (64,64)", "rbf_krr": "Classical RBF kernel ridge",
+        "qk_ridge_quantum": "Quantum kernel ridge",
         "dr_vqc_quantum": "Data-reuploading VQC",
         "bounded_vqc_quantum": "Bounded-encoding VQC"}
 KIND_C = {"unmitigated": "0.45", "analytic ZNE": "#6f8faf",
@@ -24,9 +25,9 @@ KIND_C = {"unmitigated": "0.45", "analytic ZNE": "#6f8faf",
 MODEL_C = {"no_mitigation": "0.45", "zne_linear": "#9db4cc",
            "zne_richardson2": "#6f8faf", "zne_exponential": "#4a6a8a",
            "ridge": "#7fae97", "hist_gbm": "#3f7f5f", "mlp": "#1f5136",
+           "rbf_krr": "#087e8b",
            "qk_ridge_quantum": "#c2591a", "dr_vqc_quantum": "#8c4a2f",
            "bounded_vqc_quantum": "#e08b4e"}
-MODEL_C["zne_exponential"] = "#4a6a8a"
 
 
 def style(sizes=(9, 8, 7)):
@@ -54,7 +55,7 @@ def letter(ax, ch, dx=-0.16, dy=1.03):
 def fig_main(res, out):
     order = (res[res.split == "A_random_circuits"]
              .sort_values("rmse", ascending=False)["model"].tolist())
-    fig, axes = plt.subplots(1, 2, figsize=(9.8, 3.9), sharey=True)
+    fig, axes = plt.subplots(1, 2, figsize=(9.8, 4.1), sharey=True)
     for ax, (sp, title) in zip(axes, [("A_random_circuits", "Held-out random circuits"),
                                       ("B_depth_extrapolation",
                                        "Deeper circuits than trained on")]):
@@ -95,8 +96,9 @@ def fig_main(res, out):
 
 # ------------------------------------------------------------------ figure 2
 def fig_breakdown(brk, out):
-    sel = ["no_mitigation", "zne_richardson2", "hist_gbm", "qk_ridge_quantum",
+    sel = ["no_mitigation", "zne_richardson2", "hist_gbm", "rbf_krr", "qk_ridge_quantum",
            "dr_vqc_quantum"]
+    sel = [m for m in sel if m in set(brk.model)]
     obs_order = ["Z0", "Z0Z1", "X0X1", "Z1Z2Z3", "Z_all"]
     obs_lab = {"Z0": "$Z_0$\n(weight 1)", "Z0Z1": "$Z_0Z_1$\n(2)",
                "X0X1": "$X_0X_1$\n(2)", "Z1Z2Z3": "$Z_1Z_2Z_3$\n(3)",
@@ -179,7 +181,7 @@ def fig_bandwidth(bw, out):
 # ------------------------------------------------------------------ figure 4
 def fig_sweeps(sw, out):
     sel = ["no_mitigation", "zne_richardson2", "hist_gbm", "mlp",
-           "qk_ridge_quantum", "bounded_vqc_quantum"]
+           "rbf_krr", "qk_ridge_quantum", "bounded_vqc_quantum"]
     fig, axes = plt.subplots(1, 3, figsize=(11.6, 3.5))
 
     e1 = sw[sw.experiment == "E1_noise_strength"].copy()
@@ -189,10 +191,12 @@ def fig_sweeps(sw, out):
         if len(s):
             axes[0].plot(s["x"], s["rmse"], "-o", color=MODEL_C[m], mec="white",
                          mew=0.7, label=NAME[m])
-    axes[0].set_xlabel("Noise strength ($\\times$ base rates)")
+    axes[0].set_xscale("log", base=2)
+    axes[0].set_xlabel("Base-noise multiplier $m$")
     axes[0].set_ylabel("RMSE vs ideal")
-    axes[0].set_xticks(sorted(e1["x"].unique()))
-    axes[0].set_title("All methods degrade as noise grows")
+    multipliers = sorted(e1["x"].unique())
+    axes[0].set_xticks(multipliers, labels=[f"{m:g}" for m in multipliers])
+    axes[0].set_title("Paired noise-strength sweep")
 
     e2 = sw[sw.experiment == "E2_shot_budget"].copy()
     xmap = {"256": 256, "1024": 1024, "4096": 4096, "analytic": 16384}
@@ -206,7 +210,7 @@ def fig_sweeps(sw, out):
     axes[1].set_xticklabels(["256", "1k", "4k", "analytic"])
     axes[1].set_xlabel("Shots per expectation value")
     axes[1].set_ylabel("RMSE vs ideal")
-    axes[1].set_title("Richardson ZNE suffers most at low shots")
+    axes[1].set_title("Input shot-budget sweep")
 
     e3 = sw[sw.experiment == "E3_qubit_count"].copy()
     e3["x"] = e3["config"].str.rstrip("q").astype(int)
@@ -217,7 +221,7 @@ def fig_sweeps(sw, out):
     axes[2].set_xticks(sorted(e3["x"].unique()))
     axes[2].set_xlabel("Number of qubits")
     axes[2].set_ylabel("RMSE vs ideal")
-    axes[2].set_title("Kernel and net lead at every size")
+    axes[2].set_title("System-size sweep")
 
     axes[0].legend(loc="upper left", handlelength=1.4, labelspacing=0.25,
                    borderpad=0.1, fontsize=6.5)
@@ -238,7 +242,7 @@ def fig_learning(sw, out):
     e5 = sw[sw.experiment == "E5_learning_curve"].copy()
     e5["n_circ"] = e5["extra"].str.extract(r"n_train_circuits=(\d+)").astype(int)
     fig, ax = plt.subplots(figsize=(6.4, 3.9))
-    for m in ["zne_richardson2", "ridge", "hist_gbm", "mlp", "qk_ridge_quantum",
+    for m in ["zne_richardson2", "ridge", "hist_gbm", "mlp", "rbf_krr", "qk_ridge_quantum",
               "dr_vqc_quantum", "bounded_vqc_quantum"]:
         s = e5[e5.model == m].sort_values("n_circ")
         if not len(s):
@@ -256,7 +260,7 @@ def fig_learning(sw, out):
     ax.set_xticks([], minor=True)
     ax.set_xlabel("Reference circuits used for training")
     ax.set_ylabel("RMSE vs ideal")
-    ax.set_title("Quantum kernel and ridge need the fewest reference circuits")
+    ax.set_title("Error versus the number of reference circuits")
     ax.text(0.98, 0.03, "lower = better", transform=ax.transAxes, fontsize=7,
             color="0.45", ha="right")
     ax.legend(loc="upper right", handlelength=1.4, labelspacing=0.22, fontsize=6.2,
@@ -272,7 +276,7 @@ def fig_ood(sw, out):
     e4 = sw[sw.experiment == "E4_bounded_encoding"].set_index("model")
     e7 = sw[sw.experiment == "E7_cross_family"]
     sel = ["no_mitigation", "zne_richardson2", "hist_gbm", "mlp",
-           "qk_ridge_quantum", "dr_vqc_quantum", "bounded_vqc_quantum"]
+           "rbf_krr", "qk_ridge_quantum", "dr_vqc_quantum", "bounded_vqc_quantum"]
     fig, axes = plt.subplots(1, 2, figsize=(9.4, 3.7))
 
     present = [m for m in sel if m in e4.index]

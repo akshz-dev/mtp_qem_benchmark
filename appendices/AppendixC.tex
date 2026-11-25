@@ -4,10 +4,10 @@
 
 \label{AppendixC}
 
-The complete source tree accompanies this thesis in \texttt{code/}. The listings
-below are the files that define the data-generating process and the model arms; the
-figure-generation script is included in the tree but not reproduced here. Line
-numbering is continuous within each listing.
+The complete source tree accompanies this thesis in \texttt{code/}. This
+appendix reproduces selected listings and identifies the implementation
+and output files for the remaining experiments. Line numbering is
+continuous within each listing.
 
 \section{Primary dataset generation}
 
@@ -18,11 +18,14 @@ together with a metadata record of every parameter used.
 \lstinputlisting[language=Python, caption={code/gen\_data.py},
                  label={lst:gen_data}]{code/gen_data.py}
 
-\section{Parametrized simulator for the sweeps}
+\section{Parametrised simulator for the sweeps}
 
-\texttt{simulate.py} generalizes the generator over qubit count and noise multiplier
+\texttt{simulate.py} generalises the generator over qubit count and noise multiplier
 while emitting the identical column schema, which is what allows the same model code
-to consume every dataset.
+to consume every dataset. The paired noise-strength generator
+\texttt{noise\_sweep\_data.py} reuses its channel model and simulates the same
+circuit parameters at each multiplier. Its shot streams are independent of the
+circuit-parameter stream.
 
 \lstinputlisting[language=Python, caption={code/simulate.py},
                  label={lst:simulate}]{code/simulate.py}
@@ -39,9 +42,9 @@ the bootstrap confidence intervals.
 \section{Sweep experiments}
 
 \texttt{experiments.py} runs the seven sweep experiments, including the
-bounded-encoding variational arm of Section~\ref{sec:ch3_bounded}. Results are
-flushed to disk after each experiment block so that a failure in a later block
-cannot discard completed work.
+bounded-encoding variational arm of Section~\ref{sec:ch3_bounded}.
+Its E1-only mode replaces the noise-strength rows in the sweep and paired
+kernel tables.
 
 \lstinputlisting[language=Python, caption={code/experiments.py},
                  label={lst:experiments}]{code/experiments.py}
@@ -53,6 +56,9 @@ Section~\ref{sec:ch3_realistic}: per-qubit inhomogeneous rates, coherent
 over-rotation, always-on $ZZ$ crosstalk, the two-level-system collision model, and
 both noise-scaling methods. It also records the circuit and ideal-value signatures
 on which the paired design of Section~\ref{sec:ch3_drift} depends.
+The stored folding ratios give the executed layer counts relative to the
+unfolded circuit. Within each condition, both scaling protocols use the
+same native-scale shot sample.
 
 \lstinputlisting[language=Python, caption={code/simulate\_realistic.py},
                  label={lst:simulate_realistic}]{code/simulate_realistic.py}
@@ -69,11 +75,10 @@ Section~\ref{sec:ch3_blp} requires.
 
 \section{Realistic-regime experiments}
 
-\texttt{experiments\_realistic.py} runs the scaling-method comparison, the Markovian
-control, the calibration-drift experiment and the shot-limited kernel study. The
-shot-limited kernel routine implements Eqs.~\eqref{eq:appA_kvar}
-and~\eqref{eq:appA_cost}, including the projection of the shot-estimated Gram matrix
-back onto the positive-semidefinite cone.
+\path{experiments_realistic.py} runs the scaling, reset-control, drift and
+shot-limited kernel comparisons. The \path{shot_kernel.py} module implements Eqs.~\eqref{eq:appA_kvar}
+and~\eqref{eq:appA_cost}, using the training eigenspace for validation and test
+prediction as in Eq.~\eqref{eq:appA_shot_projection}.
 
 \lstinputlisting[language=Python, caption={code/experiments\_realistic.py},
                  label={lst:experiments_realistic}]{code/experiments_realistic.py}
@@ -81,10 +86,18 @@ back onto the positive-semidefinite cone.
 \section{Paired statistics and robustness}
 
 \texttt{stats\_util.py} implements the paired, circuit-grouped bootstrap on the
-difference of two RMSEs used for every comparison between methods or noise
-conditions. \texttt{robustness.py} repeats the benchmark over ten circuit-grouped
-splits, and \texttt{test\_folding.py} is the noise-free unit test of unitary
-folding.
+difference of two RMSEs within a fitted run.
+\texttt{robustness.py} repeats the benchmark over ten circuit-grouped
+splits of the selected reference datasets.
+
+\texttt{folding\_seed\_robustness.py} fits both scaling protocols for every
+circuit-pool and shot-draw combination in the replication, using
+matched grouped splits and tuning budgets.
+
+
+\texttt{test\_folding.py} checks ideal-circuit invariance.
+\texttt{test\_folded\_zne.py} checks that the analytic fits use the realised
+ratios while the learned feature vector retains its six inputs.
 
 \lstinputlisting[language=Python, caption={code/stats\_util.py},
                  label={lst:stats_util}]{code/stats_util.py}
@@ -103,3 +116,26 @@ quantifies concentration.
 
 \lstinputlisting[language=Python, caption={code/bandwidth\_study.py},
                  label={lst:bandwidth}]{code/bandwidth_study.py}
+
+\section{Repetition-code decoding}
+
+Chapter~\ref{chap6:decoding} uses \texttt{qec\_gen\_data.py} for the
+phenomenological memory simulation. It stores bit-packed detector strings,
+the logical labels, and a manifest of circuit distances, noise rates,
+shot counts and seeds. \texttt{qec\_matching.py} constructs the physical
+space-time graph and implements the two matching decoders.
+\texttt{qec\_posterior.py} computes the logical-class posterior using the
+simulated fault probability. Both modules contain their own distance-3
+checks against all $2^{15}$ fault histories.
+
+\texttt{qec\_bench.py} fits the learned arms on the training blocks and
+generates the Chapter~\ref{chap6:decoding} figures. In \texttt{results/},
+\texttt{qec\_decoder\_results.csv} gives test counts, logical error rates,
+intervals and shared-prefix counts. \texttt{qec\_paired\_results.csv} records
+the two discordant counts used for each paired comparison. The
+\texttt{qec\_matching\_validation.json} and
+\texttt{qec\_posterior\_validation.json} artifacts give the independent
+checks, including the range of logical error rates across legal matching
+tie choices. The threshold, coverage and PCA JSON files record the
+corresponding diagnostics. \texttt{qec\_run\_metadata.json} identifies
+the package versions and execution settings for this sweep.

@@ -1,22 +1,18 @@
 %%%%%%%%%%%%%%%%%%%%%---Chapter3 Formatting---%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \documentclass[Thesis.tex]{subfiles}
 \begin{document}
-\newpage
 \setcounter{chapter}{2} %%Chapter Numbering
 
-\titleformat{\chapter}[display]
-{\sffamily\fontsize{27}{27}\bfseries\filleft}{\thechapter}{0pt}{{#1}}
 
-\thispagestyle{empty}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Methodology}\label{chap3:methodology}
 
-This chapter formalizes the benchmark. Section~\ref{sec:ch3_formulation} states the
+This chapter formalises the benchmark. Section~\ref{sec:ch3_formulation} states the
 learning problem, Sections~\ref{sec:ch3_noise}--\ref{sec:ch3_dataset} specify the
 data-generating process, Section~\ref{sec:ch3_protocol} defines the evaluation
 protocol and explains why a particular class of data split is invalid here, and
-Sections~\ref{sec:ch3_analytic}--\ref{sec:ch3_hybrid} define the nine model arms.
+Sections~\ref{sec:ch3_analytic}--\ref{sec:ch3_hybrid} define the ten main model arms.
 Section~\ref{sec:ch3_metrics} defines the metrics and the cost accounting. The
 methodology for the syndrome-decoding track is different in almost every respect and
 is therefore stated separately in Chapter~\ref{chap6:decoding}.
@@ -25,9 +21,9 @@ is therefore stated separately in Chapter~\ref{chap6:decoding}.
 
 Let $C$ be a quantum circuit drawn from some family, and $O$ a Pauli observable
 measured on its output. Write $\mu_{\text{ideal}}(C, O)$ for the noise-free
-expectation value and $\mu_\lambda(C, O)$ for the expectation value measured on a
-device whose noise has been scaled by a factor $\lambda \geq 1$, so that
-$\lambda = 1$ is the bare device. A mitigation method is a function
+expectation value and $\mu_\lambda(C, O)$ for the expectation value at
+extrapolation coordinate $\lambda \geq 1$, where $\lambda = 1$ is the
+native circuit. A mitigation method is a function
 \begin{equation}
     \widehat{\mu} \;=\; f\!\left( \mu_{\lambda_1}, \ldots, \mu_{\lambda_K},\; s(C, O) \right),
     \label{eq:ch3_estimator}
@@ -37,29 +33,28 @@ observable, and the quality of the method is the closeness of $\widehat{\mu}$ to
 $\mu_{\text{ideal}}$ over the family. Analytic methods fix $f$ in advance;
 learned methods fit $f$ on pairs
 $\left( \mu_{\lambda_1:\lambda_K}, \mu_{\text{ideal}} \right)$ obtained on reference
-circuits. This thesis uses $K = 3$ with
-$\lambda \in \{1, 2, 3\}$, which is the standard choice for three-point
-extrapolation and fixes the quantum cost of every arm that uses all three inputs at
-three circuit evaluations per estimate.
+circuits. The benchmark uses $K = 3$ measurement settings per estimate.
+Parameter scaling uses $\lambda \in \{1,2,3\}$. Folding uses the actual
+layer ratios defined in Section~\ref{sec:ch3_folding}.
 
 The unit of analysis is the pair $(C, O)$, not the circuit. Each circuit is measured
 for five observables, so each circuit contributes five rows to the dataset. This
 distinction becomes important in Section~\ref{sec:ch3_protocol}.
 
-\section{Noise regime I: idealized Markovian model}\label{sec:ch3_noise}
+\section{Noise regime I: idealised Markovian model}\label{sec:ch3_noise}
 
 The benchmark is run under two noise regimes. This section defines the first, an
-idealized gate-local Markovian model with homogeneous rates and exact noise
+idealised gate-local Markovian model with homogeneous rates and exact noise
 scaling; Section~\ref{sec:ch3_realistic} defines the second, a device-realistic
 model with inhomogeneous rates, coherent errors, crosstalk and non-Markovian
 dynamics. Reporting both is deliberate: a conclusion that holds in only one of them
 is a conclusion about the noise model, and the reader needs to be able to tell which
-is which. The idealized regime is presented first because it is the regime in which
+is which. The idealised regime is presented first because it is the regime in which
 essentially all published machine-learning mitigation results are obtained, so it is
 the setting in which this thesis can be compared to the literature.
 
 Noise is applied as a gate-level Kraus channel model. After each single-qubit gate a
-depolarizing channel acts on the gate's qubit,
+depolarising channel acts on the gate's qubit,
 \begin{equation}
     \mathcal{E}^{\text{dep}}_{p}(\rho) \;=\; (1 - p)\,\rho \;+\; \frac{p}{3}
     \left( X \rho X + Y \rho Y + Z \rho Z \right),
@@ -87,7 +82,7 @@ $(\lambda p_1, \lambda p_2, \lambda \gamma)$, clipped to remain valid probabilit
 Parameter scaling is the appropriate choice for a simulation study because it is
 exact -- the simulator is asked for a device that is precisely $\lambda$ times
 noisier -- whereas unitary folding and pulse stretching are hardware techniques that
-approximate this idealization~\cite{temme2017error,giurgicatiron2020digital,he2020zero}.
+approximate this idealisation~\cite{temme2017error,giurgicatiron2020digital,he2020zero}.
 In this thesis ``parameter scaling'' always means this multiplication of the
 \emph{channel} parameters. It is not the parameter-noise scaling of
 Mitiq~\cite{larose2022mitiq} (Section~\ref{sec:ch2_noise_amplification}), which
@@ -99,7 +94,7 @@ the error of the scaling technique itself.
 \section[Noise regime II: device-realistic non-Markovian model]{Noise regime II: device-realistic model}
 \label{sec:ch3_realistic}
 
-The idealized model of Section~\ref{sec:ch3_noise} is gate-local, Markovian,
+The idealised model of Section~\ref{sec:ch3_noise} is gate-local, Markovian,
 homogeneous across qubits and free of coherent error. Real superconducting
 processors violate all four assumptions. This section defines a second regime that
 relaxes each of them, so that the benchmark can be run twice and the robustness of
@@ -107,27 +102,29 @@ every conclusion to the noise model can be read off directly.
 
 \subsection{Inhomogeneity, coherent error and crosstalk}
 
-Three modifications make the incoherent part of the model device-like.
+Three modifications make the model device-like.
 
-\emph{Per-qubit inhomogeneity.} Each rate is drawn once per device realization as
-\[
+\emph{Per-qubit inhomogeneity.} Each rate is drawn once per device realisation
+according to Eq.~\eqref{eq:ch3_qubit_rate},
+\begin{equation}
   r_q = \bar{r} \cdot \max\bigl(0.3,\ \min(2.0,\ 1 + 0.35\,\xi_q)\bigr),
   \qquad \xi_q \sim \mathcal{N}(0,1),
-\]
-giving a spread of roughly a factor of three between
-the best and worst qubit, as calibration data typically show. Base rates are
+  \label{eq:ch3_qubit_rate}
+\end{equation}
+giving the qubits distinct rates. Base rates are
 $\bar{p}_1 = 0.0015$, $\bar{p}_2 = 0.012$, $\bar{\gamma} = 0.003$ and a separate
-pure-dephasing rate $\bar{\gamma}_\phi = 0.004$, the last representing $T_2$ decay
-independent of $T_1$ and absent from regime~I. The realized per-qubit values are
+pure-dephasing rate $\bar{\gamma}_\phi = 0.004$ that contributes to transverse
+decay alongside relaxation. Regime~I omits this separate dephasing channel. The realised per-qubit values are
 recorded in the dataset metadata so the device is reproducible.
 
 \emph{Coherent over-rotation.} Every rotation angle is miscalibrated by a fixed
 fractional error, $\theta \mapsto \theta(1 + \epsilon_q)$ with
-$\epsilon_q \sim \mathcal{N}(0, 0.02^2)$ drawn once per qubit. This is a systematic,
-unital, non-stochastic error: it does not decohere the state and cannot be described
-by a Pauli channel, so it is invisible to the noise-scaling assumption that
-underlies extrapolation. Coherent errors are the component of hardware noise that
-Pauli-twirling is designed to remove and that error mitigation handles worst.
+$\epsilon_q \sim \mathcal{N}(0, 0.02^2)$ drawn once per qubit. Parameter scaling
+multiplies $\epsilon_q$ by $\lambda$. Folded inverse layers reverse the signs
+and order of the same miscalibrated programmed rotations. If this coherent
+error acted alone, the miscalibrated layer and its inverse would cancel in each
+added pair. With the other noise processes present, including the always-on
+crosstalk, that cancellation need not hold for the full noisy layer.
 
 \emph{Always-on ZZ crosstalk.} Between each neighbouring pair on the ring an
 unwanted $\exp(-i J_q Z_a Z_b)$ term acts every layer, with $J_q$ inhomogeneous
@@ -144,7 +141,7 @@ canonical microscopic violation of this in superconducting qubits is a two-level
 absorbs excitation and returns it~\cite{mueller2019tls,klimov2018fluctuations}.
 
 This is modelled with a collision construction. One additional qubit, wire $n$,
-represents the defect. It is initialized in $\ket{0}$ once at the start of the
+represents the defect. It is initialised in $\ket{0}$ once at the start of the
 circuit and \textbf{never reset}. At the end of every layer it exchanges energy with
 qubit $0$ through an XY interaction
 \begin{equation}
@@ -161,78 +158,82 @@ laboratory measurement would.
 
 \subsection{Quantifying the non-Markovianity}\label{sec:ch3_blp}
 
-Non-Markovianity is asserted in much of the mitigation literature and measured in
-little of it, so it is measured here. The criterion is that of Breuer, Laine and
-Piilo~\cite{breuer2009measure}: for a Markovian (more precisely, CP-divisible) map
-the trace distance
+The Breuer--Laine--Piilo diagnostic uses the trace distance
+\cite{breuer2009measure}
 \begin{equation}
     D(\rho_1, \rho_2) \;=\; \tfrac{1}{2} \left\| \rho_1 - \rho_2 \right\|_1
     \label{eq:ch3_tracedist}
 \end{equation}
-between the evolved images of any two initial states is non-increasing, because a
-channel cannot increase distinguishability. Any revival is therefore information
-returning from the environment, and the total revival
+between two evolved states. For a CP-divisible evolution on the space being
+measured, the distance is non-increasing for every initial pair. This study
+measures the reduced state of qubit $0$ after each of 14 idle layers with the
+remaining system qubits and defect initialised in the ground state. Its
+discrete diagnostic is
 \begin{equation}
-    \mathcal{N} \;=\; \max_{\rho_1, \rho_2} \sum_{l} \max\!\left\{ 0,\;
+    \mathcal{N}_{\mathrm{probe}} \;=\;
+    \max_{(\rho_1,\rho_2)\in\mathcal{P}} \sum_{l=1}^{13} \max\!\left\{ 0,\;
     D\!\left(\rho_1^{(l+1)}, \rho_2^{(l+1)}\right)
     - D\!\left(\rho_1^{(l)}, \rho_2^{(l)}\right) \right\}
     \label{eq:ch3_blp}
 \end{equation}
-is zero for a Markovian map and positive otherwise, where $l$ indexes layers and the
-maximization runs over a set of initial state pairs. Alternative measures based on
-CP-divisibility or channel capacities exist and need not agree in general; the
-trace-distance measure is used here because it has a direct operational reading as
-information back-flow~\cite{rivas2014nonmarkov}.
+where $\mathcal{P}$ consists of the $\ket{0}$ versus $\ket{1}$ and
+$\ket{+}$ versus $\ket{-}$ probe preparations. The maximum is restricted
+to these two pairs and the 14 sampled layers. It describes revivals of the
+reduced probe during this idle protocol.
 
-One methodological point matters here and is easy to get wrong. Non-Markovianity is
-a property of the \emph{noise map}, not of the circuit, so $\mathcal{N}$ must be
-measured on an idling register -- noise channels, crosstalk and defect collisions
-only, with no gates. Running the probe through a scrambling circuit instead measures
-unitary mixing: the probe is the reduced state of one qubit, and in an entangling
-circuit the other register qubits act as an environment for it, so its trace distance
-revives periodically even under strictly Markovian noise (for the whole register the
-distance would be invariant under the circuit unitaries), and the estimator then reports a
-spurious $\mathcal{N} > 0$ for a model that is Markovian by construction. The
-measurement in Section~\ref{sec:ch5_nonmarkov} therefore follows the protocol of a
-device memory experiment, and both memoryless controls defined below return $\mathcal{N} = 0$
-exactly, which is the check that the estimator is sound.
+The idle protocol retains the noise channels, crosstalk and defect collisions
+with the circuit gates removed. A probe inside an
+entangling circuit can exchange distinguishability with other system qubits,
+so results for this probe should be interpreted under the stated preparation
+and evolution. Section~\ref{sec:ch5_nonmarkov} compares the production
+evolution to defect-removed and defect-reset controls, which show no revival
+for the sampled pairs and time window. Other notions of non-Markovianity
+use different properties of the evolution~\cite{rivas2014nonmarkov}.
 
-\subsection{Hardware-realizable noise scaling: unitary folding}
+\subsection{Hardware-realisable noise scaling: unitary folding}
 \label{sec:ch3_folding}
 
-Regime~I scales noise by multiplying channel strengths, which no device can do.
-Regime~II therefore also provides the scaling method practitioners actually
-use~\cite{giurgicatiron2020digital,larose2022mitiq}: unitary folding, which
-amplifies noise by lengthening the circuit while preserving its ideal action. At the
-layer level, a folded layer $L$ is replaced by
+Parameter scaling multiplies the noise-channel strengths in the simulator.
+Regime~II also evaluates unitary folding, a scaling method that can be
+executed on hardware~\cite{giurgicatiron2020digital,larose2022mitiq}.
+At the layer level, a folded layer $L$ is replaced by
 \begin{equation}
     L \;\longmapsto\; L \, L^{\dagger} L,
     \label{eq:ch3_fold}
 \end{equation}
-which is logically the identity composed with $L$ but passes three times as much
-noise. Folding every layer of a depth-$d$ circuit gives $\lambda = 3$; folding none
-gives $\lambda = 1$; intermediate $\lambda$ is obtained by folding a fraction
-$(\lambda - 1)/2$ of the layers, so $\lambda = 2$ folds half of them. The inverse
-layer is itself noisy, as it would be on hardware, and the always-on crosstalk and
-defect collisions are not inverted -- they act during the folded segments too.
+which preserves the ideal unitary and executes three noisy layers. For a
+circuit of original depth $d$, folding the first $k$ layers gives the
+executed-to-original layer ratio
+\begin{equation}
+    \lambda_{\text{fold}}(d,k) = \frac{d + 2k}{d}.
+    \label{eq:ch3_fold_ratio}
+\end{equation}
+The benchmark uses $k=0$, $k=\operatorname{round}(d/2)$, and $k=d$,
+with ties rounded to an even integer. For even $d$ the middle ratio is $2$.
+For depths $3$ and $5$ it is $7/3$ and $9/5$, respectively. The
+inverse layer is noisy and the always-on crosstalk and defect interaction
+also act during the extra layers. Equation~\eqref{eq:ch3_fold_ratio}
+measures circuit length. The amplification of each noise process depends
+on its dynamics (Appendix~\ref{sec:appA_folding}).
 
-Every row of the realistic dataset therefore carries two independent feature
-triples: $\lambda \in \{1,2,3\}$ by parameter scaling and by unitary folding.
-Section~\ref{sec:ch5_scaling} compares them, which answers a question the idealized
-regime cannot: whether the learned advantage is an artifact of an unrealizable
-scaling method.
+The realistic dataset stores a triple for parameter scaling at
+$\lambda=1,2,3$ and a triple for folding at the realised layer ratios.
+Both triples reuse the same finite-shot observation at scale~$1$.
+The linear, Richardson and exponential ZNE fits use the three coordinates
+of their respective protocol. The learned arms retain the same six
+features under both protocols. Section~\ref{sec:ch5_scaling} compares the
+two protocols on the same test circuits.
 
 \subsection{Calibration drift and the paired-control design}\label{sec:ch3_drift}
 
-A learned mitigator is trained against one calibration of a device and used against
-a later one. To test that directly, a second calibration of the same device is
-generated by multiplying every per-qubit incoherent rate (single- and two-qubit
-depolarizing, amplitude damping, dephasing) and every crosstalk strength by an
-independent factor $1 + 0.3\,\xi$, $\xi \sim \mathcal{N}(0,1)$ clipped to
-$[0.2, 3]$, and by adding a further Gaussian perturbation of standard deviation
-$0.3\,\epsilon$ to each coherent over-rotation. The defect parameters are left
-unchanged. This represents a recalibration some hours later. Drift of this magnitude in relaxation
-times is documented on real devices~\cite{klimov2018fluctuations}.
+A learned mitigator may be trained and deployed under different calibrations.
+The experiment generates a second simulated calibration by multiplying each
+incoherent rate and crosstalk strength by an independent factor
+$1 + 0.3\,\xi$, clipped to $[0.2, 3]$, where $\xi \sim \mathcal{N}(0,1)$.
+It adds an independent Gaussian perturbation of standard deviation $0.3$ times
+the base coherent-error scale to each over-rotation. The defect parameters
+are held fixed. Measured relaxation-rate fluctuations motivate this synthetic
+intervention~\cite{klimov2018fluctuations}.
 
 Four datasets are produced, all sharing identical circuit parameters and identical
 ideal expectation values so that every comparison is paired and the only thing that
@@ -240,22 +241,21 @@ changes is the noise:
 \begin{itemize}
     \item \textbf{A} -- the production realistic model (calibration A);
     \item \textbf{B} -- the same device after drift (calibration B);
-        \item \textbf{M} -- a \emph{defect-removed} control identical to A in
+    \item \textbf{M} -- a \emph{defect-removed} control identical to A in
     inhomogeneity, coherent error and crosstalk, with the defect decoupled
     ($g = 0$);
     \item \textbf{R} -- a \emph{reset} control identical to A in every respect,
     including the defect coupling, except that the defect is returned to $\ket{0}$
-    at the end of every layer. It inflicts the same damage on qubit~$0$ within each
-    layer but cannot carry an excitation to the next.
+    at the end of every layer. Resetting fixes the incoming defect state and
+    prevents it from carrying an excitation to the next layer.
 \end{itemize}
-Both controls are Markovian, but they are not equivalent. Removing the defect
-removes its energy loss as well as its memory, so A against M measures the two
-together; A against R holds the per-layer loss fixed and isolates memory. The
-distinction turns out to matter (Section~\ref{sec:ch5_markovianity}). Comparing a
-model trained on A and tested on B isolates the effect of drift. Under parameter
-scaling the defect coupling and decay are multiplied by $\lambda$ together with
-every other channel, in A and R alike. Neither
-comparison is available in the idealized regime.
+Each control yields a layerwise system channel without a retained defect state.
+A against M measures the effect of removing the defect. A against R measures the
+effect of erasing its state at fixed coupling and decay parameters. The reset can
+also change how much energy transfers in a layer because it changes the defect's
+incoming state (Section~\ref{sec:ch5_markovianity}). Training on A and testing on
+B measures transfer under the simulated drift intervention. Under parameter
+scaling the defect coupling and decay are multiplied by $\lambda$ in A and R.
 
 \section{Circuit families and observables}\label{sec:ch3_circuits}
 
@@ -263,11 +263,11 @@ Two circuit families are used, chosen because they represent the two workloads f
 which mitigation is usually deployed.
 
 The \textbf{hardware-efficient ansatz} (HEA) family applies, in each layer, an
-$R_Y(\theta)$ and an $R_Z(\theta)$ rotation to every qubit followed by a ring of
+$R_Y(\theta)$ and an $R_Z(\varphi)$ rotation to every qubit followed by a ring of
 CNOT gates. Rotation angles are drawn independently and uniformly from
 $[-\pi, \pi]$. This is the circuit shape used by variational algorithms~\cite{cerezo2021vqa}.
 
-The \textbf{Trotterized transverse-field Ising} (TFIM) family applies, in each layer,
+The \textbf{Trotterised transverse-field Ising} (TFIM) family applies, in each layer,
 an $R_X(\theta)$ rotation to every qubit followed by a ring of $R_{ZZ}(\theta)$
 couplings, which is one Trotter step of evolution under a transverse-field Ising
 Hamiltonian. This is the circuit shape used by quantum simulation workloads.
@@ -277,16 +277,18 @@ observables are measured on every circuit: $Z_0$, $Z_0 Z_1$, $X_0 X_1$,
 $Z_1 Z_2 Z_3$, and the full-weight string $Z_0 Z_1 \cdots Z_{n-1}$. All five have
 eigenvalues $\pm 1$, which makes the finite-sampling model of
 Section~\ref{sec:ch3_dataset} exact, and their Pauli weights span $1$ to $n$, which
-allows the dependence of mitigation quality on observable locality to be measured.
+allows performance comparisons across these observables. Four of the five
+include qubit~$0$, the qubit directly coupled to the defect in Regime~II.
 
 \section{Dataset construction}\label{sec:ch3_dataset}
 
-For each circuit the density matrix is computed by exact simulation at
+For each parameter-scaled circuit the density matrix is computed by exact simulation at
 $\lambda \in \{0, 1, 2, 3\}$, where $\lambda = 0$ denotes the noise-free circuit and
 supplies the regression target. Expectation values follow as
 $\mathrm{Tr}[O\rho]$. Because the full density matrix is available, all five
 observables are obtained from a single simulation per $(\text{circuit}, \lambda)$
-pair.
+pair. The realistic dataset also simulates the middle and full folds.
+The unfolded scale-1 expectation and its finite-shot estimate are reused in both the parameter-scaled and the folded triple of noise scales.
 
 Finite sampling is then applied on top of the exact values. For a $\pm 1$-eigenvalue
 observable with exact expectation $\mu$, the probability of the $+1$ outcome is
@@ -302,23 +304,29 @@ Section~\ref{sec:ch5_shots} to be performed by re-sampling
 Eq.~\eqref{eq:ch3_shots} without re-simulating any circuit.
 
 The primary dataset comprises $900$ circuits ($450$ per family) at $n = 5$ qubits,
-giving $4500$ rows. Five secondary datasets, each of $500$ circuits, support the
-sweeps: three at $n = 5$ with the noise strengths scaled by $0.5\times$, $2\times$
-and $4\times$, and two at $n = 4$ and $n = 6$ qubits with the base noise.
+giving $4500$ rows. The noise-strength sweep uses a separate pool of $500$
+five-qubit circuits ($250$ per family). Its four datasets share circuit
+parameters and ideal expectation values at $0.5\times$, $1\times$, $2\times$
+and $4\times$ the base rates. Circuit parameters and shot counts use separate
+random streams. Two further datasets of $500$ circuits at $n = 4$ and $n = 6$
+qubits support the system-size sweep at the base rates.
 
 \section{Feature construction}\label{sec:ch3_features}
 
-Every learned arm receives the same six features: the three noise-scaled
-expectation values $\mu_{\lambda=1}$, $\mu_{\lambda=2}$, $\mu_{\lambda=3}$, and
-three classically available structural descriptors -- the circuit depth, the
-two-qubit gate count, and the Pauli weight of the observable. The first three are
-exactly the inputs an analytic extrapolation uses, which makes the comparison
-between learned and analytic arms a comparison of estimators over identical
-measurement data rather than a comparison of information. The structural features
-cost nothing quantum: they are read off the circuit description.
+The principal learned comparisons use the same six features. The quantum measurements
+are the native, middle and highest settings of the selected scaling protocol.
+The three classically available structural descriptors are the circuit depth, the
+two-qubit gate count, and the Pauli weight of the observable. At the reference
+size, gate count is exactly five times depth for both circuit families. The
+encoding therefore receives two redundant descriptions of depth. The three
+expectation estimates are shared with analytic extrapolation, which also uses
+the scaling coordinates. The learned arms additionally receive the structural
+descriptors from the circuit description, at no additional shot cost. The
+RBF and fidelity kernel comparison matches the full input vector.
 
-Features are standardized to zero mean and unit variance using statistics computed
-on the training fold only, and the same transform is applied to the test fold. The
+Features are standardised to zero mean and unit variance using training statistics.
+Each kernel's tuning fits this transform within each inner training fold and then
+refits it on the entire outer training set for the held-out prediction. The
 feature ablation of Section~\ref{sec:ch5_ablation} varies this set to determine how
 much of the learned advantage comes from the noise-scaled measurements and how much
 from circuit structure.
@@ -327,16 +335,14 @@ from circuit structure.
 
 \subsection{Why the row-wise split is invalid}
 
-The five rows contributed by one circuit share that circuit's parameters, its depth,
-and -- critically -- its single noise realization. A split that assigns rows
-independently to training and test folds will therefore place some observables of a
-given circuit in training and others in test, and a model can exploit the shared
-structure to predict the held-out rows. The resulting estimate of generalization
-error is optimistic and does not describe the deployment situation, in which an
-entirely unseen circuit arrives. Every split in this thesis is therefore
-\emph{grouped by circuit}: all five rows of a circuit are assigned to the same fold,
-and this grouping is also respected inside every cross-validation loop used for
-hyperparameter selection.
+The five rows contributed by one circuit share its parameters, depth,
+calibrated noise model and underlying simulated state at each scale. A
+row-wise split can place observables of one circuit in both training and
+test sets, allowing a model to exploit those common inputs. Outer evaluation
+splits keep the five rows together and measure performance on unseen
+circuits. Grouped inner cross-validation uses this same
+constraint for both kernels and the trees. Ridge penalty selection and neural
+early stopping are described in Chapter~\ref{chap4:setup}.
 
 \subsection{The three splits}
 
@@ -362,7 +368,9 @@ The \textbf{unmitigated} estimator is $\widehat{\mu} = \mu_{\lambda = 1}$: the r
 measurement. It is the reference against which error reduction is quoted, and its
 error defines what a method must beat to be worth deploying at all.
 
-\textbf{Linear zero-noise extrapolation} fits a degree-one polynomial to
+The coordinates are the parameter multipliers or, for folding, the executed
+layer ratios for the specific circuit. \textbf{Linear zero-noise extrapolation}
+fits a degree-one polynomial to
 $\{(\lambda_k, \mu_{\lambda_k})\}$ by least squares and evaluates it at
 $\lambda = 0$. \textbf{Richardson extrapolation}~\cite{temme2017error} of degree
 two fits a quadratic,
@@ -375,24 +383,23 @@ degree $m$ fitted to $m+1$ noise levels, the estimator is the linear combination
     \label{eq:ch3_richardson}
 \end{equation}
 whose coefficients satisfy $\sum_k c_k = 1$ and alternate in sign. The alternation
-is the source of the method's characteristic weakness: the coefficients have
-magnitude greater than one, so the estimator amplifies the statistical noise of the
+is the source of the method's characteristic weakness: the coefficients are not all bounded by one in magnitude ($3$, $-3$ and $1$ for $\lambda = 1, 2, 3$), so the estimator amplifies the statistical noise of the
 inputs even as it cancels the systematic bias. Appendix~\ref{AppendixA} derives
 Eq.~\eqref{eq:ch3_richardson} and its variance inflation.
 
 \textbf{Exponential extrapolation} fits $\mu(\lambda) = a e^{-b\lambda} + c$ by
 non-linear least squares, motivated by the observation that under global
-depolarizing noise the expectation value decays exponentially in circuit
+depolarising noise the expectation value decays exponentially in circuit
 volume~\cite{endo2018practical,cai2021multiexponential}. With
 three data points and three free parameters the fit is exactly determined, and is
 included here specifically to show what that costs.
 
 \section{Classical machine-learning arms}\label{sec:ch3_classical}
 
-Three classical regressors are trained on the six features of
+Four classical regressors are trained on the six features of
 Section~\ref{sec:ch3_features}.
 
-\textbf{Ridge regression} with the regularization strength selected by
+\textbf{Ridge regression} with the regularisation strength selected by
 cross-validation over a logarithmic grid. It is the minimal learned model and
 establishes how much of the problem is linear.
 
@@ -405,11 +412,25 @@ to matter a great deal.
 \textbf{A feed-forward neural network} with two hidden layers of $64$ units,
 trained to convergence with early stopping on an internal validation split.
 
+\textbf{Classical radial basis function (RBF) kernel ridge regression} uses
+the Gaussian kernel on the standardised feature vectors,
+\begin{equation}
+    k_\mathrm{RBF}(x,x') = \exp\!\bigl(-\gamma \lVert x-x'\rVert_2^2\bigr),
+    \label{eq:ch3_rbf}
+\end{equation}
+and solves the same regularised dual regression problem as fidelity-kernel ridge.
+The RBF coefficient $\gamma$ controls the kernel's decay with feature distance.
+The two models receive identical input features, inner circuit folds, and numbers
+of tuning candidates. Both select the spread parameter and ridge penalty by mean
+validation $R^2$ and refit on the full training set. Evaluating the Gaussian kernel
+adds classical computation and requires only the quantum measurements used as
+input features.
+
 \section{Hybrid quantum--classical arms}\label{sec:ch3_hybrid}
 
 \subsection{Quantum fidelity-kernel ridge regression}
 
-The first hybrid arm embeds each standardized feature vector $x$ into a quantum state
+The first hybrid arm embeds each standardised feature vector $x$ into a quantum state
 $\ket{\phi(x)}$ using a two-repetition IQP-style embedding on six qubits, and defines
 the kernel as the squared overlap of two such
 states~\cite{havlicek2019supervised,schuld2021kernel},
@@ -426,8 +447,8 @@ which is what makes the arm tractable at this dataset size.
 A \textbf{bandwidth} hyperparameter $\beta$ rescales the input before embedding,
 $x \mapsto \beta x$. Its role is not cosmetic. As the embedded states spread over a
 large fraction of Hilbert space, off-diagonal fidelities collapse towards zero, the
-Gram matrix approaches the identity, and the regressor degenerates to memorizing the
-training set with no ability to generalize. Bandwidth controls the kernel's spectrum
+Gram matrix approaches the identity, and the regressor degenerates to memorising the
+training set with no ability to generalise. Bandwidth controls the kernel's spectrum
 and hence its inductive bias, so it is selected here by grouped cross-validation
 over $\beta \in \{0.05, 0.15, 0.4, 1.0\}$ jointly with the ridge
 penalty~\cite{shaydulin2022importance,canatar2023bandwidth}.
@@ -447,7 +468,7 @@ followed by a ring of CNOT gates; the data vector $x$ therefore re-enters the ci
 at every layer, which is what gives the model its expressivity~\cite{schuld2021effect}. The prediction is an
 affine function $a \langle Z_0 \rangle + c$ of the expectation value of $Z_0$, with
 $a$, $c$, $\{w_{\ell q}\}$ and $\{b_{\ell q}\}$ all trainable. Training uses the Adam
-optimizer on the mean squared error, with gradients obtained by automatic
+optimiser on the mean squared error, with gradients obtained by automatic
 differentiation through the simulator.
 
 \subsection{Bounded-encoding variant}\label{sec:ch3_bounded}
@@ -465,7 +486,7 @@ therefore a specific test. The bounded variant replaces the encoding with
 which confines the angle to $[-\pi/2, \pi/2]$, the region in which $\sin$ is
 monotone. Out-of-range inputs now saturate rather than wrap. The two variants are
 identical in every other respect -- same qubit count, layer count, parameter count,
-optimizer and schedule -- so the comparison isolates the effect of encoding
+optimiser and schedule -- so the comparison isolates the effect of encoding
 periodicity. This is the experiment of Section~\ref{sec:ch5_bounded}.
 
 \section{Metrics and cost accounting}\label{sec:ch3_metrics}
@@ -479,7 +500,10 @@ the ideal expectation value over the test fold,
     \label{eq:ch3_rmse}
 \end{equation}
 Mean absolute error and the coefficient of determination $R^2$ are reported
-alongside. Uncertainty on the RMSE is obtained by bootstrap resampling \emph{over
+alongside. Predictions for the mitigation comparisons are clipped to
+$[-1.5,1.5]$ before scoring. This common numerical guard permits predictions
+outside the physical expectation-value range of $[-1,1]$.
+Uncertainty for an individual holdout is obtained by bootstrap resampling \emph{over
 test circuits} rather than over rows, so that the resampling unit matches the
 grouping unit of the split; $95\%$ intervals are reported as percentiles of the
 bootstrap distribution. Error reduction is quoted relative to the unmitigated
@@ -495,22 +519,22 @@ of $1000$ resamples the difference $\mathrm{RMSE}_a - \mathrm{RMSE}_b$ is recomp
 the difference is called \emph{resolved} when the $95\%$ percentile interval of this
 distribution excludes zero. The same construction compares one method across two
 noise conditions, since the datasets share circuits and ideal values. Because a
-single split can favour one method by chance, every headline comparison is also
-repeated over ten independent circuit-grouped splits, and the variational arms over
-ten initialisation seeds.
+single split can favour one method by chance, the headline comparisons are
+also evaluated on ten circuit-grouped holdouts of the same pools. The
+variational arms are evaluated over ten initialisation seeds, and the scaling
+comparison is repeated across independent circuit pools and shot draws
+(Section~\ref{sec:ch5_folding_seeds}).
 
-Cost is reported on three axes. \textbf{Circuit evaluations per prediction} is the
-quantum cost and the one that matters operationally: one for the unmitigated
-estimator and three for every method consuming the three noise-scaled inputs. The
-variational arms add one circuit of their own per prediction. The fidelity kernel
-adds one inversion-test circuit per \emph{training point} per prediction, because
-the prediction needs the kernel between the test point and every training point,
-plus $M(M+1)/2$ circuits once to build the training Gram matrix; on hardware each of
-these is estimated from shots (Appendix~\ref{sec:appA_kernelcost}). \textbf{Trainable parameters} measures model capacity, with the caveat that
-kernel ridge regression has one dual coefficient per training point, so its
-prediction cost grows with the training set rather than being fixed.
-\textbf{Training time} is reported for completeness but is a classical,
-one-off cost and should not be weighed against the per-prediction quantum cost.
+The cost ledger distinguishes measurement settings from individual shot
+executions. The native estimator uses one setting, and a full three-scale
+input costs $3N$ executions for $N$ shots per setting. The variational arm adds
+an ansatz evaluation, computed exactly in the simulator. For an inversion-test
+kernel with $n$ training rows and $M$ shots per entry, collecting the training
+Gram triangle including its diagonal costs $Mn(n+1)/2$ executions, and a new
+prediction costs $Mn$ additional executions
+(Appendix~\ref{sec:appA_kernelcost}). These are acquisition counts. The
+tables report reference-feature acquisition and fidelity-kernel measurements
+alongside the simulator's classical training time and model size.
 
 \section{Threats to validity}\label{sec:ch3_validity}
 
@@ -519,34 +543,34 @@ Chapter~\ref{chap5:results} are not over-read. Because the benchmark is run unde
 two noise regimes, it is useful to separate the limitations that regime~II removes
 from those that remain in both.
 
-\subsection*{Addressed by the realistic regime}
+\subsection{Addressed by the realistic regime}
 
-The idealized regime of Section~\ref{sec:ch3_noise} assumes noise that is
+The idealised regime of Section~\ref{sec:ch3_noise} assumes noise that is
 gate-local, Markovian, homogeneous across qubits, purely incoherent, and static,
 whereas real devices exhibit crosstalk, non-Markovian memory, coherent control error
 and calibration drift~\cite{harper2020efficient,nielsen2021gst}. Regime~II
 (Section~\ref{sec:ch3_realistic}) relaxes each of these: rates are inhomogeneous,
 rotations carry systematic over-rotation, an always-on $ZZ$ term couples neighbours,
-a coupled defect supplies verified memory, and a second calibration supplies drift.
+a coupled defect can retain state across layers, and a second calibration
+models drift.
 Likewise, noise scaling in regime~I is exact by construction, which favours the
 extrapolation baselines relative to hardware practice; regime~II additionally
-supplies unitary folding, the technique a device can actually execute. Where the two
-regimes disagree, the realistic one should be believed, and
-Chapter~\ref{chap5:results} reports both so the reader can see where they disagree.
+supplies unitary folding. Chapter~\ref{chap5:results} reports how error and
+rankings depend on the simulated noise conditions and scaling protocol.
 
-\subsection*{Remaining in both regimes}
+\subsection{Remaining in both regimes}
 
-First, the data are still simulated. The realistic model is informed by the
-qualitative structure of superconducting-device noise but is not fitted to
-tomographic or calibration data from a specific processor, so the \emph{magnitudes}
-of the errors reported here are not device predictions. What the realistic regime
-establishes is the direction and approximate size of the effect that each realism
-ingredient has on the ranking of methods.
+First, the realistic model uses mechanisms documented in superconducting processors.
+Its parameters are synthetic, so reported error magnitudes apply to the
+simulated calibration. Regime II includes several effects jointly.
+The paired scaling, drift and defect comparisons quantify the specific
+interventions used in the benchmark. The mitigation simulator omits readout
+assignment errors and leakage.
 
 Second, the defect model supplies one memory mechanism with a single time scale.
-Real non-Markovianity is a superposition of many mechanisms -- a spectrum of
-defects, $1/f$ flux noise, leakage to non-computational states -- and the measured
-$\mathcal{N}$ characterizes the model used here, not a device.
+Other mechanisms can include fluctuators with different time scales and
+correlated control noise. The measured $\mathcal{N}_{\mathrm{probe}}$
+characterises the sampled idle evolution of this model.
 
 Third, the system sizes are small ($n \leq 6$ system qubits, plus the defect in
 regime~II), bounded by the cost of exact density-matrix simulation, and the ideal
@@ -557,9 +581,10 @@ at utility-scale circuit sizes is not something this thesis is in a position to
 make.
 
 Fourth, the hybrid arms are trained by backpropagation through the simulator and, in
-the idealized regime, evaluated with exact Gram matrices. The shot-resolved study of
-Section~\ref{sec:ch5_shotkernel} quantifies what finite sampling costs them, but
-hardware training of the variational arm -- parameter-shift gradients under shot
-noise -- is not attempted.
+the idealised regime, evaluated with exact Gram matrices. The shot-resolved study of
+Section~\ref{sec:ch5_shotkernel} samples the fidelity kernel's ideal
+overlap probabilities. Its conclusions concern sampling noise under that
+model. Hardware fidelity estimates can also be biased by errors in the
+overlap circuits. The variational arm uses exact simulator gradients.
 
 \end{document}

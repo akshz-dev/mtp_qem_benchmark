@@ -1,0 +1,19 @@
+{
+  "python": "3.12.10",
+  "platform": "macOS-26.7.1-arm64-arm-64bit",
+  "packages": {
+    "numpy": "2.5.3",
+    "pandas": "3.0.5",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "pennylane": "0.45.1",
+    "matplotlib": "3.11.1",
+    "pymatching": "2.4.0"
+  },
+  "workers": 8,
+  "threadpool_limit": 1,
+  "master_seed": 20260912,
+  "n_train_pool": 200000,
+  "n_test_pool": 200000,
+  "common_test_prefix": 50000
+}

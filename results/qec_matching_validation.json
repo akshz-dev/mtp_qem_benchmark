@@ -1,7 +1,88 @@
 {
-  "n_trials": 400,
-  "mwpm_matches_bruteforce": 400,
-  "mwpm_mismatches": 0,
-  "mismatch_examples": [],
-  "greedy_optimal_fraction": 0.37
+  "backend": "PyMatching Sparse Blossom",
+  "single_fault_checks_by_distance": {
+    "3": 15,
+    "5": 45,
+    "7": 91,
+    "9": 153
+  },
+  "exhaustive_distance": 3,
+  "n_fault_histories": 32768,
+  "n_syndromes": 256,
+  "mwpm_cost_mismatches": 0,
+  "mwpm_logical_class_mismatches": 0,
+  "syndromes_with_tied_logical_classes": 104,
+  "greedy_optimal_syndromes": 68,
+  "analytic_logical_error_rate_by_p": {
+    "0.01": {
+      "pymatching": 0.002378414465799796,
+      "min_across_mwpm_tie_choices": 0.0020131724732209088,
+      "max_across_mwpm_tie_choices": 0.0024018502590947947,
+      "logical_class_map": 0.0020131724732209088,
+      "tied_syndrome_probability": 0.0026309033878058555
+    },
+    "0.02": {
+      "pymatching": 0.0090465176276851,
+      "min_across_mwpm_tie_choices": 0.007714936714703349,
+      "max_across_mwpm_tie_choices": 0.009215252782066639,
+      "logical_class_map": 0.007714936714703349,
+      "tied_syndrome_probability": 0.009885247202844012
+    },
+    "0.03": {
+      "pymatching": 0.019346301565739847,
+      "min_across_mwpm_tie_choices": 0.016620656457524172,
+      "max_across_mwpm_tie_choices": 0.01985800951213181,
+      "logical_class_map": 0.016620656457524172,
+      "tied_syndrome_probability": 0.02088704848138265
+    },
+    "0.04": {
+      "pymatching": 0.03267555440744725,
+      "min_across_mwpm_tie_choices": 0.02827565571061117,
+      "max_across_mwpm_tie_choices": 0.033763642089703824,
+      "logical_class_map": 0.02827565571061117,
+      "tied_syndrome_probability": 0.03486223083855936
+    },
+    "0.05": {
+      "pymatching": 0.04848610191975076,
+      "min_across_mwpm_tie_choices": 0.04225567830968749,
+      "max_across_mwpm_tie_choices": 0.05038926685812498,
+      "logical_class_map": 0.04225567830968749,
+      "tied_syndrome_probability": 0.05113041205624998
+    },
+    "0.06": {
+      "pymatching": 0.06628172226764209,
+      "min_across_mwpm_tie_choices": 0.058166991539059666,
+      "max_across_mwpm_tie_choices": 0.06922161972854164,
+      "logical_class_map": 0.058166991539059666,
+      "tied_syndrome_probability": 0.06909710650064137
+    },
+    "0.08": {
+      "pymatching": 0.10608885068370028,
+      "min_across_mwpm_tie_choices": 0.09435969886245237,
+      "max_across_mwpm_tie_choices": 0.11162670654888909,
+      "logical_class_map": 0.09435969886245237,
+      "tied_syndrome_probability": 0.10813365206399328
+    },
+    "0.1": {
+      "pymatching": 0.1490732314624001,
+      "min_across_mwpm_tie_choices": 0.13430047744000007,
+      "max_across_mwpm_tie_choices": 0.1576003686400001,
+      "logical_class_map": 0.13430047744000007,
+      "tied_syndrome_probability": 0.14866320960000007
+    },
+    "0.12": {
+      "pymatching": 0.192878272687321,
+      "min_across_mwpm_tie_choices": 0.17588772228325247,
+      "max_across_mwpm_tie_choices": 0.20439466676914664,
+      "logical_class_map": 0.17588772228325247,
+      "tied_syndrome_probability": 0.18831996500903458
+    },
+    "0.15": {
+      "pymatching": 0.25637336082750223,
+      "min_across_mwpm_tie_choices": 0.2377766499553124,
+      "max_across_mwpm_tie_choices": 0.2716373307318749,
+      "logical_class_map": 0.2377766499553124,
+      "tied_syndrome_probability": 0.24283040900624986
+    }
+  }
 }

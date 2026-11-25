@@ -5,28 +5,32 @@
 \chapter*{Publications}
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% No publication has been submitted from this work at the time of thesis
-% submission. Delete this note and list entries under the headings below as
-% they are submitted or accepted. Keeping the headings in place makes the
-% expected format explicit.
+% Replace the statement below with full references (authors, title, venue,
+% year, status) as manuscripts are submitted or accepted.
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 No publications have been submitted from this work at the time of thesis
-submission. Two results reported here are intended for submission, and are recorded
-below so that the scope of the intended manuscripts is on record.
+submission. The following manuscripts, based on the results reported here, are in
+preparation for submission to \textit{Physical Review~A} or \textit{Quantum
+Science and Technology}.
 
 \section*{Manuscripts in preparation}
 
 \begin{enumerate}
-    \item \textit{Cost-normalized benchmarking of machine-learning error mitigation:
-    learned mitigators fail on deeper circuits when their inputs leave the training
-    range.}
-    Reports the nine-arm benchmark of Chapter~\ref{chap5:results}, the
-    circuit-grouped evaluation protocol, and the depth-extrapolation and
-    cross-family results.
+    \item \textit{Matched classical controls for learned quantum error mitigation:
+    classical kernel ridge regression matches or outperforms a fidelity quantum
+    kernel at full training size.}
+    Reports the ten-method benchmark and circuit-grouped evaluation protocol of
+    Chapter~\ref{chap5:results}, the matched classical RBF kernel control, the
+    repeated-split and initialisation-seed study
+    (Section~\ref{sec:ch5_robustness}) and the depth-extrapolation split, on
+    which the fidelity kernel falls below no mitigation while classical kernel
+    ridge does not.
 
-    \item \textit{Bandwidth, not architecture, determines whether a quantum kernel
-    mitigates error.} Reports the bandwidth sensitivity study of
-    Section~\ref{sec:ch5_bandwidth}, in which an untuned fidelity kernel performs
-    worse than applying no mitigation at all.
+    \item \textit{Non-Markovian memory and circuit cost in learned error
+    mitigation.}
+    Reports the device-informed noise regime, the reset control that separates
+    the defect's memory from its energy loss
+    (Section~\ref{sec:ch5_markovianity}), and the circuit-execution cost of
+    shot-estimated fidelity kernels (Section~\ref{sec:ch5_shotkernel}).
 \end{enumerate}

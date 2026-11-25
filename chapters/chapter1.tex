@@ -2,52 +2,42 @@
 \documentclass[Thesis.tex]{subfiles}
 
 \begin{document}
-\newpage
 \setcounter{chapter}{0} %%Chapter Numbering
 
 % %%Adjust chapter title formatting
-\titleformat{\chapter}[display]
-{\fontsize{27}{27}\bfseries\filleft}{ \thechapter}{0pt}{{#1}}
 
-\thispagestyle{empty}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Introduction}\label{chap1:introduction}
 
-\section{Introduction}
+\section{Research context}
 
-Quantum computers available today are noisy. Every gate application, every idle
-period and every measurement introduces errors at rates that, while remarkable by
-the standards of a decade ago, remain several orders of magnitude above what
-fault-tolerant quantum computation requires. A circuit of even modest depth
-accumulates enough error that the quantity a user actually wants -- an expectation
-value $\langle O \rangle$ of some observable on the ideal output state -- is
-displaced far from its noiseless value. This regime, in which devices are large
-enough to be interesting but too noisy to be trusted, is what the literature calls
-the noisy intermediate-scale quantum (NISQ) era~\cite{preskill2018nisq,bharti2022noisy}, and it is the setting for the whole
-of this thesis.
+Physical quantum processors experience gate, idle and measurement errors. As
+these errors accumulate, an observed expectation value can depart substantially
+from its ideal value. The noisy intermediate-scale quantum (NISQ)
+setting~\cite{preskill2018nisq,bharti2022noisy} motivates the mitigation benchmark
+in this thesis.
 
 Two distinct research programmes address this problem, and they differ in what they
 promise. \emph{Quantum error correction} (QEC) encodes one logical qubit into many
 physical qubits and, provided the physical error rate is below a code-dependent
 threshold, suppresses the logical error rate exponentially in the code
 distance~\cite{dennis2002topological,fowler2012surface,google2025below}. It
-is the asymptotically correct answer, and it is expensive: the qubit overhead is
-large and the classical decoding problem must be solved in real time, within the
-duration of a syndrome-extraction round. \emph{Quantum error mitigation} (QEM) makes
-no attempt to correct the quantum state. Instead it accepts the noisy device as
-given and post-processes the measured data so that the \emph{estimator} of an
-expectation value is less biased than the raw measurement~\cite{temme2017error,li2017efficient,cai2023review}.
-Mitigation needs no extra qubits, which is why it is the technique of choice on present hardware, and it buys
-that cheapness with sampling overhead rather than qubit overhead -- an overhead
-that is known to grow exponentially with circuit
-depth~\cite{takagi2022fundamental,quek2024exponentially}.
+requires additional physical qubits and sustained classical decoding throughput.
+\emph{Quantum error mitigation} (QEM) instead targets the accuracy of an
+\emph{estimator} of an expectation value
+\cite{temme2017error,li2017efficient,cai2023review}. The extrapolation methods
+studied here use noisy circuit measurements at multiple noise settings.
+Maintaining a given estimation accuracy can require sampling overhead
+exponential in circuit depth under noise models such as local depolarisation
+\cite{takagi2022fundamental,quek2024exponentially}.
 
 This thesis is a benchmarking study of machine-learning approaches to both problems,
 with particular attention to \emph{hybrid quantum--classical} models -- models in
-which a parametrized quantum circuit does part of the computation and a classical
-optimizer or regressor does the rest. The question it asks is deliberately narrow
-and, as the results will show, not favourable to the hypothesis that motivated it.
+which a parametrised quantum circuit does part of the computation and a classical
+optimiser or regressor does the rest. The study asks when these models improve
+held-out accuracy and what the improvement costs under specified simulated
+noise and measurement budgets.
 
 \section{Error mitigation as an estimation problem}
 
@@ -68,10 +58,10 @@ Mitigation constructs an estimator $\widehat{\langle O \rangle}$ from measuremen
 taken on the noisy device -- possibly at several deliberately different noise levels,
 possibly on several related circuits -- whose bias with respect to
 Eq.~\eqref{eq:ch1_ideal} is smaller than that of Eq.~\eqref{eq:ch1_noisy}. Zero-noise
-extrapolation, the most widely deployed technique, measures the observable at an
-amplified noise level and extrapolates the resulting curve back to the zero-noise
-axis~\cite{temme2017error,giurgicatiron2020digital,he2020zero}. It requires no training data and makes only a smoothness assumption about how
-the expectation value depends on noise strength.
+extrapolation, the most widely deployed technique, measures the observable at several amplified noise levels and extrapolates the resulting curve back to the zero-noise
+axis~\cite{temme2017error,giurgicatiron2020digital,he2020zero}. It requires no
+labelled reference data. Its bias depends on the chosen extrapolant and how the
+hardware scaling operation changes the noise.
 
 Once the problem is written this way, the machine-learning formulation is immediate.
 If we can obtain, for a set of \emph{reference} circuits, both the noisy measurements
@@ -88,49 +78,29 @@ The appeal of a \emph{quantum} model for this regression is that the function be
 learned is generated by quantum dynamics, so a model whose inductive bias is itself
 quantum might represent it more naturally than a generic classical
 regressor~\cite{havlicek2019supervised,schuld2021kernel,huang2021power}. That
-intuition is plausible, widely repeated~\cite{schuld2022isquantum,bowles2024better}, and -- as Chapter~\ref{chap5:results} will
-show -- not supported by the measurements reported here.
+intuition motivates a controlled comparison with a classical kernel using the same
+inputs and loss~\cite{schuld2022isquantum,bowles2024better}. The benchmark measures
+how the resulting ranking depends on the split, tuning and precision of the kernel
+entries (Chapter~\ref{chap5:results}).
 
 \section{Research motivation}
 
-The literature on machine-learning error mitigation reports encouraging results, but
-three methodological weaknesses recur often enough that the aggregate picture is
-difficult to trust.
+Three comparisons motivate the benchmark. First, the unmitigated and analytic
+extrapolation arms establish an accuracy reference, and classical RBF kernel
+ridge regression isolates the effect of changing the kernel at matched input
+features and candidate counts. Second, methods are compared using both RMSE and
+the number of circuit executions used to obtain it. Extrapolation and regressors
+can share three measured input settings, while fidelity estimation adds a
+test-to-training overlap measurement for every training row
+(Section~\ref{sec:ch5_cost}). Third, depth, circuit-family and calibration changes
+test transfer beyond the reference training distribution
+\cite{caro2022generalization,caro2023ood}.
 
-\textbf{Baselines are inconsistent.} Papers report improvement over the unmitigated
-expectation value, which is a low bar, far more often than they report improvement
-over a properly tuned zero-noise extrapolation, which is the technique a
-practitioner would otherwise use. A learned model that beats doing nothing has not
-yet earned its place in a workflow.
-
-\textbf{Cost is rarely normalized.} A mitigation method's price is quantum: how many
-circuit evaluations must be executed per estimated expectation value. Zero-noise
-extrapolation with three noise settings costs three evaluations. A learned model
-consuming the same three noise-scaled inputs costs the same three, and is therefore
-directly comparable; a model that additionally requires its own quantum circuits
-costs more -- one extra circuit per prediction for a variational model, and one per
-\emph{training point} for a fidelity-kernel model (Section~\ref{sec:ch5_cost}) -- and
-is not. Reporting accuracy without this denominator makes
-methods look comparable when they are not.
-
-\textbf{Generalization is rarely tested.} A mitigation model is trained on circuits
-that can be simulated or otherwise referenced, and then deployed on circuits that
-cannot -- which, in practice, means deeper circuits, different circuit families, or
-a device whose calibration has drifted since the training set was collected. The
-in-distribution test that most papers report says nothing about that deployment
-scenario, and the generalization theory of quantum models offers no guarantee
-outside the training distribution~\cite{caro2022generalization,caro2023ood}. This thesis treats out-of-distribution evaluation as a first-class
-experiment rather than an afterthought, and finds that it reverses the ranking of
-methods.
-
-A fourth motivation is specific to quantum kernel methods. Their performance depends
-critically on a bandwidth hyperparameter that controls the spread of the embedded
-data, and an untuned quantum kernel
-concentrates~\cite{shaydulin2022importance,canatar2023bandwidth,thanasilp2024exponential}:
-all off-diagonal entries of the Gram matrix collapse towards a constant, the model loses its ability to
-discriminate, and the resulting regressor can be worse than no model at all. A
-baseline reported without bandwidth tuning is a broken baseline, and this thesis
-quantifies exactly how broken.
+Fidelity bandwidth controls the spread of the encoded data and changes the
+kernel spectrum and regression accuracy
+\cite{shaydulin2022importance,canatar2023bandwidth,thanasilp2024exponential}.
+The bandwidth sweep measures this sensitivity in the tested encoding. The finite-shot study measures how sampling the kernel entries changes accuracy
+and circuit cost.
 
 \section{Research objectives}
 
@@ -149,25 +119,25 @@ The objectives of this work are:
     and a data-reuploading variational quantum circuit.
 
     \item To report accuracy together with cost, measuring cost in circuit
-    evaluations per prediction as well as in trainable parameters and training time,
-    so that no method appears to win by spending quantum resources that its
-    competitors were not allowed.
+    executions and shots per prediction, and documenting model size and simulator
+    training time.
 
     \item To measure out-of-distribution behaviour explicitly, by testing on circuits
     deeper than any seen in training and on a circuit family not seen in training,
     and to determine which model classes degrade gracefully and which fail.
 
-    \item To characterize the sensitivity of the hybrid models to their
+    \item To characterise the sensitivity of the hybrid models to their
     hyperparameters and design choices -- in particular quantum-kernel bandwidth and
     the periodicity of the variational encoding -- and to the training split and
-    initialisation, to the point where an observed failure can be attributed to a
-    cause rather than merely reported.
+    initialisation. The fixed-setting and feature ablations test which changes
+    account for differences on the paired holdouts.
 
     \item To extend the study to quantum error correction by benchmarking
     machine-learning syndrome decoders, including a hybrid quantum--classical
-    decoder, against minimum-weight perfect matching on syndrome
+    decoder, against minimum-weight perfect matching and exact logical-class
+    posterior decoding on syndrome
     data~\cite{edmonds1965paths,higgott2022pymatching,torlai2017neural,bausch2024learning},
-using logical error rate as the metric.
+    using logical error rate as the metric.
 \end{enumerate}
 
 \section{Research contributions}
@@ -177,81 +147,81 @@ using logical error rate as the metric.
 The substantive contributions of this thesis are as follows.
 
 \begin{enumerate}
-    \item \textbf{A two-regime benchmark design.} The main comparison, the
-    noise-scaling comparison and the robustness analysis are run both under an
-    idealized gate-local Markovian model -- the regime in which the machine-learning
-    mitigation literature reports its results -- and under a device-realistic model
-    with per-qubit inhomogeneous rates, coherent over-rotation, always-on $ZZ$
-    crosstalk and non-Markovian dynamics. The bandwidth study and the five sweeps are
-    run in the idealized regime only. A conclusion that survives only one regime is a
-    conclusion about the noise model, and the design makes that visible.
+    \item \textbf{A two-regime benchmark design.} The main comparison and
+    robustness analysis run under both an idealised gate-local Markovian model
+    and a device-realistic model with per-qubit inhomogeneous rates, coherent
+    over-rotation, always-on $ZZ$ crosstalk and non-Markovian dynamics.
+    The realistic regime includes the comparison of scaling protocols.
+    The bandwidth study and the five sweeps use the idealised regime.
 
-    \item \textbf{Non-Markovianity that is measured and isolated.} Memory is
-    introduced through a coherently coupled two-level-system defect and quantified
-    with the Breuer--Laine--Piilo measure on an idling register. Two Markovian
-    controls return exactly zero: one removes the defect and one resets it every
-    layer. Only the reset control holds the defect's per-layer loss fixed, and using
-    it reverses a conclusion the defect-removed control alone would have suggested:
-    memory narrows the learned advantage over extrapolation rather than widening it.
+    \item \textbf{A trace-distance revival diagnostic and a reset control.}
+    A coherently coupled two-level-system defect produces trace-distance revivals
+    on the idle probe. The selected probe pairs show no revival in the
+    defect-removed and defect-reset controls. The reset control keeps the
+    collision and damping parameters and resets the defect after each layer,
+    allowing a paired comparison with persistent memory under both scaling
+    protocols.
 
     \item \textbf{A calibration-drift experiment}, in which mitigators are trained
     against one device calibration and evaluated after a $30\%$ recalibration on the
     same circuits. Most learned arms lose no resolvable accuracy; the raw error,
     linear extrapolation and ridge regression do.
 
-    \item \textbf{Both an idealized and a hardware-realizable noise-scaling method.}
-    Parameter scaling is exact but no device can perform it; layer-level unitary
-    folding is what practitioners use. Under folding the learned arms' margin over
-    linear extrapolation roughly halves but remains resolved in every split for the
-    four non-variational learned arms.
+    \item \textbf{Both an idealised and a hardware-realisable noise-scaling method.}
+    Parameter scaling multiplies the simulator's channel strengths. Layer-level
+    unitary folding lengthens the circuit while preserving its ideal action.
+    The protocols share the native-scale shots, and folded extrapolation uses
+    the realised ratio of executed to original circuit layers. The comparison
+    is repeated across independently generated circuit pools and shot draws
+    (Section~\ref{sec:ch5_folding_seeds}).
 
     \item \textbf{Shot-resolved cost accounting for the quantum kernel.} The fidelity
-    Gram matrix is re-estimated from finite shots as hardware must. Approaching the
-    simulator accuracy needs about $10^5$ shots per entry, or $3 \times 10^8$ circuit
-    executions per mitigated value.
+    entries are estimated from simulated finite shots. Each grouped training fold
+    fits its own positive-eigenspace repair, and both validation and final
+    predictions use the repair fitted on their respective training blocks.
+    The study records the costs of tuning, the final fit and test, and a new
+    prediction.
 
-    \item \textbf{A leakage-free protocol with paired statistics.} Every split is
-    grouped by circuit, because the observables measured on one circuit share its
-    noise realization. Methods are compared by a paired, circuit-grouped bootstrap on
-    the difference of their errors, every headline comparison is repeated over ten
-    independent splits, and the variational arms over ten initialisation seeds.
+    \item \textbf{A circuit-grouped protocol with paired statistics.} Observables
+    from one circuit stay together in outer splits. The two kernels tune on the
+    same grouped inner folds with fold-local feature standardisation. Method
+    comparisons use a circuit-grouped paired bootstrap. The benchmark also
+    evaluates ten holdouts in the split-sensitivity study and the variational arms
+    over ten initialisation seeds.
 
-    \item \textbf{Learned mitigation removes $41$--$44\%$ of the residual error left
-    by linear extrapolation in-distribution} in the idealized regime, resolved in
-    every split, at the same circuit cost for the classical regressors.
-
-    \item \textbf{A negative result on quantum advantage in this task.} The quantum
-    fidelity-kernel regressor is tied with the classical neural network in the
-    idealized regime and under folding, and ahead of it by about $3\%$ only under
-    idealized parameter scaling in the realistic regime, while requiring one
-    shot-estimated circuit per training point for every prediction. The
-    data-reuploading variational circuit is unstable across initialisation seeds and
-    on average no better than no mitigation in the idealized regime.
+    \item \textbf{A matched classical nonlinear control.} Classical RBF and
+    quantum fidelity use the same inputs and kernel ridge objective. The matched
+    searches use equal candidate counts, and the selection data for each model
+    are recorded with the results. The benchmark
+    measures their paired accuracy across both noise regimes and under distribution
+    shift. Classical RBF computes its test-to-training similarities from the
+    measured inputs. The tested fidelity implementation would add one
+    shot-estimated overlap per training point for every hardware prediction.
 
     \item \textbf{A quantification of quantum-kernel bandwidth sensitivity}: the
     untuned kernel is worse than no mitigation, and tuning bandwidth changes its error
     by a factor of $3.6$.
 
-    \item \textbf{An out-of-distribution failure analysis with an identified cause.}
-    On deeper circuits the neural network, the quantum kernel and the variational
-    circuits are worse than no mitigation when circuit depth and gate count are among
-    their inputs. Removing those two inputs, whose test values lie outside the
-    training range, makes every learned arm resolvably better than no mitigation.
+    \item \textbf{An out-of-distribution comparison.} The depth split compares
+    the learned and extrapolation arms on circuits deeper than any training
+    circuit. A feature ablation measures the effect of removing depth and gate
+    count, which both go beyond their training range on this split.
 
     \item \textbf{A syndrome-decoding benchmark} comparing neural and hybrid
-    quantum--classical decoders against minimum-weight perfect matching on the
-    distance-$3$ to $9$ repetition code under phenomenological noise, reported in
-    logical error rate with decoding latency alongside. The repetition code
+    quantum--classical decoders with matching on the physical detector graph
+    and exact logical-class posterior decoding on the distance-$3$ to $9$
+    repetition code under phenomenological noise. The benchmark reports logical
+    error rate and batched decoding cost. The repetition code
     substitutes for the surface code, for reasons stated in
     Chapter~\ref{chap6:decoding}.
 \end{enumerate}
 
-\subsection{Organization of thesis}
+\subsection{Organisation of thesis}
 
 Chapter~\ref{chap2:background} reviews the noise models, mitigation techniques,
 quantum machine-learning primitives and decoding algorithms on which this work
 builds, and states the research gap precisely.
-Chapter~\ref{chap3:methodology} formalizes the benchmark: the noise model, the
+Chapter~\ref{chap3:methodology} formalises the benchmark: the noise model, the
 circuit families, the feature construction, the evaluation protocol, every model
 arm, and the metrics.
 Chapter~\ref{chap4:setup} documents the implementation -- software versions, seeds,
@@ -259,9 +229,9 @@ hyperparameter selection protocol and computational budget -- in enough detail t
 reproduce every number in the thesis.
 Chapter~\ref{chap5:results} reports the mitigation benchmark: the main comparison,
 the noise-strength, shot-budget and system-size sweeps, learning curves, feature
-ablation and the two out-of-distribution experiments in the idealized regime, and
+ablation and the two out-of-distribution experiments in the idealised regime, and
 then repeats the main comparison under a device-realistic, non-Markovian noise model
-with hardware-realizable noise scaling, calibration drift and a shot-limited
+with hardware-realisable noise scaling, calibration drift and a shot-limited
 quantum kernel.
 Chapter~\ref{chap6:decoding} reports the syndrome-decoding track.
 Chapter~\ref{chap7:conclusion} states the conclusions, the limits of what has been

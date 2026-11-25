@@ -14,68 +14,52 @@ import pennylane as qml
 from pennylane import numpy as pnp
 from scipy.optimize import curve_fit
 from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import RidgeCV
 from sklearn.model_selection import GroupShuffleSplit, GridSearchCV, GroupKFold
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler
 
+from kernel_models import KERNEL_MODELS, fit_kernel_ridge, qk_states, quantum_gram
+from stats_util import paired_diff
+
 SEED = 7
 LAMS = np.array([1.0, 2.0, 3.0])
 FEATS = ["noisy_l1", "noisy_l2", "noisy_l3", "depth", "n_2q", "obs_weight"]
 rng_global = np.random.default_rng(SEED)
-qk_choice = {}
+kernel_choices = {name: {} for name in KERNEL_MODELS}
 
 
 # ---------------------------------------------------------------- analytic ZNE
-def zne_poly(Y, deg):
-    """Least-squares polynomial extrapolation to zero noise."""
-    c = np.polynomial.polynomial.polyfit(LAMS, Y.T, deg)
-    return c[0]
+def zne_poly(Y, deg, lams=LAMS):
+    """Extrapolate to zero with a shared grid or one grid per observation."""
+    Y, lams = np.asarray(Y), np.asarray(lams)
+    if lams.ndim == 1:
+        return np.polynomial.polynomial.polyfit(lams, Y.T, deg)[0]
+    if lams.shape != Y.shape or Y.ndim != 2:
+        raise ValueError("Expected a shared ZNE grid or one grid per observation")
+
+    # Circuits with the same executed fold ratios can share a polynomial fit.
+    grids, grid_index = np.unique(lams, axis=0, return_inverse=True)
+    zero_noise = np.empty(len(Y))
+    for i, grid in enumerate(grids):
+        rows = grid_index == i
+        zero_noise[rows] = np.polynomial.polynomial.polyfit(grid, Y[rows].T, deg)[0]
+    return zero_noise
 
 
-def zne_exp(Y):
-    """Fit E(l) = a*exp(-b*l) + c, fall back to linear on failure."""
+def zne_exp(Y, lams=LAMS):
+    """Fit an exponential per observation, with a linear fallback on the same grid."""
     out = np.empty(len(Y))
-    lin = zne_poly(Y, 1)
-    for i, y in enumerate(Y):
+    lin = zne_poly(Y, 1, lams)
+    for i, (grid, y) in enumerate(zip(np.broadcast_to(lams, np.shape(Y)), Y)):
         try:
-            p, _ = curve_fit(lambda l, a, b, c: a * np.exp(-b * l) + c, LAMS, y,
+            p, _ = curve_fit(lambda l, a, b, c: a * np.exp(-b * l) + c, grid, y,
                              p0=[y[0], 0.5, 0.0], maxfev=4000)
             v = p[0] + p[2]
             out[i] = v if np.isfinite(v) and abs(v) <= 1.5 else lin[i]
         except Exception:
             out[i] = lin[i]
     return out
-
-
-# ------------------------------------------------- hybrid: quantum kernel ridge
-QK_WIRES = 6
-qk_dev = qml.device("default.qubit", wires=QK_WIRES)
-
-
-QK_BANDWIDTHS = (0.05, 0.15, 0.4, 1.0)
-
-
-@qml.qnode(qk_dev)
-def feature_map(x):
-    """IQP-style embedding; the fidelity kernel is |<psi_i|psi_j>|^2."""
-    qml.IQPEmbedding(x, wires=range(QK_WIRES), n_repeats=2)
-    return qml.state()
-
-
-def qk_states(X, bw):
-    """Bandwidth-rescaled embedding states. Bandwidth controls the kernel
-    spectrum and hence the inductive bias, so it is tuned here rather than
-    fixed at 1: Canatar, Peters, Pehlevan, Wild & Shaydulin, "Bandwidth
-    Enables Generalization in Quantum Kernel Models", TMLR 2023,
-    arXiv:2206.06686."""
-    return np.array([feature_map(bw * x) for x in X])
-
-
-def quantum_gram(Psi_a, Psi_b=None):
-    Psi_b = Psi_a if Psi_b is None else Psi_b
-    return np.abs(Psi_a @ Psi_b.conj().T) ** 2
 
 
 # --------------------------------------- hybrid: data-reuploading VQC regressor
@@ -150,7 +134,7 @@ def boot_rmse_ci(y, p, groups, n=1000, seed=SEED):
 COST = {
     "no_mitigation":   (1, 0), "zne_linear": (3, 0), "zne_richardson2": (3, 0),
     "zne_exponential": (3, 0), "ridge": (3, None), "hist_gbm": (3, None),
-    "mlp": (3, None), "qk_ridge_quantum": (4, None), "dr_vqc_quantum": (4, None),
+    "mlp": (3, None), "rbf_krr": (3, None), "dr_vqc_quantum": (4, None),
 }
 
 
@@ -158,11 +142,11 @@ def run_split(df, tr, te, name):
     Xtr_raw, Xte_raw = df.loc[tr, FEATS].to_numpy(), df.loc[te, FEATS].to_numpy()
     ytr, yte = df.loc[tr, "ideal"].to_numpy(), df.loc[te, "ideal"].to_numpy()
     gtr, gte = df.loc[tr, "circuit_id"].to_numpy(), df.loc[te, "circuit_id"].to_numpy()
-    Ytr_l, Yte_l = df.loc[tr, FEATS[:3]].to_numpy(), df.loc[te, FEATS[:3]].to_numpy()
+    Yte_l = df.loc[te, FEATS[:3]].to_numpy()
 
     sc = StandardScaler().fit(Xtr_raw)
     Xtr, Xte = sc.transform(Xtr_raw), sc.transform(Xte_raw)
-    preds, nparam, secs = {}, {}, {}
+    preds, nparam, secs, tuning = {}, {}, {}, {}
 
     preds["no_mitigation"] = Yte_l[:, 0]
     preds["zne_linear"] = zne_poly(Yte_l, 1)
@@ -193,25 +177,19 @@ def run_split(df, tr, te, name):
     nparam["mlp"] = int(sum(c.size for c in mlp.coefs_) + sum(i.size for i in mlp.intercepts_))
     secs["mlp"] = time.time() - t
 
-    # hybrid 1: quantum fidelity kernel + classical ridge readout
-    t = time.time()
-    best = None
-    for bw in QK_BANDWIDTHS:
-        Ptr = qk_states(Xtr, bw)
-        g = GridSearchCV(KernelRidge(kernel="precomputed"),
-                         {"alpha": np.logspace(-6, 1, 15)},
-                         cv=GroupKFold(n_splits=4), n_jobs=1
-                         ).fit(quantum_gram(Ptr), ytr, groups=gtr)
-        print(f"    qk bandwidth={bw} cv_r2={g.best_score_:.4f} "
-              f"alpha={g.best_params_['alpha']:.2g}", flush=True)
-        if best is None or g.best_score_ > best[0]:
-            best = (g.best_score_, bw, g.best_estimator_, Ptr)
-    _, bw_best, qkr, Ptr = best
-    qk_choice[name] = {"bandwidth": bw_best, "alpha": float(qkr.alpha)}
-    preds["qk_ridge_quantum"] = qkr.predict(
-        quantum_gram(qk_states(Xte, bw_best), Ptr))
-    nparam["qk_ridge_quantum"] = int(len(ytr))  # one dual coefficient per train point
-    secs["qk_ridge_quantum"] = time.time() - t
+    for arm in KERNEL_MODELS:
+        t = time.time()
+        model = fit_kernel_ridge(arm, Xtr_raw, ytr, gtr)
+        scale_name = "bandwidth" if arm == "qk_ridge_quantum" else "gamma"
+        tuning[arm] = {
+            "kernel_scale": model.scale, "kernel_alpha": model.alpha,
+            "kernel_cv_r2": model.cv_r2, "kernel_candidates": model.n_candidates,
+        }
+        kernel_choices[arm][name] = {scale_name: model.scale, "alpha": model.alpha,
+                                     "cv_r2": model.cv_r2, "n_candidates": model.n_candidates}
+        preds[arm] = model.predict(Xte_raw)
+        nparam[arm] = len(ytr)
+        secs[arm] = time.time() - t
 
     # hybrid 2: data-reuploading variational circuit + classical affine readout
     t = time.time()
@@ -236,10 +214,11 @@ def run_split(df, tr, te, name):
             "max_abs_err": float(np.max(np.abs(yte - p))),
             "r2": float(1 - np.sum((yte - p) ** 2) / np.sum((yte - yte.mean()) ** 2)),
             "err_reduction_pct": float(100 * (1 - rmse(yte, p) / base)),
-            "circuit_evals_per_pred": COST[m][0],
+            "circuit_evals_per_pred": 3 + len(ytr) if m == "qk_ridge_quantum" else COST[m][0],
             "n_params": nparam.get(m, 0),
             "train_sec": round(secs.get(m, 0.0), 2),
             "n_test": int(len(yte)), "n_train": int(len(ytr)),
+            **tuning.get(m, {}),
         })
     return pd.DataFrame(rows), preds, yte, df.loc[te].reset_index(drop=True), hist
 
@@ -281,10 +260,25 @@ def main():
              **{m: np.clip(p, -1.5, 1.5) for m, p in pA.items()})
     np.savez("predictions_splitB.npz", y=yB,
              **{m: np.clip(p, -1.5, 1.5) for m, p in pB.items()})
+    contrasts = []
+    for split, (preds, y, test) in (
+        ("A_random_circuits", (pA, yA, dA)),
+        ("B_depth_extrapolation", (pB, yB, dB)),
+    ):
+        contrasts.append({"split": split, **matched_kernel_difference(preds, y, test["circuit_id"])})
+    pd.DataFrame(contrasts).to_csv("paired_kernel_main.csv", index=False)
     json.dump({"dr_vqc_train_curve_A": histA, "dr_vqc_train_curve_B": histB,
-               "qk_selected_hyperparams": qk_choice},
+               "qk_selected_hyperparams": kernel_choices["qk_ridge_quantum"],
+               "rbf_selected_hyperparams": kernel_choices["rbf_krr"]},
               open("train_curves.json", "w"), indent=2)
     print(res[["split", "model", "rmse", "err_reduction_pct"]].to_string(index=False))
+
+
+def matched_kernel_difference(preds, y, groups):
+    """Paired circuit-bootstrap RMSE(RBF) minus RMSE(fidelity kernel)."""
+    rbf = np.clip(preds["rbf_krr"], -1.5, 1.5)
+    qk = np.clip(preds["qk_ridge_quantum"], -1.5, 1.5)
+    return paired_diff(y, rbf, y, qk, groups, seed=SEED)
 
 
 if __name__ == "__main__":

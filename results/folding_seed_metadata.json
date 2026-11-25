@@ -1,0 +1,128 @@
+{
+  "experiment": "R1_seed_replication",
+  "protocol": "executed-layer-ratios-shared-native-v1",
+  "circuit_pools": [
+    {
+      "circuit_seed": 2026112501,
+      "pool_file": "fold_pool_2026112501.csv",
+      "pool_sha256": "3b1bab9bd0820faae6d2488889f7856643797e62e924e08b5ac73c88622c0271",
+      "circuit_signature": "1e8341e633f7f8a2",
+      "ideal_signature": "272269745d9c6a63",
+      "n_circuits": 900,
+      "n_rows": 4500,
+      "splits": [
+        {
+          "split": "A_random_circuits",
+          "n_train": 3150,
+          "n_test": 1350,
+          "n_train_circuits": 630,
+          "n_test_circuits": 270,
+          "split_signature": "af34c3c16fb953c7649cda5fcc5956ff5821cf312d16b007f10b4b9881633ff3",
+          "cv_signature": "f6d8a4576f9e125364edb1e95c98fed0fd9f2b3379db5692b489c7e5b04b5c27"
+        },
+        {
+          "split": "B_depth_extrapolation",
+          "n_train": 2770,
+          "n_test": 1730,
+          "n_train_circuits": 554,
+          "n_test_circuits": 346,
+          "split_signature": "127cd8473a4457d51a4d6c6b111d6b0dec792e81bed6c71fd89b4de00a4cf40c",
+          "cv_signature": "12f00f17e104779597c1997a65c252425d1b72fc4cae978a822f471cd18de0f8"
+        }
+      ]
+    },
+    {
+      "circuit_seed": 2026112502,
+      "pool_file": "fold_pool_2026112502.csv",
+      "pool_sha256": "2f1352e673d131df281c06e503a38d576c817e9c29a567e19eed441327576a01",
+      "circuit_signature": "a0343bbb7d89c4df",
+      "ideal_signature": "07b5801842624e36",
+      "n_circuits": 900,
+      "n_rows": 4500,
+      "splits": [
+        {
+          "split": "A_random_circuits",
+          "n_train": 3150,
+          "n_test": 1350,
+          "n_train_circuits": 630,
+          "n_test_circuits": 270,
+          "split_signature": "af34c3c16fb953c7649cda5fcc5956ff5821cf312d16b007f10b4b9881633ff3",
+          "cv_signature": "f6d8a4576f9e125364edb1e95c98fed0fd9f2b3379db5692b489c7e5b04b5c27"
+        },
+        {
+          "split": "B_depth_extrapolation",
+          "n_train": 2625,
+          "n_test": 1875,
+          "n_train_circuits": 525,
+          "n_test_circuits": 375,
+          "split_signature": "7945c638d18e1d650e85a381cfb0311b19c9bb93e5eabbff0f6fae2645b89387",
+          "cv_signature": "e3a2a19852a5d9040b501c0bdfa74590ae17792d0ddc373b780d3da228286ae0"
+        }
+      ]
+    },
+    {
+      "circuit_seed": 2026112503,
+      "pool_file": "fold_pool_2026112503.csv",
+      "pool_sha256": "d697c4d94f3a0a4ab07fa3a3a9a313ade12bbc8c520ef459ddab13a00a649675",
+      "circuit_signature": "ce031a8213a4314b",
+      "ideal_signature": "44effec3490c6552",
+      "n_circuits": 900,
+      "n_rows": 4500,
+      "splits": [
+        {
+          "split": "A_random_circuits",
+          "n_train": 3150,
+          "n_test": 1350,
+          "n_train_circuits": 630,
+          "n_test_circuits": 270,
+          "split_signature": "af34c3c16fb953c7649cda5fcc5956ff5821cf312d16b007f10b4b9881633ff3",
+          "cv_signature": "f6d8a4576f9e125364edb1e95c98fed0fd9f2b3379db5692b489c7e5b04b5c27"
+        },
+        {
+          "split": "B_depth_extrapolation",
+          "n_train": 2795,
+          "n_test": 1705,
+          "n_train_circuits": 559,
+          "n_test_circuits": 341,
+          "split_signature": "5042c658d0ae185582d4a6f5de2bd04e80e652dcdcfb1534422726e1ee664209",
+          "cv_signature": "3831b7288faf4bfd3fdbd1735282c7ce926b25ddf2aef171ce80396c5f509f24"
+        }
+      ]
+    }
+  ],
+  "shot_seeds": [
+    2026112511,
+    2026112512,
+    2026112513
+  ],
+  "shots_per_observable_setting": 4096,
+  "shot_stream": "numpy SeedSequence([shot_seed, circuit_seed]) with PCG64",
+  "split_seed": 7,
+  "outer_random_test_fraction": 0.3,
+  "depth_training_max": 4,
+  "depth_test_min": 5,
+  "inner_group_folds": 4,
+  "kernel_candidates": 24,
+  "scaling_methods": [
+    "parameter_scaling",
+    "unitary_folding"
+  ],
+  "models": [
+    "no_mitigation",
+    "zne_linear",
+    "zne_richardson2",
+    "zne_exponential",
+    "ridge",
+    "hist_gbm",
+    "mlp",
+    "rbf_krr",
+    "qk_ridge_quantum",
+    "dr_vqc_quantum",
+    "bounded_vqc_quantum"
+  ],
+  "paired_bootstrap_replicates": 1000,
+  "aggregate_uncertainty": "empirical spread across cells and across circuit pool means",
+  "n_pool_shot_cells": 9,
+  "n_scored_holdouts": 18,
+  "n_fit_checkpoints": 36
+}

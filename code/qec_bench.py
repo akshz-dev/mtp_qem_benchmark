@@ -7,40 +7,29 @@ SCOPE NOTE. The benchmark uses the repetition code under phenomenological noise,
 not the surface code under circuit-level noise (thesis Section 6.1). Every number
 produced here comes from the numpy simulation in qec_gen_data.py.
 
-Decoders
-  MWPM        exact minimum-weight perfect matching with boundary, on the 1+1D
-              space-time defect graph. Blossom solver: networkx.max_weight_matching
-              (Galil's exact algorithm) on negated weights, validated against
-              brute-force enumeration.
-  Greedy      greedy nearest-available matching (weaker classical baseline).
-  LogReg      logistic regression on the flattened detector syndrome.
-  MLP         feed-forward network on the flattened detector syndrome (sklearn).
-  VQC-PCA     data-reuploading variational quantum circuit on PCA-compressed
-              syndromes with a logistic head (PennyLane).
+Decoders: exact and greedy matching, exact logical-class posterior decoding,
+logistic regression, an MLP, PCA logistic regression, and a PCA-based VQC.
 
-Metric: logical error rate per shot on a disjoint held-out shot set, Wilson 95% CI.
+Reports held-out logical error rates and Wilson intervals, a common test prefix
+for ranking, and paired McNemar tests on each pair's shared shots.
 
 Run:  python qec_bench.py
 """
-import itertools
+import argparse
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import importlib.metadata
 import json
-import os
+from pathlib import Path
+import platform
 import time
-import warnings
 
 import numpy as np
 import pandas as pd
-
-warnings.filterwarnings("ignore")
 
 DATA_DIR = "qec_data"
 RESULTS_CSV = "qec_decoder_results.csv"
 SEED = 7
 
-# ---- compute budgets; every reduction is recorded in the results table ------
-MWPM_TIME_BUDGET = 150.0     # s per config for the exact matching decoder
-GREEDY_TIME_BUDGET = 60.0
-MWPM_MIN_SHOTS = 20_000
 MLP_MAX_TRAIN = 200_000
 VQC_MAX_TRAIN = 15_000
 VQC_MAX_TEST = 50_000
@@ -68,206 +57,31 @@ def wilson_ci(k: int, n: int, z: float = 1.959963985) -> tuple:
 
 
 # ============================================================================
-# matching decoders on the 1+1D defect graph
-# ============================================================================
-# A defect at flat detector index k sits at (t, j) = (k // n_stab, k % n_stab),
-# where j indexes the stabilizer between data qubits j and j+1.
-#   defect-defect weight  : |t1-t2| + |j1-j2|      (Manhattan / graph distance)
-#   defect-left-boundary  : j + 1                  (flip qubits 0..j)
-#   defect-right-boundary : d - 1 - j              (flip qubits j+1..d-1)
-# Only a left-boundary connection flips data qubit 0, so the decoder's predicted
-# observable is  (# defects matched to the LEFT boundary) mod 2.
-
-def _coords(idx, n_stab):
-    return idx // n_stab, idx % n_stab
-
-
-def mwpm_predict(idx, n_stab, d):
-    """Exact MWPM with boundary. Returns (predicted observable bit, cost)."""
-    import networkx as nx
-
-    n = len(idx)
-    if n == 0:
-        return 0, 0
-    t, j = _coords(idx, n_stab)
-    left = j + 1
-    right = d - 1 - j
-    bcost = np.minimum(left, right)
-    bleft = left < right              # cheaper boundary is the left one
-
-    if n == 1:
-        return int(bleft[0]), int(bcost[0])
-    if n == 2:
-        pair = abs(int(t[0]) - int(t[1])) + abs(int(j[0]) - int(j[1]))
-        both = int(bcost[0] + bcost[1])
-        if pair <= both:
-            return 0, pair
-        return int(bleft[0]) ^ int(bleft[1]), both
-
-    # general case: 2n-node graph (n defects + n private boundary nodes)
-    G = nx.Graph()
-    for a in range(n):
-        for b in range(a + 1, n):
-            w = abs(int(t[a]) - int(t[b])) + abs(int(j[a]) - int(j[b]))
-            G.add_edge(a, b, weight=-float(w))
-        G.add_edge(a, n + a, weight=-float(bcost[a]))
-    for a in range(n):
-        for b in range(a + 1, n):
-            G.add_edge(n + a, n + b, weight=0.0)
-
-    mate = nx.max_weight_matching(G, maxcardinality=True)
-    parity, cost = 0, 0
-    for u, v in mate:
-        if u > v:
-            u, v = v, u
-        if v >= n and u < n:          # defect u sent to a boundary
-            cost += int(bcost[u])
-            parity ^= int(bleft[u])
-        elif v < n:                   # defect-defect pair
-            cost += abs(int(t[u]) - int(t[v])) + abs(int(j[u]) - int(j[v]))
-    return parity, cost
-
-
-def greedy_predict(idx, n_stab, d):
-    """Greedy nearest-available matching. Returns (observable bit, cost)."""
-    n = len(idx)
-    if n == 0:
-        return 0, 0
-    t, j = _coords(idx, n_stab)
-    left = (j + 1).astype(int)
-    right = (d - 1 - j).astype(int)
-    bcost = np.minimum(left, right)
-    bleft = left < right
-    alive = np.ones(n, dtype=bool)
-    parity, cost = 0, 0
-    while alive.any():
-        live = np.flatnonzero(alive)
-        best, act = None, None
-        for ai in range(len(live)):
-            a = live[ai]
-            if best is None or bcost[a] < best:
-                best, act = int(bcost[a]), ("B", a, -1)
-            for b in live[ai + 1:]:
-                w = abs(int(t[a]) - int(t[b])) + abs(int(j[a]) - int(j[b]))
-                if w < best:
-                    best, act = w, ("P", a, b)
-        kind, a, b = act
-        cost += best
-        if kind == "B":
-            parity ^= int(bleft[a])
-            alive[a] = False
-        else:
-            alive[a] = False
-            alive[b] = False
-    return parity, cost
-
-
-def brute_force_cost(idx, n_stab, d):
-    """Exhaustive minimum over all partial matchings (unmatched -> boundary)."""
-    n = len(idx)
-    t, j = _coords(idx, n_stab)
-    left = (j + 1).astype(int)
-    right = (d - 1 - j).astype(int)
-    bcost = np.minimum(left, right)
-
-    def rec(remaining):
-        if not remaining:
-            return 0
-        a = remaining[0]
-        rest = remaining[1:]
-        best = int(bcost[a]) + rec(rest)              # send a to a boundary
-        for k in range(len(rest)):
-            b = rest[k]
-            w = abs(int(t[a]) - int(t[b])) + abs(int(j[a]) - int(j[b]))
-            best = min(best, w + rec(rest[:k] + rest[k + 1:]))
-        return best
-
-    return rec(tuple(range(n)))
-
-
-def validate_matching(n_trials=400, seed=11):
-    """Check the blossom MWPM cost against brute force on small instances."""
-    rng = np.random.default_rng(seed)
-    n_ok = n_bad = 0
-    greedy_opt = 0
-    worst = []
-    for _ in range(n_trials):
-        d = int(rng.choice([3, 5, 7, 9]))
-        n_stab = d - 1
-        T1 = d + 1
-        n_det = T1 * n_stab
-        n_def = int(rng.integers(1, min(8, n_det) + 1))
-        idx = rng.choice(n_det, size=n_def, replace=False)
-        c_mwpm = mwpm_predict(idx, n_stab, d)[1]
-        c_bf = brute_force_cost(idx, n_stab, d)
-        c_gr = greedy_predict(idx, n_stab, d)[1]
-        if c_mwpm == c_bf:
-            n_ok += 1
-        else:
-            n_bad += 1
-            worst.append((d, sorted(idx.tolist()), c_mwpm, c_bf))
-        if c_gr == c_bf:
-            greedy_opt += 1
-    return {"n_trials": n_trials, "mwpm_matches_bruteforce": n_ok,
-            "mwpm_mismatches": n_bad, "mismatch_examples": worst[:5],
-            "greedy_optimal_fraction": greedy_opt / n_trials}
-
-
-def run_matching(det_te, y_te, n_stab, d, fn, time_budget):
-    """Apply a matching decoder shot-by-shot with a wall-clock budget."""
-    cache = {}
-    n_total = len(det_te)
-    errs = 0
-    t0 = time.time()
-    used = 0
-    for i in range(n_total):
-        row = det_te[i]
-        key = row.tobytes()
-        pred = cache.get(key)
-        if pred is None:
-            pred = fn(np.flatnonzero(row), n_stab, d)[0]
-            cache[key] = pred
-        errs += int(pred != y_te[i])
-        used = i + 1
-        if (i & 1023) == 1023 and (time.time() - t0) > time_budget \
-                and used >= MWPM_MIN_SHOTS:
-            break
-    dt = time.time() - t0
-    return errs, used, dt, 0, len(cache)
-
-
-# ============================================================================
 # ML decoders
 # ============================================================================
-def run_logreg(det_tr, y_tr, det_te, y_te):
+def run_logreg(det_tr, y_tr, det_te):
     from sklearn.linear_model import LogisticRegression
 
-    clf = LogisticRegression(max_iter=1000, n_jobs=1, C=1.0)
+    clf = LogisticRegression(max_iter=1000, C=1.0)
     clf.fit(det_tr, y_tr)
-    t0 = time.time()
+    t0 = time.perf_counter()
     pred = clf.predict(det_te)
-    dt = time.time() - t0
-    return (int((pred != y_te).sum()), len(det_te), dt,
-            int(clf.coef_.size + clf.intercept_.size), None)
+    return pred, time.perf_counter() - t0, int(clf.coef_.size + clf.intercept_.size)
 
 
-def run_logreg_pca(det_tr, y_tr, det_te, y_te, pca_state):
-    """Classical control on exactly the features the VQC receives. Isolates the
-    cost of PCA compression from the behaviour of the quantum model."""
+def run_logreg_pca(det_tr, y_tr, det_te, pca_state):
+    """Logistic regression on the six PCA scores, without the VQC's angle transform."""
     from sklearn.linear_model import LogisticRegression
 
     pca = pca_state[0]
-    clf = LogisticRegression(max_iter=1000, n_jobs=1)
+    clf = LogisticRegression(max_iter=1000)
     clf.fit(pca.transform(det_tr), y_tr)
-    Zte = pca.transform(det_te)
-    t0 = time.time()
-    pred = clf.predict(Zte)
-    dt = time.time() - t0
-    return (int((pred != y_te).sum()), len(det_te), dt,
-            int(clf.coef_.size + clf.intercept_.size), None)
+    t0 = time.perf_counter()
+    pred = clf.predict(pca.transform(det_te))
+    return pred, time.perf_counter() - t0, int(clf.coef_.size + clf.intercept_.size)
 
 
-def run_mlp(det_tr, y_tr, det_te, y_te):
+def run_mlp(det_tr, y_tr, det_te):
     from sklearn.neural_network import MLPClassifier
 
     n = min(MLP_MAX_TRAIN, len(det_tr))
@@ -277,14 +91,14 @@ def run_mlp(det_tr, y_tr, det_te, y_te):
                         n_iter_no_change=MLP_NO_CHANGE,
                         validation_fraction=0.1, random_state=SEED)
     clf.fit(det_tr[:n], y_tr[:n])
-    t0 = time.time()
+    t0 = time.perf_counter()
     pred = clf.predict(det_te)
-    dt = time.time() - t0
+    dt = time.perf_counter() - t0
     npar = sum(c.size for c in clf.coefs_) + sum(b.size for b in clf.intercepts_)
-    return int((pred != y_te).sum()), len(det_te), dt, int(npar), clf.n_iter_
+    return pred, dt, int(npar)
 
 
-def run_vqc(det_tr, y_tr, det_te, y_te, pca_state):
+def run_vqc(det_tr, y_tr, det_te, pca_state):
     """Data-reuploading VQC on N_PCA PCA features with a logistic head."""
     import pennylane as qml
     from pennylane import numpy as pnp
@@ -293,9 +107,7 @@ def run_vqc(det_tr, y_tr, det_te, y_te, pca_state):
     ntr = min(VQC_MAX_TRAIN, len(det_tr))
     nte = min(VQC_MAX_TEST, len(det_te))
     Ztr = np.clip((pca.transform(det_tr[:ntr]) - mu) / sd, -3, 3) * (np.pi / 3)
-    Zte = np.clip((pca.transform(det_te[:nte]) - mu) / sd, -3, 3) * (np.pi / 3)
     ytr = y_tr[:ntr].astype(np.float64)
-    yte = y_te[:nte]
 
     nq = N_PCA
     dev = qml.device("default.qubit", wires=nq)
@@ -348,31 +160,28 @@ def run_vqc(det_tr, y_tr, det_te, y_te, pca_state):
                 break
     w, h = best_wh
 
-    t0 = time.time()
+    t0 = time.perf_counter()
+    Zte = np.clip((pca.transform(det_te[:nte]) - mu) / sd, -3, 3) * (np.pi / 3)
     preds = []
     for i in range(0, nte, 4096):
         z = logits(pnp.array(Zte[i:i + 4096], requires_grad=False), w, h)
         preds.append((np.asarray(z) > 0).astype(np.uint8))
     pred = np.concatenate(preds)
-    dt = time.time() - t0
-    npar = int(w.size + h.size)
-    return int((pred != yte).sum()), nte, dt, npar, ep + 1
+    return pred, time.perf_counter() - t0, int(w.size + h.size)
 
 
 # ============================================================================
-# threshold estimation (validated on synthetic curves with a known crossing;
-# that validation is methodology only and produces no reported result)
+# descriptive finite-distance crossover diagnostics
 # ============================================================================
-def _crossing(pa, ya, pb, yb):
-    lp = np.log10(pa)
-    da = np.log10(np.maximum(ya, 1e-12)) - np.log10(np.maximum(yb, 1e-12))
-    sgn = np.sign(da)
-    for i in range(len(lp) - 1):
-        if sgn[i] == 0:
-            return float(10 ** lp[i])
-        if sgn[i] * sgn[i + 1] < 0:
-            t = da[i] / (da[i] - da[i + 1])
-            return float(10 ** (lp[i] + t * (lp[i + 1] - lp[i])))
+def _crossing(p, ya, yb):
+    # Equal point estimates do not establish a crossing. In particular,
+    # observing zero errors in both samples gives only upper limits.
+    ordered = (ya > 0) & (yb > 0) & (ya != yb)
+    lp = np.log10(p[ordered])
+    delta = np.log10(ya[ordered]) - np.log10(yb[ordered])
+    for i in np.flatnonzero(delta[:-1] * delta[1:] < 0):
+        t = delta[i] / (delta[i] - delta[i + 1])
+        return float(10 ** (lp[i] + t * (lp[i + 1] - lp[i])))
     return None
 
 
@@ -395,10 +204,10 @@ def fit_thresholds(df):
         for a, b in zip(ds[:-1], ds[1:]):
             ga = g[g.d == a].sort_values("p")
             gb = g[g.d == b].sort_values("p")
-            if len(ga) != len(gb) or len(ga) < 2:
+            if len(ga) < 2 or not np.array_equal(ga.p.to_numpy(), gb.p.to_numpy()):
                 continue
             c = _crossing(ga.p.to_numpy(), ga.logical_error_rate.to_numpy(),
-                          gb.p.to_numpy(), gb.logical_error_rate.to_numpy())
+                          gb.logical_error_rate.to_numpy())
             rec["crossings"][f"d{a}-d{b}"] = c
             if c is not None:
                 cr.append(c)
@@ -439,8 +248,8 @@ def fit_thresholds(df):
                 rec["nu"] = float(best.x[1])
                 rec["fss_rss"] = float(2 * best.cost)
                 rec["n_fss_points"] = int(len(w))
-        # A decoder whose LER rises with d at every sampled p has no threshold
-        # in this window; the FSS fit is meaningless there, so suppress it.
+        # Suppress the descriptive fit when neither crossings nor endpoint
+        # improvement support one. Retain the historical artifact field name.
         rec["no_threshold_in_window"] = bool(
             rec["p_th_crossing"] is None
             and len(rec["larger_d_better"]) > 0
@@ -449,8 +258,7 @@ def fit_thresholds(df):
             rec["p_th_fss"] = None
             rec["nu"] = None
             rec["fss_rss"] = None
-        est = rec["p_th_crossing"] or rec["p_th_fss"]
-        rec["bracketed"] = bool(est is not None and df.p.min() < est < df.p.max())
+        rec["bracketed"] = rec["p_th_crossing"] is not None
         out[dec] = rec
     return out
 
@@ -458,282 +266,292 @@ def fit_thresholds(df):
 # ============================================================================
 # figures
 # ============================================================================
-DEC_ORDER = ["MWPM", "Greedy", "MLP", "LogReg", "LogReg-PCA", "VQC-PCA"]
-DEC_LABEL = {
-    "MWPM": "MWPM (exact matching)",
-    "Greedy": "Greedy matching",
-    "MLP": "MLP (flat syndrome)",
-    "LogReg": "Logistic reg. (flat syndrome)",
-    "LogReg-PCA": f"Logistic reg., {N_PCA} PCA feat.",
-    "VQC-PCA": f"VQC, {N_PCA} PCA feat. (quantum)",
+DEC_STYLES = {
+    "Exact-MAP": ("Exact logical MAP", "#007a59", "-"),
+    "MWPM": ("MWPM (PyMatching)", "#171717", "--"),
+    "Greedy": ("Greedy matching", "#7d7d7d", ":"),
+    "MLP": ("MLP", "#0072b2", "-"),
+    "LogReg": ("Logistic regression", "#bd5900", ":"),
+    "LogReg-PCA": ("PCA logistic regression", "#6550a4", "--"),
+    "VQC-PCA": ("PCA + VQC", "#b02b76", "-."),
 }
-DEC_COLOR = {"MWPM": "#111111", "Greedy": "#777777", "MLP": "#0072B2",
-             "LogReg": "#E69F00", "LogReg-PCA": "#009E73", "VQC-PCA": "#CC79A7"}
 
 
-def _panel_claim(g, decs):
-    """A claim true of EVERY plotted series in the panel, or a description."""
-    mono = all(
-        len(s) >= 2 and np.all(np.diff(s) >= -1e-12)
-        for s in (g[g.decoder == dec].sort_values("p")["logical_error_rate"]
-                  .to_numpy() for dec in decs))
-    mwpm_best = True
-    for p in sorted(g.p.unique()):
-        sub = g[g.p == p]
-        if "MWPM" not in set(sub.decoder):
-            mwpm_best = False
-            break
-        m = sub[sub.decoder == "MWPM"].logical_error_rate.iloc[0]
-        if (sub.logical_error_rate < m - 1e-12).any():
-            mwpm_best = False
-            break
-    if mono and mwpm_best:
-        return "all rise with $p$; matching lowest"
-    if mono:
-        return "all rise with $p$"
-    if mwpm_best:
-        return "matching lowest at every $p$"
-    return "logical error rate vs $p$"
+def plot_ler(ax, data, x_col):
+    """Plot each decoder on its available shots, with zero counts as limits."""
+    for decoder, (label, color, style) in DEC_STYLES.items():
+        s = data[data.decoder == decoder].sort_values(x_col)
+        x = s[x_col].to_numpy()
+        y = s.logical_error_rate.to_numpy()
+        positive = y > 0
+        lo, hi = s.ler_ci_lo.to_numpy(), s.ler_ci_hi.to_numpy()
+        if positive.any():
+            ax.plot(x, np.where(positive, y, np.nan), color=color, ls=style,
+                    marker="o", ms=2.8, lw=1.4, label=label)
+            ax.fill_between(x, lo, hi, where=positive, color=color, alpha=0.12, lw=0)
+        if (~positive).any():
+            ax.plot(x[~positive], hi[~positive], color=color, marker="v",
+                    ls="none", mfc="white", ms=5, label=None if positive.any() else label)
+    ax.set_yscale("log")
+    ax.grid(which="major", alpha=0.24, lw=0.5)
 
 
-def make_figures(df, thr):
+def make_figures(df, matching_validation):
     import matplotlib as mpl
+
+    mpl.use("Agg")
     import matplotlib.pyplot as plt
 
-    mpl.rcParams.update({"font.size": 8, "axes.spines.top": False,
+    mpl.rcParams.update({"font.size": 9, "axes.spines.top": False,
                          "axes.spines.right": False, "figure.dpi": 300,
-                         "axes.labelsize": 8, "legend.fontsize": 6.5,
-                         "xtick.labelsize": 6.5, "ytick.labelsize": 6.5})
+                         "legend.fontsize": 8, "xtick.labelsize": 8, "ytick.labelsize": 8})
     ds = sorted(df.d.unique())
-    decs = [x for x in DEC_ORDER if x in set(df.decoder)]
     ps = sorted(df.p.unique())
 
-    def _pticks(ax):
+    fig, axes = plt.subplots(2, 2, figsize=(7.5, 5.4), sharey=True,
+                             constrained_layout=True)
+    for ax, d in zip(axes.flat, ds):
+        plot_ler(ax, df[df.d == d], "p")
+        ax.set_xscale("log")
         ax.set_xticks(ps)
-        ax.set_xticklabels([f"{v:g}" for v in ps])
+        ax.set_xticklabels([f"{p:g}" if p in (0.01, 0.02, 0.04, 0.08, 0.15) else "" for p in ps])
         ax.set_xticks([], minor=True)
-
-    def _series(ax, s, dec, lw, ms):
-        """Plot a series; zero-error points become 95% upper-bound markers."""
-        y = s.logical_error_rate.to_numpy()
-        nz = y > 0
-        c = DEC_COLOR[dec]
-        if nz.any():
-            ax.plot(s.p.to_numpy()[nz], y[nz], "-o", color=c, lw=lw, ms=ms,
-                    label=DEC_LABEL[dec], zorder=5 if dec == "MWPM" else 3)
-            ax.fill_between(s.p.to_numpy()[nz], s.ler_ci_lo.to_numpy()[nz],
-                            s.ler_ci_hi.to_numpy()[nz], color=c, alpha=0.15, lw=0)
-        if (~nz).any():   # no logical errors observed -> plot the Wilson bound
-            ax.plot(s.p.to_numpy()[~nz], s.ler_ci_hi.to_numpy()[~nz], "v",
-                    color=c, mfc="white", ms=ms + 1.6, zorder=6,
-                    label=None if nz.any() else DEC_LABEL[dec])
-
-    # ---------------- Figure 1: threshold plot ----------------
-    fig, axes = plt.subplots(1, len(ds), figsize=(3.15 * len(ds), 3.3),
-                             sharey=True)
-    axes = np.atleast_1d(axes)
-    for ax, d in zip(axes, ds):
-        g = df[df.d == d]
-        for dec in decs:
-            s = g[g.decoder == dec].sort_values("p")
-            if not s.empty:
-                _series(ax, s, dec, 2.0 if dec == "MWPM" else 1.1, 3.2)
-        ax.set_xscale("log"); ax.set_yscale("log")
-        ax.set_xlabel("physical error rate $p$")
-        _pticks(ax)
-        ax.set_title(f"$d$={d}: " + _panel_claim(g, decs), fontsize=7.5,
-                     loc="left", pad=4)
-        ax.grid(alpha=0.25, lw=0.4)
-        ax.margins(0.07)
-    axes[0].set_ylabel("logical error rate per shot")
-    axes[0].text(0.04, 0.035, "lower = better", transform=axes[0].transAxes,
-                 fontsize=6.5, style="italic", color="#444444")
-    handles, labels = axes[-1].get_legend_handles_labels()
-    if (df.logical_error_rate <= 0).any():
-        handles.append(mpl.lines.Line2D([], [], marker="v", ls="none",
-                                        color="#111111", mfc="white", ms=5))
-        labels.append("no errors seen: 95% upper bound")
-    axes[-1].legend(handles, labels, frameon=False, loc="lower right",
-                    handlelength=1.6, borderpad=0.2, labelspacing=0.3)
-    fig.tight_layout()
-    fig.savefig("qec_threshold_fig.png", dpi=300, bbox_inches="tight")
+        ax.set_title(f"Distance {d}", loc="left")
+    for ax in axes[:, 0]:
+        ax.set_ylabel("Logical error rate per shot")
+    for ax in axes[-1]:
+        ax.set_xlabel("Physical error rate $p$")
+    handles, labels = axes[0, 0].get_legend_handles_labels()
+    if (df.logical_error_rate == 0).any():
+        handles.append(mpl.lines.Line2D([], [], marker="v", ls="none", color="#171717",
+                                      mfc="white", ms=5))
+        labels.append("Zero observed errors (95% upper limit)")
+    fig.legend(handles, labels, loc="outside lower center", ncol=3, frameon=False)
+    fig.savefig("qec_threshold_fig.png", dpi=300)
     plt.close(fig)
 
-    # ---------------- Figure 2: decoder comparison ----------------
-    p_star = ps[1] if len(ps) > 1 else ps[0]     # well below threshold
-    fig2, (axA, axB) = plt.subplots(1, 2, figsize=(7.4, 3.3))
+    p_star = 0.02
+    fig, (left, right) = plt.subplots(1, 2, figsize=(7.5, 3.9), constrained_layout=True)
+    plot_ler(left, df[df.p == p_star], "d")
+    left.set_xticks(ds)
+    left.set_xlabel("Code distance $d$")
+    left.set_ylabel("Logical error rate per shot")
+    left.set_title(r"a  Distance scaling at $p=0.02$", loc="left")
+    left.legend(loc="lower left", frameon=False, fontsize=7.2)
 
-    gA = df[df.p == p_star]
-    for dec in decs:
-        s = gA[gA.decoder == dec].sort_values("d")
-        if s.empty:
-            continue
-        y = s.logical_error_rate.to_numpy()
-        nz = y > 0
-        axA.plot(s.d.to_numpy()[nz], y[nz], "-o", color=DEC_COLOR[dec], lw=1.4,
-                 ms=4, label=DEC_LABEL[dec])
-        axA.fill_between(s.d.to_numpy()[nz], s.ler_ci_lo.to_numpy()[nz],
-                         s.ler_ci_hi.to_numpy()[nz], color=DEC_COLOR[dec],
-                         alpha=0.15, lw=0)
-        if (~nz).any():
-            axA.plot(s.d.to_numpy()[~nz], s.ler_ci_hi.to_numpy()[~nz], "v",
-                     color=DEC_COLOR[dec], mfc="white", ms=5.6, zorder=6)
-    axA.set_yscale("log"); axA.set_xticks(ds)
-    axA.set_xlabel("code distance $d$")
-    axA.set_ylabel("logical error rate per shot")
-    # Title must be true of EVERY plotted series: classify each decoder's
-    # behaviour across d at p_star, then pick a claim consistent with all of them.
-    MATCHERS = {"MWPM", "Greedy"}
-    improves, degrades = set(), set()
-    for dec in decs:
-        v = gA[gA.decoder == dec].sort_values("d").logical_error_rate.to_numpy()
-        if len(v) != len(ds):
-            continue
-        if np.all(np.diff(v) <= 1e-12) and v[-1] < v[0]:
-            improves.add(dec)
-        if v[-1] > v[0]:
-            degrades.add(dec)
-    matchers_here = MATCHERS & set(decs)
-    learned_here = set(decs) - MATCHERS
-    if improves == matchers_here and degrades == learned_here:
-        claim = "matching improves with distance;\nevery learned decoder degrades"
-    elif improves == {"MWPM"}:
-        claim = "only exact matching improves with distance"
-    elif improves >= matchers_here and not (improves & learned_here):
-        claim = "no learned decoder improves with distance"
-    else:
-        claim = "logical error rate versus code distance"
-    axA.set_title(f"at $p$={p_star:g}, " + claim, fontsize=7.5, loc="left", pad=4)
-    axA.grid(alpha=0.25, lw=0.4); axA.margins(0.10)
-    axA.legend(frameon=False, loc="lower left", handlelength=1.6,
-               borderpad=0.2, labelspacing=0.3)
+    risks = matching_validation["analytic_logical_error_rate_by_p"]
+    ps = sorted(map(float, risks))
+    rows = [risks[f"{p:g}"] for p in ps]
+    map_risk = np.array([row["logical_class_map"] for row in rows])
 
-    d_max = max(ds)
-    gB = df[(df.d == d_max) & (df.p == p_star)].copy()
-    gB = gB[gB.decoder.isin(decs)].sort_values("decode_sec_per_1k")
-    # stagger labels so the three near-degenerate points stay legible
-    offs = {"LogReg-PCA": (0, 9, "center"), "LogReg": (0, -14, "center"),
-            "VQC-PCA": (-8, 9, "right"), "MLP": (0, 9, "center"),
-            "Greedy": (0, -14, "center"), "MWPM": (-9, 2, "right")}
-    for _, s in gB.iterrows():
-        dec = s.decoder
-        y = float(s.logical_error_rate)
-        if y <= 0:
-            y = float(s.ler_ci_hi)
-        x = float(s.decode_sec_per_1k)
-        axB.scatter(x, y, s=54, color=DEC_COLOR[dec], zorder=4,
-                    edgecolor="white", lw=0.6)
-        dx, dy, ha = offs.get(dec, (7, 3, "left"))
-        axB.annotate(DEC_LABEL[dec], (x, y), textcoords="offset points",
-                     xytext=(dx, dy), fontsize=6.5, color=DEC_COLOR[dec], ha=ha)
-    axB.set_xscale("log"); axB.set_yscale("log")
-    axB.set_xlabel("decode time (s per 1000 shots)")
-    axB.set_ylabel("logical error rate per shot")
-    axB.set_title(f"accuracy against decode cost, $d$={d_max}, $p$={p_star:g}",
-                  fontsize=7.5, loc="left", pad=4)
-    axB.text(0.97, 0.06, "lower-left = better", transform=axB.transAxes,
-             ha="right", va="bottom", fontsize=6.5, style="italic",
-             color="#444444")
-    axB.grid(alpha=0.25, lw=0.4)
-    axB.set_xlim(2e-6, 4.0)
-    axB.set_ylim(2e-5, 1.6)
-    fig2.tight_layout()
-    fig2.savefig("qec_decoder_comparison_fig.png", dpi=300, bbox_inches="tight")
-    plt.close(fig2)
-    print("wrote qec_threshold_fig.png, qec_decoder_comparison_fig.png")
+    def excess(key):
+        return 100 * np.maximum(0, np.array([row[key] for row in rows]) - map_risk)
 
+    right.fill_between(ps, excess("min_across_mwpm_tie_choices"),
+                       excess("max_across_mwpm_tie_choices"), color="#0072b2", alpha=0.2,
+                       label="Range over valid MWPM tie choices")
+    right.plot(ps, excess("pymatching"), "--o", color="#171717", lw=1.4, ms=3,
+               label="PyMatching tie choice")
+    right.axhline(0, color="#007a59", lw=1.2, label="Exact logical MAP")
+    right.set_xticks([0.01, 0.05, 0.10, 0.15])
+    right.set_xlabel("Physical error rate $p$")
+    right.set_ylabel("Excess logical error (percentage points)")
+    right.set_title(r"b  Exact tie sensitivity at $d=3$", loc="left")
+    right.grid(alpha=0.24, lw=0.5)
+    right.legend(loc="upper left", frameon=False, fontsize=7.2)
+    fig.savefig("qec_decoder_comparison_fig.png", dpi=300)
+    plt.close(fig)
 
 # ============================================================================
 # main sweep
 # ============================================================================
-def load_config(d, p):
-    z = np.load(os.path.join(DATA_DIR, f"cfg_d{d}_p{p}.npz"))
-    n_det = int(z["n_detectors"])
-    det = np.unpackbits(z["det_packed"], axis=1, count=n_det, bitorder="little")
-    return det, z["obs"].astype(np.uint8), n_det
+def load_config(data_dir, d, p):
+    path = data_dir / f"cfg_d{d}_p{p}.npz"
+    with np.load(path, allow_pickle=False) as archive:
+        n_det = int(archive["n_detectors"])
+        packed, obs = archive["det_packed"], archive["obs"]
+        if (n_det != (d + 1) * (d - 1)
+                or obs.ndim != 1 or not np.isin(obs, (0, 1)).all()
+                or packed.shape != (len(obs), (n_det + 7) // 8) or packed.dtype != np.uint8):
+            raise ValueError(f"Invalid detector or logical-label arrays: {path}")
+        for field, expected in (("d", d), ("p", p), ("rounds", d)):
+            if field in archive and archive[field].item() != expected:
+                raise ValueError(f"Archive {field} differs from the manifest: {path}")
+        det = np.unpackbits(packed, axis=1, count=n_det, bitorder="little")
+        return det, obs.astype(np.uint8)
+
+
+def training_seen_mask(det_tr, det_te):
+    """Identify test syndromes recorded at least once in the training block."""
+    def packed_rows(det):
+        packed = np.packbits(det, axis=1, bitorder="little")
+        return packed.view(np.dtype((np.void, packed.shape[1]))).ravel()
+
+    observed = np.unique(packed_rows(det_tr))
+    return len(observed), np.isin(packed_rows(det_te), observed)
+
+
+def paired_errors(model_errors, ref_errors):
+    from scipy.stats import binomtest
+
+    n = min(len(model_errors), len(ref_errors))
+    model, ref = model_errors[:n], ref_errors[:n]
+    model_only = int(np.count_nonzero(model & ~ref))
+    ref_only = int(np.count_nonzero(ref & ~model))
+    discordant = model_only + ref_only
+    return dict(n_paired_shots=n, model_only_errors=model_only, ref_only_errors=ref_only,
+                ler_difference=(model_only - ref_only) / n,
+                mcnemar_p=binomtest(model_only, discordant, 0.5).pvalue if discordant else 1.0)
+
+
+def benchmark_config(data_dir, cfg, n_tr_pool, n_te_pool=None):
+    from sklearn.decomposition import PCA
+    from qec_matching import decode_greedy, decode_mwpm
+    from qec_posterior import ExactLogicalDecoder
+
+    d, p = cfg["d"], cfg["p"]
+    det, obs = load_config(data_dir, d, p)
+    if not 0 < n_tr_pool < len(obs) or (n_te_pool is not None and len(obs) != n_tr_pool + n_te_pool):
+        raise ValueError(f"Shot count differs from the manifest for d={d}, p={p:g}")
+    n_det = det.shape[1]
+    det_tr, det_te = det[:n_tr_pool], det[n_tr_pool:]
+    y_tr, y_te = obs[:n_tr_pool], obs[n_tr_pool:]
+    distinct_train, seen = training_seen_mask(det_tr, det_te)
+    n_common = min(VQC_MAX_TEST, len(y_te))
+    base = dict(d=d, p=p)
+    rows, errors, conditional = [], {}, {}
+
+    def add(name, kind, result, n_train):
+        pred, dt, npar = result
+        n = len(pred)
+        wrong = pred != y_te[:n]
+        errors[name] = wrong
+        errs = int(wrong.sum())
+        common_errs = int(wrong[:n_common].sum())
+        lo, hi = wilson_ci(errs, n)
+        rows.append(dict(decoder=name, kind=kind, **base,
+                         n_train_shots=n_train, n_test_shots=n,
+                         logical_error_rate=errs / n, ler_ci_lo=lo, ler_ci_hi=hi,
+                         decode_sec_per_1k=1000.0 * dt / n,
+                         n_params=npar, n_logical_errors=errs, n_detectors=n_det,
+                         n_common_test_shots=n_common, n_common_logical_errors=common_errs,
+                         common_logical_error_rate=common_errs / n_common))
+        mask = seen[:n]
+        n_seen = int(mask.sum())
+        conditional[name] = {
+            "n_seen": n_seen, "n_unseen": n - n_seen,
+            "n_errors_seen": int(wrong[mask].sum()),
+            "n_errors_unseen": int(wrong[~mask].sum()),
+        }
+
+    def timed_decode(decode, *args):
+        t0 = time.perf_counter()
+        pred = decode(*args)
+        return pred, time.perf_counter() - t0, 0
+
+    add("MWPM", "classical baseline", timed_decode(decode_mwpm, det_te, d), 0)
+    add("Greedy", "classical baseline", timed_decode(decode_greedy, det_te, d), 0)
+    oracle = ExactLogicalDecoder(d, p)
+    add("Exact-MAP", "model-informed control", timed_decode(oracle.predict, det_te), 0)
+    add("LogReg", "classical learned", run_logreg(det_tr, y_tr, det_te), len(det_tr))
+    add("MLP", "classical learned", run_mlp(det_tr, y_tr, det_te),
+        min(MLP_MAX_TRAIN, len(det_tr)))
+
+    pca = PCA(n_components=N_PCA, random_state=SEED)
+    pca.fit(det_tr[:100_000].astype(np.float32))
+    scores = pca.transform(det_tr[:VQC_MAX_TRAIN])
+    pca_state = pca, scores.mean(0), scores.std(0) + 1e-9
+    add("LogReg-PCA", "classical learned", run_logreg_pca(det_tr, y_tr, det_te, pca_state),
+        len(det_tr))
+    add("VQC-PCA", "hybrid quantum-classical", run_vqc(det_tr, y_tr, det_te, pca_state),
+        min(VQC_MAX_TRAIN, len(det_tr)))
+
+    pairs = [dict(**base, decoder=name, reference="MWPM", **paired_errors(wrong, errors["MWPM"]))
+             for name, wrong in errors.items() if name != "MWPM"]
+    pairs.append(dict(**base, decoder="MLP", reference="Exact-MAP",
+                      **paired_errors(errors["MLP"], errors["Exact-MAP"])))
+    coverage = dict(**base, n_detectors=n_det, possible_syndromes=1 << n_det,
+                    n_train_shots=len(det_tr), distinct_train=distinct_train,
+                    n_test_shots=len(det_te), n_test_seen=int(seen.sum()),
+                    test_seen_fraction=float(seen.mean()), decoder_counts=conditional)
+    pca_evr = dict(**base, evr6=float(pca.explained_variance_ratio_.sum()))
+    return rows, pairs, coverage, pca_evr
+
+
+def run_config(job):
+    from threadpoolctl import threadpool_limits
+
+    with threadpool_limits(limits=1):
+        return benchmark_config(*job)
+
+
+def publish_results(completed):
+    rows, pairs, coverage, evr = [], [], {}, {}
+    for config_rows, config_pairs, config_coverage, config_evr in completed:
+        rows.extend(config_rows)
+        pairs.extend(config_pairs)
+        key = f"d{config_coverage['d']}_p{config_coverage['p']:g}"
+        coverage[key] = config_coverage
+        evr[key] = config_evr
+
+    df = pd.DataFrame(rows)
+    df.to_csv(RESULTS_CSV, index=False)
+    paired = pd.DataFrame(pairs)
+    raw_p = paired.mcnemar_p.to_numpy()
+    order = np.argsort(raw_p)
+    adjusted = np.empty_like(raw_p)
+    adjusted[order] = np.minimum(1.0, np.maximum.accumulate(raw_p[order] * np.arange(len(order), 0, -1)))
+    paired["mcnemar_p_holm"] = adjusted
+    paired.to_csv("qec_paired_results.csv", index=False)
+    for path, data in (("qec_syndrome_coverage.json", coverage), ("qec_pca_evr.json", evr),
+                       ("qec_thresholds.json", fit_thresholds(df))):
+        Path(path).write_text(json.dumps(data, indent=2, allow_nan=False) + "\n")
+    print(f"wrote {len(df)} decoder results and {len(paired)} paired comparisons", flush=True)
+    return df
 
 
 def main():
-    with open(os.path.join(DATA_DIR, "manifest.json")) as fh:
-        man = json.load(fh)
-    n_tr_pool = man["n_train_shots"]
+    from qec_matching import validate_matching
+    from qec_posterior import validate_exact_posterior
 
-    val = validate_matching()
-    with open("qec_matching_validation.json", "w") as fh:
-        json.dump(val, fh, indent=2)
-    print(f"MWPM validation: {val['mwpm_matches_bruteforce']}/{val['n_trials']} "
-          f"instances match brute force; greedy optimal on "
-          f"{val['greedy_optimal_fraction']:.1%}", flush=True)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--workers", type=int, default=1, help="parallel configurations")
+    args = parser.parse_args()
+    if args.workers < 1:
+        parser.error("--workers must be positive")
 
-    from sklearn.decomposition import PCA
+    data_dir = Path(DATA_DIR).resolve()
+    manifest = json.loads((data_dir / "manifest.json").read_text())
+    n_train = manifest["n_train_shots"]
+    versions = {name: importlib.metadata.version(name) for name in
+                ("numpy", "pandas", "scipy", "scikit-learn", "pennylane", "matplotlib", "pymatching")}
+    provenance = dict(python=platform.python_version(), platform=platform.platform(), packages=versions,
+                      workers=args.workers, threadpool_limit=1, master_seed=manifest["master_seed"],
+                      n_train_pool=n_train, n_test_pool=manifest["n_test_shots"],
+                      common_test_prefix=min(VQC_MAX_TEST, manifest["n_test_shots"]))
+    matching_validation = validate_matching()
+    posterior_validation = validate_exact_posterior()
 
-    # resume: keep rows already computed for (decoder, d, p)
-    rows = []
-    done = set()
-    if os.path.exists(RESULTS_CSV):
-        prev = pd.read_csv(RESULTS_CSV)
-        rows = prev.to_dict("records")
-        done = {(r["decoder"], r["d"], r["p"]) for r in rows}
-        print(f"resuming: {len(rows)} rows already in {RESULTS_CSV}")
-
-    for cfg in man["configs"]:
-        d, p = cfg["d"], cfg["p"]
-        if ("MWPM", d, p) in done:
-            continue
-        det, obs, n_det = load_config(d, p)
-        n_stab = d - 1
-        det_tr, det_te = det[:n_tr_pool], det[n_tr_pool:]
-        y_tr, y_te = obs[:n_tr_pool], obs[n_tr_pool:]
-        base = dict(d=d, p=p, n_detectors=n_det)
-        print(f"\n=== d={d} p={p} ({n_det} detectors, "
-              f"{cfg['mean_defects_per_shot']:.1f} defects/shot) ===", flush=True)
-
-        def add(name, kind, res, n_train, extra=""):
-            errs, n, dt, npar = res[0], res[1], res[2], res[3]
-            lo, hi = wilson_ci(errs, n)
-            rows.append(dict(base, decoder=name, kind=kind, n_train_shots=n_train,
-                             n_test_shots=n, logical_error_rate=errs / n,
-                             ler_ci_lo=lo, ler_ci_hi=hi,
-                             decode_sec_per_1k=1000.0 * dt / n, n_params=npar,
-                             n_logical_errors=errs))
-            print(f"  {name:9s} LER={errs/n:.4e} [{lo:.2e},{hi:.2e}] "
-                  f"n_test={n} {1000*dt/n:.4f} s/1k params={npar} {extra}",
-                  flush=True)
-
-        add("MWPM", "classical baseline",
-            run_matching(det_te, y_te, n_stab, d, mwpm_predict, MWPM_TIME_BUDGET), 0)
-        add("Greedy", "classical baseline",
-            run_matching(det_te, y_te, n_stab, d, greedy_predict,
-                         GREEDY_TIME_BUDGET), 0)
-        add("LogReg", "neural", run_logreg(det_tr, y_tr, det_te, y_te), len(det_tr))
-        add("MLP", "neural", run_mlp(det_tr, y_tr, det_te, y_te),
-            min(MLP_MAX_TRAIN, len(det_tr)))
-
-        pca = PCA(n_components=N_PCA, random_state=SEED)
-        pca.fit(det_tr[:100_000].astype(np.float32))
-        Z = pca.transform(det_tr[:VQC_MAX_TRAIN])
-        pca_state = (pca, Z.mean(0), Z.std(0) + 1e-9)
-        evr = float(pca.explained_variance_ratio_.sum())
-        add("LogReg-PCA", "classical baseline",
-            run_logreg_pca(det_tr, y_tr, det_te, y_te, pca_state), len(det_tr),
-            extra=f"(control on the VQC's own features, EVR={evr:.3f})")
-        add("VQC-PCA", "hybrid quantum-classical",
-            run_vqc(det_tr, y_tr, det_te, y_te, pca_state),
-            min(VQC_MAX_TRAIN, len(det_tr)), extra=f"(PCA EVR={evr:.3f})")
-
-        pd.DataFrame(rows).to_csv(RESULTS_CSV, index=False)
-
-    df = pd.DataFrame(rows)
-    cols = ["decoder", "kind", "d", "p", "n_train_shots", "n_test_shots",
-            "logical_error_rate", "ler_ci_lo", "ler_ci_hi", "decode_sec_per_1k",
-            "n_params", "n_logical_errors", "n_detectors"]
-    df[cols].to_csv(RESULTS_CSV, index=False)
-    print(f"\nwrote {RESULTS_CSV}: {len(df)} rows")
-
-    thr = fit_thresholds(df)
-    with open("qec_thresholds.json", "w") as fh:
-        json.dump(thr, fh, indent=2)
-    make_figures(df, thr)
+    jobs = [(data_dir, cfg, n_train, manifest["n_test_shots"]) for cfg in manifest["configs"]]
+    completed = []
+    if args.workers == 1:
+        for job in jobs:
+            completed.append(run_config(job))
+            print(f"completed d={job[1]['d']} p={job[1]['p']:g}", flush=True)
+    else:
+        with ProcessPoolExecutor(max_workers=args.workers) as pool:
+            futures = {pool.submit(run_config, job): job for job in jobs}
+            for future in as_completed(futures):
+                job = futures[future]
+                completed.append(future.result())
+                print(f"completed d={job[1]['d']} p={job[1]['p']:g}", flush=True)
+    completed.sort(key=lambda result: (result[2]["d"], result[2]["p"]))
+    df = publish_results(completed)
+    make_figures(df, matching_validation)
+    for path, data in (("qec_matching_validation.json", matching_validation),
+                       ("qec_posterior_validation.json", posterior_validation),
+                       ("qec_run_metadata.json", provenance)):
+        Path(path).write_text(json.dumps(data, indent=2, allow_nan=False) + "\n")
 
 
 if __name__ == "__main__":

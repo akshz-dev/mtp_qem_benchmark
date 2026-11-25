@@ -3,27 +3,31 @@
 M.Tech thesis, Department of Computer Science and Engineering, Indian Institute of Technology Jodhpur.
 Author: Abhishek Kumar Singh (M23CSA503). Supervisor: Dr. Subhashish Banerjee.
 
-This repository holds the complete thesis: the LaTeX source, the compiled PDF, every analysis script, the generated datasets and the result tables quoted in the text. Every number in the thesis is traceable to a file in `results/`.
+This repository holds the thesis source and PDF, analysis scripts, generated datasets, and result tables. The reported experimental results trace to the archived files or the documented calculations.
 
 ## What the thesis does
 
-Quantum error mitigation is posed as supervised regression from noise-scaled expectation values (noise scales λ = 1, 2, 3) to the ideal expectation value. The dataset has 4500 circuit–observable pairs from two circuit families. Nine methods are compared on circuit-grouped folds using paired bootstrap tests, ten repeated splits and ten initialisation seeds:
+Quantum error mitigation is posed as supervised regression from three noise-scaled expectation values to the ideal expectation value. The reference dataset has 4500 circuit–observable pairs from two circuit families. Ten main methods are compared on circuit-grouped folds, with paired bootstrap intervals and ten repeated holdouts:
 
 - no mitigation;
 - linear, Richardson and exponential zero-noise extrapolation;
-- ridge regression, gradient-boosted trees and a neural network;
+- linear ridge, classical RBF kernel ridge, gradient-boosted trees and a neural network;
 - a fidelity quantum kernel and a data-reuploading variational circuit.
 
-The comparison runs under two noise regimes. Regime I is an idealized Markovian model. Regime II is a device-realistic model with inhomogeneous rates, coherent error, crosstalk, unitary folding, and non-Markovian memory from a two-level-system defect. A second track compares six syndrome decoders, one of them hybrid, against exact minimum-weight perfect matching on the repetition code.
+The two kernels receive identical inputs and four grouped inner folds. Each fits
+feature scaling within each inner training fold and selects by mean validation
+R² from 60 full-grid or 24 reduced-grid candidates. The outer holdout and tuned
+parameters are recorded alongside the comparison. The separate VQC study varies
+ten initialisation seeds.
 
-Headline results (from the abstract; full tables in Appendix B):
+The comparison runs under two noise regimes. Regime I is an idealized Markovian model. Regime II is a device-inspired simulator with inhomogeneous rates, coherent error, crosstalk, unitary folding, and an explicit two-level environment that can retain memory. A second track benchmarks seven repetition-code syndrome decoders, including minimum-weight perfect matching on the physical detector graph, an exact logical-class posterior control, and a hybrid variational circuit.
 
-- In-distribution, the three strongest learned methods (RMSE 0.0412–0.0436) remove 41–44% of the error left by the best extrapolation (0.0737).
-- The quantum kernel is tied with a classical neural network (0.0425 ± 0.0012 against 0.0426 ± 0.0009) at higher circuit cost. With untuned bandwidth it is 47% worse than no mitigation.
-- On deeper circuits the neural and quantum models are worse than no mitigation, because depth and gate count fall outside the training range. Without those inputs, every learned method beats no mitigation.
-- Unitary folding halves the kernel's margin over linear extrapolation (38% to 18%).
-- A shot-estimated kernel needs about 3 × 10⁸ circuit executions per mitigated value to approach its simulator accuracy.
-- In decoding, exact matching wins 33 of 40 configurations.
+Selected results from the mitigation tables in Appendix B and the decoding tables in Chapter 6.
+
+- On the idealized random held-out split, classical RBF kernel ridge reaches 0.0404 RMSE, the fidelity kernel reaches 0.0421, and linear extrapolation reaches 0.0737. On deeper circuits, RBF and fidelity reach 0.0658 and 0.1433.
+- On the realistic reference random holdout, RBF and fidelity reach 0.0622 and 0.0622 under parameter scaling and 0.0762 and 0.0757 under folding. On the reference depth split, the paired comparison favours RBF under parameter scaling and includes zero under folding.
+- On the parameter-scaled random holdout, R4 fits PSD repair inside each grouped fold. At 100,000 shots per entry it reaches 0.0658 RMSE versus 0.0629 for the corresponding exact-Gram fit, with 3.15 × 10⁸ additional fidelity executions per prediction.
+- At distance 3 and physical error rate 0.15, the logical error rates are 25.6485% for PyMatching, 23.8735% for the MLP, and 23.7845% for exact logical-class decoding. At distance 3, optimal matching tie choices attain the exact posterior risk at each sampled error rate.
 
 All results are simulated. The decoding track uses the repetition code under phenomenological noise in place of the surface code under circuit-level noise; Chapter 6 states the consequences.
 
@@ -32,8 +36,7 @@ All results are simulated. The decoding track uses the repetition code under phe
 ```
 Thesis.tex              master file: metadata macros and package preamble
 Thesis.pdf              compiled thesis
-chapters/               chapter1.tex … chapter7.tex, publications.tex,
-                        refs.bib (72 entries, each verified; see results/reference_audit.csv)
+chapters/               chapter1.tex … chapter7.tex and refs.bib
 preliminaryPages/       cover, declaration, certificate, abstract, acknowledgements,
                         dedication, list of symbols (nomencl), list of abbreviations (acronym)
 appendices/             A derivations, B complete result tables, C source listings
@@ -47,7 +50,7 @@ requirements.txt        pinned Python environment
 
 ## Building the PDF
 
-The template uses `fontspec`, so compile with LuaLaTeX (XeLaTeX also works).
+The layout follows the public [IIT Jodhpur M.Tech. project report guide](https://www.iitj.ac.in/PageImages/Gallery/03-2025/Guidelines-for-submission-of-Project-Report-for-MTech-Students-638771979333235810.pdf). Compile with LuaLaTeX or XeLaTeX. The preamble uses Times New Roman when available and falls back to TeX Gyre Termes. Install Times New Roman or supply it to the compiler if you need to reproduce the included PDF's typeface.
 
 On **Overleaf**, set *Menu → Compiler* to LuaLaTeX and recompile. Overleaf runs BibTeX and the nomenclature index automatically.
 
@@ -73,18 +76,20 @@ The cover page takes the submission month from the compile date (`\today` in `pr
 
 ### Environment
 
-Python 3.12 with the versions in `requirements.txt` (the same versions as Table 4.1.1 of the thesis):
+The reproduction environment uses Python 3.12.10 and the versions pinned in `requirements.txt` and recorded in Chapter 4.
 
 ```bash
 python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-All scikit-learn searches run single-threaded (`n_jobs=1`). Everything is seeded: dataset 20260912, shot noise 20260913, models 7.
+The benchmark records dataset, shot and model seeds. Set numerical-library thread
+limits for comparable runtime and record the worker count if running configurations
+concurrently.
 
 ### Working directory
 
-The scripts read their inputs from, and write their outputs to, the current working directory. Run them in a scratch directory that holds copies of the code, data and results, then copy the outputs you want to keep back into `data/`, `results/` or `figures/`:
+The older benchmark scripts use the current working directory for inputs and outputs. The Regime I and Regime II commands below start in a scratch directory with copies of the code, data, and results. Later commands that use `code/`, `data/`, and `results/` paths start from the repository root and give the driver a scratch output directory.
 
 ```bash
 mkdir -p run && cp code/*.py data/* results/* run/ && cd run
@@ -96,9 +101,7 @@ mkdir -p run && cp code/*.py data/* results/* run/ && cd run
 
 ```bash
 python gen_data.py                                   # benchmark_data.csv (900 circuits, n = 5)
-python simulate.py --noise-mult 0.5 --out ds_noise0.5x.csv
-python simulate.py --noise-mult 2.0 --out ds_noise2.0x.csv
-python simulate.py --noise-mult 4.0 --out ds_noise4.0x.csv
+python noise_sweep_data.py --outdir . --workers 4      # E1 datasets and metadata at 0.5x, 1x, 2x and 4x
 python simulate.py --wires 4 --out ds_q4.csv
 python simulate.py --wires 6 --out ds_q6.csv
 python bench.py                                      # benchmark_results.csv, breakdown, predictions
@@ -106,11 +109,31 @@ python bandwidth_study.py                            # bandwidth_study.csv
 python experiments.py                                # sweep_results.csv (E1–E7)
 python followups.py                                  # followup_results.csv, followup_paired.csv
 python vqc_seeds.py                                  # vqc_seed_sweep.csv
-python robustness.py --config ideal                  # robust_splits_ideal.csv, robust_pairs_ideal.csv
 python make_figures.py --outdir ../figures/ch5
 ```
 
-### Regime II: device-realistic, non-Markovian benchmark (Sections 5.13–5.18)
+E1 uses one 500-circuit pool and the same seed-7 circuit-grouped holdout and
+reduced tuning budget at all four noise multipliers. The generator draws
+circuit parameters from seed 20260912 and uses a separate shot seed, 20260913,
+with an independent child stream for each multiplier. Every E1 dataset,
+including 1x, uses that pool. The metadata records the circuit signature
+alongside the seeds.
+
+E1's unmitigated RMSE rises from 0.0621 at 0.5x to 0.1960 at 4x. The
+classical RBF kernel's reduction relative to unmitigated RMSE narrows
+from 59.6% to 24.6%.
+
+To rerun just E1 in the scratch directory, generate the four datasets as shown
+above and run `python experiments.py --noise-strength-only --workers 4`.
+This replaces the E1 rows in the scratch copies of `sweep_results.csv` and
+`paired_kernel_sweeps.csv`.
+
+The idealized main run, sweeps and follow-ups record their direct paired kernel
+contrasts in `paired_kernel_main.csv`, `paired_kernel_sweeps.csv`, and
+`paired_kernel_followups.csv`. Positive RBF-minus-fidelity differences favour
+the fidelity fit. The VQC-only seed panel reports its separate diagnostic runs.
+
+### Regime II: device-realistic, non-Markovian benchmark (Sections 5.13–5.19)
 
 Four paired datasets share circuits and ideal values exactly:
 
@@ -121,27 +144,108 @@ Four paired datasets share circuits and ideal values exactly:
 
 A against R isolates memory; A against M also removes the defect's energy loss. Each generator writes a `circuit_signature` and an `ideal_signature` into its metadata, and `experiments_realistic.py` refuses to run unless all four agree.
 
+Within each dataset, parameter scaling and unitary folding share the same
+4096-shot scale-1 estimate (`noisy_l1` equals `fold_l1`). Each protocol uses two
+additional settings, for five settings and 20,480 shots per circuit–observable
+pair in the joint comparison. `fold_ratio_l1` through `fold_ratio_l3` record
+the ratios of executed to original layers. Folded ZNE uses these ratios,
+including middle coordinates of 7/3 at depth 3 and 9/5 at depth 5.
+The ratios measure circuit length. The noise response depends on the
+simulated device model.
+
+The corrected repository datasets reuse the existing parameter-scale
+native shot estimates and retain the higher-scale measurements. To apply
+this correction to an archived dataset with its matching metadata file
+alongside it, use
+`python simulate_realistic.py --migrate-existing archived/ds_real_A.csv --out ds_real_A.csv`.
+
 ```bash
 python simulate_realistic.py --out ds_real_A.csv
 python simulate_realistic.py --drift 0.30 --out ds_real_B.csv
 python simulate_realistic.py --markovian --out ds_real_M.csv
 python simulate_realistic.py --tls-reset --out ds_real_R.csv
 python test_folding.py                               # noise-free check: folding leaves <O> unchanged
+python -m unittest test_folded_zne.py                 # realised scales and analytic baselines
 python nonmarkov_check.py --fig ../figures/ch5/fig_ch5_nonmarkov.png
 python experiments_realistic.py                      # sweep_realistic.csv, paired_realistic.csv
-for c in real_param real_fold real_reset_param real_reset_fold; do python robustness.py --config $c; done
+python robustness.py --config all --workers 4         # five configurations and robustness_summary.csv
 python make_figures_realistic.py --outdir ../figures/ch5
 ```
 
-Shot-limited kernel diagnosis (Section 5.17):
+To rerun R1–R3 while retaining the completed R4 study, start with the existing
+`sweep_realistic.csv` in the scratch directory and run
+`python experiments_realistic.py --workers 4 --reuse-shot-results sweep_realistic.csv`.
+The `--config all` robustness command also rebuilds the combined summary.
+
+The RBF comparisons are paired on the same held-out observations in R1–R3.
+The finite-shot R4 plot uses the R1 parameter-scaling RBF fit on the same holdout
+as a cost reference and labels its separate tuning grid.
+The reference scaling comparison is reported in the thesis and in
+`results/sweep_realistic.csv` and `results/paired_realistic.csv`.
+`results/claims_audit.csv` records an earlier review of the thesis.
+`results/reference_audit.csv` records how each bibliography entry was verified.
+
+#### Circuit-pool and shot replication
+
+The production scaling comparison also crosses three independently generated
+900-circuit pools with three shot draws per pool, using 4096 shots per
+circuit–observable pair and setting. Each cell uses its own stream from
+`SeedSequence([shot_seed, circuit_seed])` and shares the native shot estimate
+between parameter scaling and folding. Both protocols use the seed-7
+grouped 70/30 holdout and the depth holdout, with training at depth ≤ 4 and
+testing at depth ≥ 5. The kernels tune on the same four grouped inner folds
+with 24 candidates each. The simulated production calibration is fixed across
+cells.
+
+The repository includes `data/fold_pool_*.csv` and their metadata. To
+regenerate the exact pools in the scratch directory, run:
 
 ```bash
-python diag_shotkernel_alpha.py                      # diag_shotkernel.csv
-python diag_shotkernel_finegrid.py                   # diag_finegrid.csv
+for circuit_seed in 2026112501 2026112502 2026112503; do
+    python simulate_realistic.py --circuit-seed "$circuit_seed" --shots 0 \
+        --per-family 450 --workers 3 --out "fold_pool_${circuit_seed}.csv"
+done
+```
+
+Then rerun the fits and plot the contrasts:
+
+```bash
+python folding_seed_robustness.py --pool fold_pool_2026112501.csv \
+    --pool fold_pool_2026112502.csv --pool fold_pool_2026112503.csv \
+    --shot-seeds 2026112511 2026112512 2026112513 --output . --workers 6
+MPLBACKEND=Agg python make_figures_realistic.py --folding-seed-pairs folding_seed_pairs.csv \
+    --outdir ../figures/ch5
+```
+
+`results/folding_seed_scores.csv` records the cell scores and tuning choices.
+`results/folding_seed_pairs.csv` reports paired intervals from test circuits
+within each cell. `folding_seed_summary.csv` gives the range across cells
+and across circuit-pool means. `folding_seed_pool_summary.csv` gives the
+spread across shot draws within each pool, and `folding_seed_metadata.json`
+records the seeds, partitions and budget. Cells from one pool share circuits,
+so counts of resolved intervals describe the nine observed combinations.
+
+#### Finite-shot fidelity on the parameter-scaled random holdout
+
+To rerun R4, use a scratch directory
+containing `ds_real_A.csv` and the existing `sweep_realistic.csv`. Each grouped
+fold fits its own feature scaler and PSD repair on its training data. The fitted
+positive eigenspace projects that fold's validation cross-kernel. The final fit
+and held-out test use the same rule with the outer training set. The results
+separate fidelity executions for tuning, the final fit and test, and one new
+prediction.
+
+```bash
+python experiments_realistic.py --shot-only --workers 4
 python summarise_shot_kernel_diag.py                 # shot_kernel_alpha_diagnosis.csv
 ```
 
-Regenerate the realistic-regime parts of Appendix B from `results/` (run from the repository root):
+The penalty summary compares the 12-point primary grid and a nested 23-point
+grid on the same simulated shot draws. Both select the penalty by grouped
+validation. Regenerate the plot with `make_figures_realistic.py` alongside the
+other realistic figures.
+
+Regenerate the mitigation tables in Appendix B from `results/` (run from the repository root):
 
 ```bash
 python code/make_appendixB.py .
@@ -149,18 +253,41 @@ python code/make_appendixB.py .
 
 ### Syndrome decoding (Chapter 6)
 
+From the repository root, start with a fresh scratch directory.
+
 ```bash
-python qec_gen_data.py                               # qec_data/ (repetition code, phenomenological noise)
-python qec_bench.py                                  # qec_decoder_results.csv, qec_thresholds.json, figures
+repo_root=$PWD
+mkdir -p "$repo_root/run"
+qec_run=$(mktemp -d "$repo_root/run/qec.XXXXXX")
+(
+  cd "$qec_run"
+  python "$repo_root/code/qec_gen_data.py"
+  OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 \
+    MKL_NUM_THREADS=1 python "$repo_root/code/qec_bench.py" --workers 8
+)
 ```
 
-`qec_data/` is regenerated by `qec_gen_data.py` and is not committed.
+The sweep generates all 40 distance and noise-rate configurations. The scratch
+directory holds the raw `qec_data/`, the per-decoder and paired result CSVs,
+coverage, PCA, threshold, validation and run-metadata JSONs, and both figure PNGs.
+Copy the result files and figures to the repository with:
+
+```bash
+cp "$qec_run"/qec_*.csv "$qec_run"/qec_*.json results/
+cp "$qec_run"/qec_*.png figures/ch6/
+```
+
+The files under `results/` record each arm's test-shot count, logical error count,
+the shared 50,000-shot prefix, and paired tests using each pair's largest common
+prefix. The run uses PyMatching 2.4.0, with the exact Python and package versions
+recorded in `qec_run_metadata.json`. The earlier `results/claims_audit.csv` preserves
+the audit of the pre-correction thesis. Chapter 6 uses the updated QEC results.
 
 **Note on random streams.** `simulate_realistic.py` uses separate generators for circuit parameters and for shot noise. Do not merge them. NumPy's binomial sampler consumes a variable number of underlying draws, so a shared stream makes the circuit sequence depend on the noise configuration and silently breaks the paired design.
 
 ## Using your own measurements
 
-Every script downstream of data generation consumes a flat table with these columns:
+`bench.py` reads `benchmark_data.csv` from its working directory. The input schema includes the following columns.
 
 | column | meaning |
 |---|---|
@@ -172,7 +299,21 @@ Every script downstream of data generation consumes a flat table with these colu
 | `noisy_l1`, `noisy_l2`, `noisy_l3` | measured expectation values at noise scales 1, 2, 3 |
 | `ideal` | reference (noise-free) expectation value |
 
-Hardware measurements written into this schema run through `bench.py` and `experiments.py` unchanged. The `ideal` column requires a classically simulable reference: a simulable circuit, a near-Clifford replacement as in Clifford data regression, or an analytically known observable.
+Use a valid circuit grouping and an ideal target for each circuit–observable pair. An ideal target can come from a simulable circuit or an analytically known result. `experiments.py` also expects the companion datasets for its sweeps. The folding experiments use the executed folding ratios in addition to the shared inputs. A hardware evaluation would need to acquire its own measured features and define the corresponding training targets and shot accounting.
+
+## Tests
+
+Run from `code/` with that directory on `PYTHONPATH`; each script exits with status 0 on success.
+
+```bash
+cd code && export PYTHONPATH=$PWD
+python test_folding.py                        # noise-free check: folding leaves <O> unchanged
+python -m unittest test_folded_zne.py         # realised scales and analytic baselines
+python test_folding_seed_robustness.py        # shared splits and pair summaries of the pool replication
+python test_kernel_depth_tuning.py            # grouped tuning helpers of both kernel regressors
+python test_noise_strength_sweep.py           # noise-sweep datasets and grouped folds
+python test_shot_kernel.py                    # shot-estimated fidelity kernel and PSD repair
+```
 
 ## Citation
 
@@ -188,4 +329,4 @@ Hardware measurements written into this schema run through `bench.py` and `exper
 
 ## Template and copyright
 
-The LaTeX layout follows the unofficial IIT Jodhpur thesis template by Chandan Mukherjee, distributed under CC BY-NC-SA 3.0; the template-derived files carry that licence. All other content (text, code, data and results) is © 2026 Abhishek Kumar Singh, all rights reserved.
+The LaTeX layout adapts the unofficial IIT Jodhpur thesis template by Chandan Mukherjee to the public M.Tech. project report guide. The template-derived files retain their CC BY-NC-SA 3.0 licence. All other content (text, code, data and results) is © 2026 Abhishek Kumar Singh, all rights reserved.

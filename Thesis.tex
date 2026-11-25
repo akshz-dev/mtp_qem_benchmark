@@ -10,25 +10,33 @@
 %% or simply:  latexmk -lualatex Thesis.tex
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\documentclass[11pt, openright, twoside]{report}
+\documentclass[12pt,a4paper,oneside,openany]{report}
 \usepackage{subfiles}
 \usepackage[nohyperlinks]{acronym}
 \usepackage{graphicx}
 \usepackage{hyperref}
 \hypersetup{hidelinks}          % links stay clickable; no red/green boxes
-\usepackage[T1]{fontenc}
-\usepackage{geometry}
+\usepackage[a4paper,top=1in,bottom=1in,left=0.75in,right=0.75in]{geometry}
 \usepackage{chngcntr}
 \counterwithin{table}{section}
 \counterwithin{figure}{section}
-\usepackage{afterpage}
-\usepackage[export]{adjustbox}
 \usepackage{datetime}
 \usepackage{setspace}
 \usepackage{booktabs}
 \usepackage{multicol}
 \usepackage{multirow}
 \usepackage{fontspec}
+\IfFontExistsTF{Times New Roman}
+  {\setmainfont{Times New Roman}}
+  {\IfFileExists{/System/Library/Fonts/Supplemental/Times New Roman.ttf}
+     {\setmainfont[
+       Path=/System/Library/Fonts/Supplemental/,
+       BoldFont={Times New Roman Bold.ttf},
+       ItalicFont={Times New Roman Italic.ttf},
+       BoldItalicFont={Times New Roman Bold Italic.ttf}
+      ]{Times New Roman.ttf}}
+     {\setmainfont{TeX Gyre Termes}
+      \PackageWarningNoLine{Thesis}{Times New Roman unavailable; using TeX Gyre Termes}}}
 \usepackage{tocbibind}
 \usepackage{nomencl}
 \usepackage{etoolbox}
@@ -36,6 +44,7 @@
 
 %%%%%%%%%%%% packages added for this thesis %%%%%%%%%%%%
 \usepackage{amsmath}          % equation environments, \text in math
+\numberwithin{equation}{section}
 \usepackage{amssymb}          % \mathbb, \lesssim
 \usepackage{braket}           % Dirac notation: \ket, \bra, \braket
 \usepackage{siunitx}          % aligned numeric columns in result tables
@@ -44,7 +53,7 @@
 \usepackage{listings}         % code listings in Appendix C
 \usepackage{xcolor}
 \usepackage{caption}
-\captionsetup{font=small}
+\captionsetup{font=small,justification=centering,singlelinecheck=false}
 \sisetup{round-mode=places, round-precision=4, table-format=1.4}
 
 \lstdefinestyle{thesiscode}{
@@ -63,33 +72,21 @@
 %%%%%%%%%%%%%%%%%%%%  Format for new dates  %%%%%%%%%%%%%%%%
 \newdateformat{monthyeardate}{%
   \monthname[\THEMONTH], \THEYEAR}
-\newcommand\myemptypage{
-    \null
-    \thispagestyle{empty}
-    \newpage
-    }
-
-\newgeometry{
-	paper=a4paper,
-        total={210mm,297mm },
-	inner=3.23cm, % Inner margin
-	outer=1.5cm,  % Outer margin
-	bindingoffset=.5cm,
-	top=2.5cm,
-	bottom=2.5cm,
-}
-\usepackage{setspace}
-\setstretch{1.5}
+\onehalfspacing
+\setlength{\emergencystretch}{2em}
 \usepackage[explicit]{titlesec}
 
-% %%%%%%%%% formatting the chapters  %%%%%%%
 \titleformat{\chapter}[display]
-{\fontsize{27}{27}\sffamily\bfseries\filleft}{\hfil \thechapter}{0pt}{{#1}}
+  {\normalfont\bfseries\centering\fontsize{16}{19}\selectfont}
+  {\chaptertitlename\ \thechapter}{0.5em}{\MakeUppercase{#1}}
 
-%%%%%%%%% formatting the sections  %%%%%%
-\titleformat{\section}{\Large\bfseries\sffamily}{\thesection}{0.5em}{\MakeUppercase{#1}}
-\titleformat{\subsection}{\large\bfseries\sffamily}{\thesubsection}{0.5em}{\MakeUppercase{#1}}
-\titleformat{\subsubsection}{\sffamily}{\thesubsubsection}{0.5em}{\MakeUppercase{#1}}
+\titleformat{\section}
+  {\normalfont\bfseries\fontsize{14}{17}\selectfont}
+  {\thesection}{0.5em}{\MakeUppercase{#1}}
+\titleformat{\subsection}
+  {\normalfont\itshape}{\thesubsection}{0.5em}{#1}
+\titleformat{\subsubsection}
+  {\normalfont\itshape}{\thesubsubsection}{0.5em}{#1}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% THESIS METADATA: THE SEVEN MACROS BELOW %%%%%%%%
@@ -113,32 +110,24 @@ for Quantum Error Mitigation and Syndrome Decoding}
 \makeatother
 
 \begin{document}
-\include{preliminaryPages/coverPage}
-\myemptypage
+\pagestyle{plain}
 \pagenumbering{roman}
-\setcounter{page}{3}
+\include{preliminaryPages/coverPage}
 \include{preliminaryPages/declaration}
-\myemptypage
 \include{preliminaryPages/certificate}
-\myemptypage
 \include{preliminaryPages/abstract}
-\myemptypage
 \include{preliminaryPages/acknowledgments}
-\myemptypage
-\include{preliminaryPages/dedication}   %%%% Optional %%%%%
-\begin{flushright}
+\include{preliminaryPages/dedication}
 \tableofcontents
-\clearpage
 \listoffigures
 \listoftables
+\begingroup
 \include{preliminaryPages/nomenclature}
 \include{preliminaryPages/abbreviation}
-\end{flushright}
+\endgroup
 
-% resume page numbering for the rest of the document
 \clearpage
 \pagenumbering{arabic}
-\setcounter{page}{1}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% Chapter 1 (Introduction)
@@ -191,7 +180,8 @@ for Quantum Error Mitigation and Syndrome Decoding}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Bibliography
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\bibliographystyle{unsrt}
+\clearpage
+\bibliographystyle{ieeetr}
 \bibliography{chapters/refs}
 
 %----------------------------------------------------------------------------------------

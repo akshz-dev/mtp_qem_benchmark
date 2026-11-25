@@ -1,5 +1,5 @@
-# Python environment used for every result in the thesis (Table 4.1.1).
-# Python 3.12.14
+# Reproduction environment for the revised benchmarks.
+# Python 3.12.10
 pennylane==0.45.1
 numpy==2.5.3
 scipy==1.18.1
@@ -7,3 +7,6 @@ pandas==3.0.5
 scikit-learn==1.9.1
 matplotlib==3.11.1
 networkx==3.6.1
+pymatching==2.4.0
+autograd==1.8.0
+threadpoolctl==3.8.0

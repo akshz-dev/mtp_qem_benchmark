@@ -69,5 +69,13 @@
   "scaling_methods": [
     "parameter scaling (noisy_l*)",
     "layer-level unitary folding (fold_l*)"
-  ]
+  ],
+  "fold_ratio_columns": [
+    "fold_ratio_l1",
+    "fold_ratio_l2",
+    "fold_ratio_l3"
+  ],
+  "fold_ratio_definition": "executed layers / original layers",
+  "native_shots_shared": true,
+  "folding_data_provenance": "existing native parameter-scale shot estimate"
 }

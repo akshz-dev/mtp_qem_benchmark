@@ -1,19 +1,15 @@
 {
+  "generator": "paired_noise_strength_v1",
   "wires": 5,
-  "noise_mult": 4.0,
   "base_noise": {
     "p1": 0.002,
     "p2": 0.02,
     "gamma": 0.004
   },
-  "effective_noise": {
-    "p1": 0.008,
-    "p2": 0.08,
-    "gamma": 0.016
-  },
   "per_family": 250,
   "shots": 4096,
-  "seed": 20260912,
+  "circuit_seed": 20260912,
+  "shot_seed": 20260913,
   "lambdas": [
     1.0,
     2.0,
@@ -27,5 +23,16 @@
     6
   ],
   "n_circuits": 500,
-  "n_rows": 2500
+  "n_rows": 2500,
+  "circuit_signature": "48ff71dcfbff4510e915e24a9631c70ec37319208440d6d7981c4189bcfdb6af",
+  "ideal_signature": "6aee383b11fab83322dd3e6439c60a7e83aa702e9662d7bfab6d621a3f8eec6b",
+  "noise_mult": 4.0,
+  "effective_noise": {
+    "p1": 0.008,
+    "p2": 0.08,
+    "gamma": 0.016
+  },
+  "shot_spawn_key": [
+    3
+  ]
 }

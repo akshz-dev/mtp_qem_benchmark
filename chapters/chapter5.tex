@@ -1,56 +1,32 @@
 %%%%%%%%%%%%%%%%%%%%%---Chapter5 Formatting---%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \documentclass[Thesis.tex]{subfiles}
 \begin{document}
-\newpage
 \setcounter{chapter}{4} %%Chapter Numbering
 
-\titleformat{\chapter}[display]
-{\sffamily\fontsize{27}{27}\bfseries\filleft}{\thechapter}{0pt}{{#1}}
 
-\thispagestyle{empty}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Results: Error Mitigation Benchmark}\label{chap5:results}
 
-This chapter reports the mitigation benchmark in two parts.
-Sections~\ref{sec:ch5_main}--\ref{sec:ch5_summary} report the idealized Markovian
-regime of Section~\ref{sec:ch3_noise}: the main nine-arm comparison, the bandwidth
-study, the five sweeps and the two out-of-distribution experiments. This is the
-regime in which the machine-learning mitigation literature reports its results, so
-it is the part of the thesis that is directly comparable to prior work.
-Sections~\ref{sec:ch5_nonmarkov}--\ref{sec:ch5_realistic_summary} then report the
-device-realistic non-Markovian regime of Section~\ref{sec:ch3_realistic}: the
-verification that the noise model really does carry memory, the comparison of the
-two noise-scaling methods, the Markovian control, the calibration-drift experiment,
-and the shot-resolved cost of the hybrid arm. Where the two regimes disagree the
-realistic one should be believed; Section~\ref{sec:ch5_realistic_summary} states
-which conclusions survive and which do not.
+Sections~\ref{sec:ch5_main}--\ref{sec:ch5_summary} evaluate mitigation under
+idealised Markovian noise, including bandwidth sensitivity, feature ablations
+and depth and circuit-family transfer. Sections~\ref{sec:ch5_nonmarkov}--
+\ref{sec:ch5_realistic_summary} use the device-informed model to compare scaling
+protocols, test defect and drift controls, and evaluate the accuracy and circuit
+cost of finite-shot fidelity kernels.
 
-Section~\ref{sec:ch5_main} gives the
-main nine-arm comparison on in-distribution and depth-extrapolated test sets;
-Section~\ref{sec:ch5_bandwidth} isolates the effect of quantum-kernel bandwidth;
-Sections~\ref{sec:ch5_noise}--\ref{sec:ch5_ablation} report the noise-strength,
-shot-budget, system-size, learning-curve and feature-ablation sweeps; and
-Sections~\ref{sec:ch5_bounded} and~\ref{sec:ch5_transfer} report the two
-out-of-distribution experiments. Section~\ref{sec:ch5_cost} collects the
-cost accounting, Section~\ref{sec:ch5_robustness} tests whether the headline
-comparisons survive repeated train/test splits, repeated initialisation and the
-removal of out-of-range inputs, and Section~\ref{sec:ch5_summary} summarizes.
-
-All errors are RMSE against the ideal expectation value with $95\%$ bootstrap
-confidence intervals resampled over test circuits. Error reduction is quoted
-relative to the unmitigated estimator on the same fold, so a negative value means
-the method is worse than performing no mitigation at all. Whether two methods differ
-is decided by a paired, circuit-grouped bootstrap on the difference of their RMSEs
-(Section~\ref{sec:ch3_metrics}), not by whether their marginal intervals overlap: two
-methods scored on the same test circuits have correlated errors, so overlapping
-marginal intervals can hide a resolved difference and disjoint ones overstate the
-evidence. A difference is called \emph{resolved} when its $95\%$ paired interval
-excludes zero. Complete tables for every experiment are in Appendix~\ref{AppendixB}.
+Unless stated otherwise, error is RMSE against the ideal expectation value.
+Negative error reduction indicates higher RMSE than the unmitigated estimator.
+Within a fitted split, the $95\%$ bootstrap resamples whole test circuits and
+pairs the methods' errors on the same circuits (Section~\ref{sec:ch3_metrics}).
+Replications across independently generated pools report nominal intervals over
+the paired pool means. A difference is called \emph{resolved} when its paired
+interval excludes zero. Appendix~\ref{AppendixB} gives numerical tables and
+the files containing the replications.
 
 \section{Main benchmark}\label{sec:ch5_main}
 
-Table~\ref{tab:ch5_main} and Figure~\ref{fig:ch5_main} report all nine arms on
+Table~\ref{tab:ch5_main} and Figure~\ref{fig:ch5_main} report all ten arms on
 Split~A ($3150$ training rows, $1350$ test rows, grouped by circuit) and Split~B
 ($2700$ training rows at depth $\leq 4$, $1800$ test rows at depth $\geq 5$).
 
@@ -60,11 +36,8 @@ Split~A ($3150$ training rows, $1350$ test rows, grouped by circuit) and Split~B
 bootstrap confidence intervals; error reduction relative to the unmitigated
 estimator on the same fold. Arms are ordered by Split~A error. Negative error
 reduction means the method is worse than no mitigation. All values are for the
-single reference split (seed 7). The data-reuploading VQC row is one initialisation
-(seed 7); over ten initialisation seeds its Split~A error is $0.0935 \pm 0.0327$
-(range $0.0557$--$0.1511$) and its Split~B error $0.3034 \pm 0.0938$ (range
-$0.1827$--$0.4900$), so the tabulated values are the best and the worst seed
-respectively (Section~\ref{sec:ch5_robustness}).}
+single reference fit. Section~\ref{sec:ch5_robustness} reports a separate
+ten-seed VQC study.}
 \label{tab:ch5_main}
 \small
 \begin{tabular}{llcccc}
@@ -75,15 +48,16 @@ respectively (Section~\ref{sec:ch5_robustness}).}
 \textbf{Method} & \textbf{Family} & \textbf{RMSE (95\% CI)} & \textbf{Red.\ \%}
 & \textbf{RMSE} & \textbf{Red.\ \%} \\
 \midrule
-Neural net (64,64)      & classical & 0.0412 (0.0388--0.0434) & 60.2 & 0.1292 & $-6.2$ \\
-Quantum kernel ridge    & hybrid    & 0.0421 (0.0395--0.0448) & 59.3 & 0.1433 & $-17.7$ \\
-Gradient-boosted trees  & classical & 0.0436 (0.0413--0.0460) & 57.8 & \textbf{0.0665} & \textbf{45.4} \\
-Ridge regression        & classical & 0.0515 (0.0488--0.0543) & 50.2 & 0.0717 & 41.1 \\
-Data-reuploading VQC    & hybrid    & 0.0557 (0.0523--0.0596) & 46.1 & 0.4900 & $-302.4$ \\
-ZNE, linear             & analytic  & 0.0737 (0.0690--0.0785) & 28.8 & 0.0960 & 21.2 \\
-ZNE, Richardson (deg 2) & analytic  & 0.0743 (0.0713--0.0773) & 28.2 & 0.0831 & 31.8 \\
-No mitigation           & ---       & 0.1035 (0.0978--0.1090) & 0.0  & 0.1217 & 0.0 \\
-ZNE, exponential        & analytic  & 0.1548 (0.1382--0.1714) & $-49.6$ & 0.1805 & $-48.3$ \\
+Classical RBF kernel ridge & classical & 0.0404 (0.0380--0.0427) & 60.9 & \textbf{0.0658} & \textbf{46.0} \\
+Neural net (64,64) & classical & 0.0412 (0.0388--0.0434) & 60.2 & 0.1292 & $-6.2$ \\
+Quantum kernel ridge & hybrid & 0.0421 (0.0395--0.0448) & 59.3 & 0.1433 & $-17.7$ \\
+Gradient-boosted trees & classical & 0.0436 (0.0413--0.0460) & 57.8 & 0.0665 & 45.4 \\
+Ridge regression & classical & 0.0515 (0.0488--0.0543) & 50.2 & 0.0717 & 41.1 \\
+Data-reuploading VQC & hybrid & 0.0533 (0.0510--0.0557) & 48.5 & 0.3127 & $-156.8$ \\
+ZNE, linear & analytic & 0.0737 (0.0690--0.0785) & 28.8 & 0.0960 & 21.2 \\
+ZNE, Richardson (deg 2) & analytic & 0.0743 (0.0713--0.0773) & 28.2 & 0.0831 & 31.8 \\
+No mitigation & --- & 0.1035 (0.0978--0.1090) & 0.0 & 0.1217 & 0.0 \\
+ZNE, exponential & analytic & 0.1548 (0.1382--0.1714) & $-49.6$ & 0.1805 & $-48.3$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -92,86 +66,46 @@ ZNE, exponential        & analytic  & 0.1548 (0.1382--0.1714) & $-49.6$ & 0.1805
 \centering
 \includegraphics[width=\textwidth]{figures/ch5/fig_ch5_main.png}
 \caption[Main benchmark on both splits]{Main benchmark on both splits. Points are RMSE, bars are $95\%$ bootstrap
-confidence intervals, and the dotted line marks the unmitigated error level; any
-method to the right of it is worse than doing nothing. Arms are ordered by Split~A
-error and the order is held fixed in both panels, so the vertical reordering of
-performance between panels is visible as crossing. Learned methods lead
+confidence intervals, and the dotted line marks the unmitigated error level.
+Both panels order the arms by Split~A error. Learned methods lead
 in-distribution (panel~a); on deeper circuits (panel~b) the neural network, the
 quantum kernel and the data-reuploading VQC are worse than the unmitigated baseline.
 The VQC point is a single initialisation seed.}
 \label{fig:ch5_main}
 \end{figure}
 
-\subsection{In-distribution: learned mitigation removes 41--44\% of the residual error}
+\subsection{In-distribution performance on common test circuits}
 
-On Split~A the three strongest learned arms -- the neural network at $0.0412$, the
-quantum kernel at $0.0421$ and gradient-boosted trees at $0.0436$ -- reduce the
-unmitigated RMSE of $0.1035$ by $58$--$60\%$. The best analytic baseline, linear
-extrapolation, reduces it by $28.8\%$ to $0.0737$. Relative to linear
-extrapolation the three leaders are $41$--$44\%$ lower, so they remove somewhat less
-than half of the error that extrapolation leaves behind. On this split the paired
-difference against linear extrapolation is resolved for each of them ($-0.030$ to
-$-0.033$), and over ten independent circuit-grouped splits the paired difference against linear extrapolation is
-resolved in $10$ of $10$ splits for the kernel, the network and the trees
-(Section~\ref{sec:ch5_robustness}).
+On Split~A the matched classical RBF and fidelity kernels reach
+$0.0404$ and $0.0421$ RMSE, respectively. The neural
+network reaches $0.0412$. Linear extrapolation, the strongest
+analytic arm on this split, reaches $0.0737$. Relative to linear ZNE, RBF
+lowers RMSE by $45.2\%$. The paired difference
+RMSE(RBF) $-$ RMSE(fidelity) is $-0.00168$ (95\% CI $[-0.00324,\allowbreak -0.00071]$).
+Its interval favours RBF. Section~\ref{sec:ch5_robustness} reports
+the comparison over ten additional circuit-grouped holdouts.
 
-The kernel and the network are not distinguishable from each other. Over ten
-splits their mean errors are $0.0425 \pm 0.0012$ and $0.0426 \pm 0.0009$, and the
-paired difference is resolved in $0$ of the $10$ splits. The trees are close behind
-($0.0471 \pm 0.0010$) but resolvably worse than the network in every split. This is
-the first of the two central findings of this thesis: \textbf{on this task the
-hybrid quantum kernel is competitive with, and not superior to, the best classical
-regressor.} It is worth
-stating in the positive direction as well -- a fidelity kernel over a six-qubit IQP
-embedding is a working mitigation regressor, reaching $R^2 = 0.972$ against the
-ideal values -- but the comparison it wins is against the analytic baselines, not
-against classical learning.
+Linear ridge regression reaches $0.0515$ and improves on every analytic method
+on Split~A. Exponential extrapolation reaches $0.1548$, which is $49.6\%$ above
+the unmitigated RMSE. Fitting a three-parameter curve with three noisy observations
+leaves no redundant measurements to constrain the extrapolation.
+Appendix~\ref{sec:appA_exp} describes the resulting sensitivity to shot noise.
 
-The two weakest arms are instructive. Plain ridge regression reaches $0.0515$, which
-is worse than the three leaders but still far better than any analytic method; a
-substantial part of this correction map is therefore linear in the noise-scaled
-measurements, and the non-linear models are recovering a smaller additional
-increment. Exponential extrapolation, at $0.1548$, is $49.6\%$ \emph{worse} than not
-mitigating at all. As derived in Appendix~\ref{sec:appA_exp}, this is the predictable
-consequence of fitting three free parameters to three noise points: the fit is
-exactly determined, so statistical fluctuation in any single measurement propagates
-directly and non-linearly into the extrapolated value. The ansatz is not at fault;
-the parameter count is.
+\subsection{Out-of-distribution depth extrapolation}
 
-\subsection{Out-of-distribution: the ranking inverts}
+Split~B trains at depth four or less and tests at depth five or six. Boosted
+trees reach $0.0665$, linear ridge reaches
+$0.0717$, and Richardson extrapolation reaches
+$0.0831$. The unmitigated RMSE is
+$0.1217$. The neural network and data-reuploading VQC reach $0.1292$ and $0.3127$.
 
-Split~B tells a different story, and it is the story that matters for deployment.
-Gradient-boosted trees remain the best arm at $0.0665$ ($45.4\%$ reduction) and
-ridge regression is second at $0.0717$, but the neural network ($0.1292$), the
-quantum kernel ($0.1433$) and the data-reuploading VQC ($0.4900$) are all
-\emph{worse} than the unmitigated baseline of $0.1217$, each by a resolved paired
-margin ($+0.008$, $+0.022$ and $+0.368$). The VQC value is the worst of ten initialisation seeds; across seeds the arm
-scores $0.18$--$0.49$ on this split and is worse than no mitigation for every seed.
-Its $R^2 = -4.23$ at seed~7 means that its predictions fall far outside the range of
-the ideal values, not merely that they are noisy.
-
-Meanwhile the analytic methods, which have no training distribution to leave, degrade
-gracefully: Richardson extrapolation actually \emph{improves} its relative standing,
-reducing error by $31.8\%$ on Split~B against $28.2\%$ on Split~A, because the
-unmitigated error it is competing against has grown.
-
-This is the second central finding: \textbf{in-distribution accuracy is not
-predictive of out-of-distribution accuracy.} A practitioner choosing a mitigation
-method on Split~A evidence would select the neural network or the quantum kernel,
-and would be worse off than having done nothing the moment the deployed circuits ran
-deeper than the reference set. The reversal is not, however, a property of the model
-families, as the next paragraph shows.
-
-The follow-up experiment of Section~\ref{sec:ch5_robustness} locates the cause. Two
-of the six inputs, the depth and the two-qubit gate count, take values on Split~B
-that never occur in training; the three noise-scaled measurements and the observable
-weight do not. Refitting every learned arm without the two structural inputs makes
-every one of them resolvably better than no mitigation on the deeper circuits, the
-neural network and the kernel included. The inversion is therefore not a property of
-the model families as such but of feeding them inputs outside their training
-support: tree ensembles hold their prediction constant beyond the last split point
-and ridge regularises the structural coefficients towards zero, whereas the neural
-network and the quantum models respond to the out-of-range values freely.
+The classical RBF kernel reaches $0.0658$ and the
+fidelity kernel reaches $0.1433$ with identical inputs.
+The paired difference is $-0.07751$ (95\% CI $[-0.08270,\allowbreak -0.07226]$). Circuit depth and
+two-qubit count are proportional at fixed system size in this dataset.
+Their values on the deeper circuits fall outside the training range.
+The ablation of Section~\ref{sec:ch5_robustness} measures the effect
+of removing these inputs.
 
 \subsection{Where the error concentrates}
 
@@ -182,35 +116,23 @@ observable.
 \centering
 \includegraphics[width=\textwidth]{figures/ch5/fig_ch5_breakdown.png}
 \caption[Split~A error by circuit depth and by observable]{Split~A error by circuit depth (panel~a) and by observable (panel~b), for
-five representative arms. Unmitigated error grows $1.9\times$ from depth 2 to depth
-6 and is nearly independent of observable Pauli weight.}
+six representative arms, including both kernels. Unmitigated RMSE grows $1.9\times$
+from depth 2 to depth 6 and varies modestly across the five observables.}
 \label{fig:ch5_breakdown}
 \end{figure}
 
-Unmitigated RMSE rises monotonically from $0.067$ at depth 2 to $0.127$ at depth 6,
-a factor of $1.9$, which is expected: deeper circuits accumulate more error. The
-trend is not monotone for every method -- gradient-boosted trees dip from $0.0406$
-at depth 2 to $0.0330$ at depth 3 before rising to $0.0546$ at depth 6, and
-Richardson extrapolation dips at depth 4 -- so the honest statement is that
-unmitigated error grows with depth while mitigated error grows more slowly and less
-regularly.
+Unmitigated RMSE rises monotonically from $0.067$ at depth 2 to $0.127$ at depth 6.
+Gradient-boosted trees dip from $0.0406$ at depth 2 to $0.0330$ at depth 3 before
+rising to $0.0546$ at depth 6, and Richardson extrapolation dips at depth 4.
+At each depth and for each observable, the two kernels use the same test circuits.
 
-Across observables the picture is flatter than one might expect. The ratio of
-unmitigated to quantum-kernel error is $2.13$ for the weight-one observable $Z_0$,
-$2.91$ for $Z_0 Z_1$, $2.55$ for $X_0 X_1$, $2.56$ for $Z_1 Z_2 Z_3$ and $2.21$ for
-the full-weight string $Z_0 \cdots Z_4$: there is no trend in Pauli weight. High-weight
-observables are not disproportionately hard to mitigate in this noise model, which
-is consistent with the depolarizing-plus-damping channel attenuating all Pauli
-strings by comparable factors at these depths rather than penalizing weight
-specifically.
-
-\section{Bandwidth determines whether the quantum kernel works at all}
+\section{Fidelity-kernel bandwidth sensitivity}
 \label{sec:ch5_bandwidth}
 
 The quantum-kernel arm in Table~\ref{tab:ch5_main} has its bandwidth $\beta$ tuned
 by cross-validation. Table~\ref{tab:ch5_bandwidth} and Figure~\ref{fig:ch5_bandwidth}
-report what happens at fixed bandwidths, with the ridge penalty still selected by
-cross-validation so that bandwidth is the only thing that varies.
+report performance at fixed bandwidths, with the ridge penalty reselected by
+cross-validation at each bandwidth.
 
 \begin{table}[htbp]
 \centering
@@ -227,10 +149,10 @@ nearly orthogonal. Unmitigated RMSE on this fold is $0.1035$.}
 \midrule
 0.02 & 0.0433 (0.0408--0.0458) & 58.1 & 0.9988 & 0.963 \\
 0.05 & 0.0422 (0.0396--0.0444) & 59.2 & 0.9924 & 0.966 \\
-\textbf{0.15} & \textbf{0.0421 (0.0394--0.0449)} & \textbf{59.3} & 0.9339 & 0.967 \\
-0.40 & 0.0481 (0.0422--0.0552) & 53.5 & 0.6737 & 0.942 \\
-1.00 & 0.1526 (0.1366--0.1695) & $-47.4$ & 0.2041 & 0.579 \\
-2.00 & 0.2371 (0.2210--0.2532) & $-129.1$ & 0.0558 & 0.109 \\
+0.15 & 0.0421 (0.0394--0.0449) & 59.3 & 0.9339 & 0.967 \\
+0.40 & 0.0481 (0.0422--0.0552) & 53.5 & 0.6737 & 0.941 \\
+1.00 & 0.1526 (0.1366--0.1695) & $-47.4$ & 0.2041 & 0.577 \\
+2.00 & 0.2371 (0.2210--0.2532) & $-129.1$ & 0.0558 & 0.124 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -246,105 +168,74 @@ deviation across entries.}
 \label{fig:ch5_bandwidth}
 \end{figure}
 
-At the default $\beta = 1$ the arm scores $0.1526$, which is $47.4\%$ worse than
-applying no mitigation whatsoever, and at $\beta = 2$ it is $129\%$ worse. Tuning
-bandwidth to $0.15$ changes the error by a factor of $3.6$. The fourth column shows
-what changes: as bandwidth grows the mean off-diagonal kernel entry falls from
-$0.9988$ to $0.0558$, so most pairs of training and test states become nearly
-orthogonal, the Gram matrix approaches the identity, the model can relate a test
-point to few training points, and its cross-validated $R^2$ falls from $0.967$ to
-$0.109$. This is not the exponential concentration of
-Appendix~\ref{sec:appA_kernel}, in which kernel values concentrate around a
-\emph{single} value with vanishing spread: at $\beta = 1$ the off-diagonal entries
-still have a standard deviation of $0.18$ about their mean of $0.20$
-(Figure~\ref{fig:ch5_bandwidth}b). At six qubits the failure is the ordinary one of
-a kernel that is too narrow for the data, the regime analysed for quantum kernels
-in~\cite{canatar2023bandwidth,florezablan2025similarity}; exponential
-concentration~\cite{thanasilp2024exponential} is the large-$n$ limit of the same
-trend and is not what is measured here.
-
-Two conclusions follow. First, for this task, \textbf{bandwidth matters more than
-architecture}: the spread between the best and worst bandwidth of a single model,
-$0.0421$ to $0.2371$, is far larger than the spread between the best and worst
-\emph{model families} at their own tuned settings. Second, a published quantum-kernel
-baseline reported without bandwidth tuning carries no information about the method,
-only about the implementation -- and it will tend to make quantum kernels look worse
-than they are, in the same way that the exponential-extrapolation arm makes
-extrapolation look worse than it is.
+The fixed-bandwidth fidelity study gives RMSE $0.1526$ at
+$\beta=1$ and a minimum observed error of $0.0421$ at
+$\beta=0.15$. The off-diagonal kernel entries change as
+bandwidth spreads the embedded data. The resulting error spread motivates
+a tuned bandwidth for each fidelity comparison.
 
 \section{Noise-strength sweep}\label{sec:ch5_noise}
 
-Figure~\ref{fig:ch5_sweeps}(a) reports Split~A error when the base noise rates are
-scaled by $0.5\times$, $1\times$, $2\times$ and $4\times$; at $4\times$ the
-two-qubit depolarizing probability is $8\%$ per gate, which is beyond present
-hardware.
+Experiment E1 multiplies the base rates $(p_1,p_2,\gamma)$ by
+$m\in\{0.5,1,2,4\}$ while retaining the three extrapolation scales
+$\lambda\in\{1,2,3\}$. At $m=4$ and $\lambda=1$, the depolarising channel
+following a two-qubit gate has probability $m p_2=0.08$ on each wire,
+independently. The probability of a nonidentity Pauli on at least one wire at
+that scale is $1-(1-0.08)^2=0.1536$.
+
+Every multiplier uses the same $500$ five-qubit circuits, ideal
+targets, and seed-7 circuit-grouped split of $350$ training and $150$ held-out
+circuits. Circuit angles are drawn once. A separate random stream for each
+multiplier samples $4096$ shots per expectation value. The models use
+the same reduced tuning budget at all four multipliers, including
+$24$ candidates and four grouped inner folds for each kernel and
+$30$ epochs for each variational arm. The $1\times$ dataset is generated
+on this shared E1 pool.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/ch5/fig_ch5_sweeps.png}
-\caption[Sweeps over noise strength, shot budget and qubit count]{Sweeps on held-out random circuits. Panel~a: noise strength as a multiple
-of the base rates. Panel~b: shots per expectation value, with ``analytic'' the
-zero-sampling-noise limit. Panel~c: qubit count. Every panel plots RMSE against the
-ideal expectation value; the grey series is the unmitigated baseline.}
+\caption[Sweeps over noise strength, shot budget and qubit count]{Sweeps on held-out random circuits. Panel~a varies the base-noise multiplier
+with the same circuit pool, grouped split and tuning budget. Panel~b varies the
+shots per expectation value, with ``analytic'' denoting the limit without
+sampling noise. Panel~c varies qubit count. Every panel plots RMSE against the
+ideal expectation value. The grey series is the unmitigated baseline.}
 \label{fig:ch5_sweeps}
 \end{figure}
 
-RMSE increases with noise strength for every plotted arm. The error reduction
-achieved by the learned methods is not monotone: it is largest at the base rate and
-falls on either side of it. The quantum kernel reduces error by $53.9\%$ at
-$0.5\times$, $59.3\%$ at $1\times$, $42.5\%$ at $2\times$ and $23.3\%$ at
-$4\times$, and the other non-variational learned arms follow the same shape. Above
-the base rate the learned advantage over analytic extrapolation therefore
-\emph{narrows} rather than widening,
-which contradicts the intuition that a learned model has more systematic error to
-exploit when there is more of it. The likely reason is that at high noise the
-expectation values themselves are compressed towards zero, so the signal available
-in the three noise-scaled inputs shrinks relative to the shot noise on them.
+Unmitigated RMSE rises from $0.0621$ at $0.5\times$ to $0.1960$ at $4\times$.
+Absolute RMSE rises at each step for ten of the eleven methods, with
+exponential extrapolation the exception. The classical RBF kernel reduces
+unmitigated RMSE by $59.6\%$, $58.6\%$, $43.5\%$ and $24.6\%$ as $m$ increases.
+It gives the lowest observed RMSE at $0.5\times$, $1\times$ and $4\times$,
+and the neural network gives the lowest at $2\times$. The paired
+circuit-bootstrap intervals favour RBF over fidelity at $0.5\times$,
+$1\times$ and $4\times$ and include zero at $2\times$.
 
-The data-reuploading VQC is the exception to the ordering: it reduces error by
-$46.1\%$ at the base rate but is $19.9\%$ \emph{worse} than no mitigation at
-$2\times$ and $19.2\%$ worse at $4\times$. Its useful operating range is narrow.
+\section{Observable shot-budget sweep}\label{sec:ch5_shots}
 
-\section{Shot-budget sweep}\label{sec:ch5_shots}
+Figure~\ref{fig:ch5_sweeps}(b) varies the shots used to estimate each input
+observable, from $256$ to exact expectation values. The sweep resamples the
+stored exact values using Eq.~\eqref{eq:ch3_shots} and refits on the same
+circuit-grouped split. Fidelity-kernel entries remain exact throughout.
 
-Figure~\ref{fig:ch5_sweeps}(b) varies the shot budget from $256$ to the analytic
-(infinite-shot) limit, re-sampling Eq.~\eqref{eq:ch3_shots} from the stored exact
-values so that only sampling noise changes.
-
-Two features stand out. First, at $256$ shots, Richardson extrapolation is the worst
-arm in the panel at RMSE $0.2684$, more than twice the unmitigated $0.1209$, and it
-recovers to $0.0709$ at $4096$ shots and $0.0346$ in the analytic limit. This is the
-variance-inflation factor of $19$ derived in Eq.~\eqref{eq:appA_variance} made
-visible: the estimator's coefficients $(3, -3, 1)$ amplify statistical noise, so at
-low shot counts its bias reduction is swamped. Second, the learned arms improve
-steeply and without saturating -- the quantum kernel goes from $0.1013$ at $256$
-shots to $0.0427$ at $4096$ and $0.0031$ in the analytic limit, a factor of $33$
-between the two extremes. Their accuracy is limited by shot noise in the features,
-not by model capacity, throughout this range.
-
-The practical reading is that the choice of mitigation method should depend on the
-shot budget. Below roughly $1000$ shots per expectation value, the differences
-between the learned arms and the analytic ones compress and high-order extrapolation
-becomes actively harmful; above a few thousand shots the learned arms separate
-clearly.
+At $256$ shots, Richardson extrapolation reaches
+$0.2684$, consistent with
+the variance amplification in Eq.~\eqref{eq:appA_variance}. Across
+$256$ shots, $4096$ shots and exact inputs, RBF achieves
+$0.1013$, $0.0411$, $0.0029$.
+The fidelity-kernel estimates under those same three conditions are
+$0.1013$, $0.0427$, $0.0031$.
 
 \section{System-size sweep}\label{sec:ch5_qubits}
 
-Figure~\ref{fig:ch5_sweeps}(c) repeats the benchmark at $4$, $5$ and $6$ qubits.
-The unmitigated error falls with qubit count in this design, from $0.1192$ at
-$4$ qubits to $0.0904$ at $6$, because the full-weight observable is measured over
-more qubits and the dominant two-qubit-gate count per layer grows only linearly
-while the Pauli strings measured stay mostly local.
-
-The relevant question is whether the \emph{ranking} holds, and it does at the top:
-the quantum kernel and the neural network are the two best arms at every system size
-tested, the kernel first at $4$ and $6$ qubits and the network first at $5$. The
-full ordering is not identical across sizes -- the data-reuploading VQC drops from
-sixth at $4$ qubits to last at $6$, where it is $113\%$ worse than no mitigation --
-but the top of the table is stable. Three sizes spanning two qubits is too narrow a
-range to support a scaling claim, and none is made here; the sweep establishes only
-that the in-distribution conclusions of Section~\ref{sec:ch5_main} are not an
-artifact of the particular choice $n = 5$.
+Figure~\ref{fig:ch5_sweeps}(c) compares $4$, $5$ and $6$ qubits.
+The classical RBF RMSEs are
+$0.0418$, $0.0404$, $0.0428$,
+and the corresponding fidelity-kernel RMSEs are
+$0.0419$, $0.0421$, $0.0434$.
+The settings differ in their circuit and observable construction and span
+a small size range. The comparison describes the three tested settings.
 
 \section{Learning curves}\label{sec:ch5_learning}
 
@@ -365,23 +256,18 @@ the spread over $20$ subsets at the two smallest sizes.}
 Each point of Figure~\ref{fig:ch5_learning} is one random subset of training
 circuits, so the curve alone cannot separate sample efficiency from the luck of a
 draw. At the two smallest sizes the experiment was therefore repeated over $20$
-independent subsets (the variational arms are excluded for cost).
+independent subsets (the variational arms are excluded because of their training cost).
 
-At $31$ training circuits the quantum kernel scores $0.0545 \pm 0.0094$ and plain
-ridge regression $0.0526 \pm 0.0010$; neither is worse than no mitigation ($0.1035$)
-in any of the $20$ draws, and both beat Richardson extrapolation ($0.0743$) on
-average. The neural network is the opposite: $0.1169 \pm 0.0510$, ranging from
-$0.0572$ to $0.2075$, and worse than no mitigation in $12$ of $20$ draws. The
-gradient-boosted trees ($0.1093 \pm 0.0072$) are worse than no mitigation in $15$
-of $20$. At $63$ circuits every arm is better than no mitigation in every draw, and
-the network ($0.0522 \pm 0.0023$) has caught up with ridge ($0.0521 \pm 0.0003$)
-and the kernel ($0.0502 \pm 0.0069$).
-
-This is a genuine practical property, but it belongs to regularised kernel and linear
-regression rather than to quantumness: classical ridge regression is at least as
-sample-efficient as the quantum kernel and has a tenth of its spread across draws.
-When reference circuits are scarce, the safe choice is a strongly regularised model,
-and the quantum kernel is one such model, not a uniquely good one.
+At $31$ training circuits, the RBF and fidelity kernels reach
+$0.0623\pm0.0220$ and
+$0.0582\pm0.0143$ across the
+$20$ draws. At $63$ circuits, their mean RMSEs are
+$0.0489$ and $0.0499$.
+The spread comes from changing reference circuits while holding the test set fixed.
+At $31$ circuits, the paired intervals favour RBF in
+$4$
+draws and fidelity in
+$9$.
 
 \section{Feature ablation}\label{sec:ch5_ablation}
 
@@ -392,56 +278,44 @@ the learned advantage comes from.
 \centering
 \caption[Feature ablation on Split~A]{Feature ablation on Split~A (RMSE). ``Noise-scaled only'' uses the three
 noise-scaled expectation values, the same information an analytic extrapolation
-consumes; ``single + structure'' uses one noisy value plus the three structural
-descriptors; ``full'' uses all six features. Unmitigated RMSE is $0.1035$.}
+consumes; ``native + structure'' uses the native noisy value plus the three structural descriptors; ``full'' uses all six features. Unmitigated RMSE is $0.1035$.
+The bounded VQC uses the 30-epoch sweep budget.}
 \label{tab:ch5_ablation}
 \small
 \begin{tabular}{lccc}
 \toprule
-\textbf{Method} & \textbf{Noise-scaled only (3)} & \textbf{Single + structure (4)}
-& \textbf{Full (6)} \\
+\textbf{Method} & \textbf{Noise only} & \textbf{Native + structure}
+& \textbf{Full} \\
 \midrule
-Neural net (64,64)     & 0.0474 & 0.0444 & \textbf{0.0412} \\
-Quantum kernel ridge   & 0.0497 & 0.0457 & \textbf{0.0421} \\
-Gradient-boosted trees & 0.0528 & 0.0482 & \textbf{0.0456}$^{*}$ \\
-Ridge regression       & 0.0515 & 0.0725 & \textbf{0.0515} \\
-Bounded-encoding VQC   & 0.0553 & 0.0653 & \textbf{0.0517} \\
+Ridge regression & 0.0515 & 0.0725 & 0.0515 \\
+Gradient-boosted trees & 0.0528 & 0.0482 & 0.0456 \\
+Neural net (64,64) & 0.0474 & 0.0444 & 0.0412 \\
+Classical RBF kernel ridge & 0.0476 & 0.0440 & 0.0404 \\
+Quantum kernel ridge & 0.0497 & 0.0457 & 0.0421 \\
+Bounded-encoding VQC & 0.0553 & 0.0653 & 0.0517 \\
 \bottomrule
-\multicolumn{4}{l}{\footnotesize $^{*}$ fitted on the reduced hyperparameter grid of the
-sweeps; Table~\ref{tab:ch5_main} uses the full grid ($0.0436$).}\\
-\multicolumn{4}{l}{\footnotesize The bounded-encoding VQC rows use the 30-epoch budget of
-the sweeps; its 40-epoch fit (seed~7) scores $0.0597$ (Table~\ref{tab:appB_vqcseeds}).}
 \end{tabular}
 \end{table}
 
-The noise-scaled measurements alone are sufficient to beat every analytic arm: the
-neural network reaches $0.0474$ and the quantum kernel $0.0497$ on three features,
-against $0.0737$ for linear extrapolation on exactly the same three numbers. A
-better estimator over identical measurement data is therefore enough for a large
-advantage. It is not the only route to one: with a \emph{single} noisy value plus the
-structural descriptors -- one circuit evaluation instead of three -- the network
-($0.0444$), the kernel ($0.0457$) and the trees ($0.0482$) do better still than on
-the three noise-scaled values alone. For these models the circuit structure carries
-information about the attenuation that substitutes for the extra noise scales.
-Using everything gives a further relative improvement over single plus structure of
-$7.2\%$ for the network, $7.9\%$ for the kernel and $5.4\%$ for the trees.
+On the three noise-scale inputs alone, RBF and fidelity reach
+$0.0476$ and
+$0.0497$. Linear extrapolation
+reaches $0.0737$ on the same test fold. With the native noisy measurement
+and the three structural descriptors, the kernels reach
+$0.0440$ and
+$0.0457$.
+Both kernels use the reduced grid in each feature condition.
 
-Ridge regression is the exception and its behaviour is informative: replacing two
-noise scales with structural features \emph{hurts} it ($0.0515 \rightarrow 0.0725$),
-and adding them to the full set changes nothing to four decimal places. A linear
-model cannot exploit depth and gate count, which enter the error map
-multiplicatively; only the non-linear models can.
-
-\section{Does encoding periodicity explain the extrapolation collapse?}
+\section{Bounded encoding under depth extrapolation}
 \label{sec:ch5_bounded}
 
-Section~\ref{sec:ch5_main} left a mechanistic question open. The data-reuploading
-VQC does not merely degrade on Split~B, it fails by a factor of four, and
-Section~\ref{sec:ch3_bounded} proposed a specific cause: the angle encoding
-$R_Y(w \cdot x + b)$ is periodic, so features outside the training range wrap around
-the circle and produce uncontrolled outputs. The bounded variant of
-Eq.~\eqref{eq:ch3_bounded} replaces this with a $\tanh$-squashed angle confined to
-$[-\pi/2, \pi/2]$, holding everything else fixed.
+Table~\ref{tab:ch5_bounded} adds the bounded-encoding arm to the depth-extrapolation
+comparison. On Split~B, data reuploading gives $2.57$ times the unmitigated RMSE.
+The periodic encoding $R_Y(w \cdot x + b)$ can map distinct feature values to
+equivalent rotations. The bounded variant of Eq.~\eqref{eq:ch3_bounded} uses
+a $\tanh$ transform to confine angles to $[-\pi/2, \pi/2]$. The transform also
+changes angles within the training range, so this is a comparison of the two
+encodings as fitted.
 
 \begin{table}[htbp]
 \centering
@@ -453,16 +327,17 @@ $[-\pi/2, \pi/2]$, holding everything else fixed.
 \toprule
 \textbf{Method} & \textbf{RMSE (95\% CI)} & \textbf{Red.\ \%} & \textbf{Verdict} \\
 \midrule
-Gradient-boosted trees & 0.0665 (0.0637--0.0691) & 45.4 & best \\
-Ridge regression       & 0.0717 (0.0685--0.0741) & 41.1 & useful \\
-ZNE, Richardson (deg 2)& 0.0831 (0.0803--0.0854) & 31.8 & useful \\
-ZNE, linear            & 0.0960 (0.0921--0.0996) & 21.2 & useful \\
-No mitigation          & 0.1217 (0.1174--0.1258) & 0.0  & --- \\
-Neural net (64,64)     & 0.1292 (0.1251--0.1339) & $-6.2$ & harmful \\
-Quantum kernel ridge   & 0.1433 (0.1369--0.1493) & $-17.7$ & harmful \\
-Bounded-encoding VQC   & 0.1543 (0.1486--0.1591) & $-26.7$ & harmful \\
-ZNE, exponential       & 0.1805 (0.1628--0.1962) & $-48.3$ & harmful \\
-Data-reuploading VQC   & 0.4900 (0.4725--0.5056) & $-302.4$ & catastrophic \\
+Classical RBF kernel ridge & 0.0658 (0.0629--0.0685) & 46.0 & lowest RMSE \\
+Gradient-boosted trees & 0.0665 (0.0637--0.0691) & 45.4 & lower error \\
+Ridge regression & 0.0717 (0.0685--0.0741) & 41.1 & lower error \\
+ZNE, Richardson (deg 2) & 0.0831 (0.0803--0.0854) & 31.8 & lower error \\
+ZNE, linear & 0.0960 (0.0921--0.0996) & 21.2 & lower error \\
+No mitigation & 0.1217 (0.1174--0.1258) & 0.0 & reference \\
+Neural net (64,64) & 0.1292 (0.1251--0.1339) & $-6.2$ & higher error \\
+Quantum kernel ridge & 0.1433 (0.1369--0.1493) & $-17.7$ & higher error \\
+Bounded-encoding VQC & 0.1543 (0.1486--0.1591) & $-26.7$ & higher error \\
+ZNE, exponential & 0.1805 (0.1628--0.1962) & $-48.3$ & higher error \\
+Data-reuploading VQC & 0.3127 (0.3028--0.3215) & $-156.8$ & higher error \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -476,154 +351,127 @@ Panel~b: cross-family transfer in both directions.}
 \label{fig:ch5_ood}
 \end{figure}
 
-The hypothesis is \emph{partially} confirmed, and the qualification matters.
-Bounding the encoding improves the extrapolated error by a factor of $3.18$, from
-$0.4900$ to $0.1543$, so at seed~7 encoding periodicity accounts for most of the
-catastrophic magnitude. Over ten initialisation seeds the comparison is less sharp:
-the reuploading arm scores $0.3034 \pm 0.0938$ and the bounded arm
-$0.1813 \pm 0.0601$ on this split, and seed~7 is the reuploading arm's worst seed. But the
-bounded arm is still $26.7\%$ worse than performing no mitigation at all. Removing
-the periodicity converts a catastrophic failure into an ordinary one; it does not
-produce a model that extrapolates.
-
-The residual failure is therefore not about wrapping. It is the same failure the
-neural network and the quantum kernel exhibit, and Section~\ref{sec:ch5_robustness}
-identifies its source: the depth and gate-count inputs lie outside their training
-range on this split. Without them the bounded arm reaches $0.0672$ and the
-reuploading arm $0.0905$, both resolvably better than no mitigation. The correct
-conclusion is that \textbf{bounded encoding reduces the magnitude of the failure but
-does not remove it}; what removes it is not feeding the model inputs outside their
-training support.
+The bounded VQC reduces full-input RMSE from $0.3127$ to $0.1543$ on the depth
+split. Both errors exceed the unmitigated RMSE of $0.1217$. The feature ablation
+in Section~\ref{sec:ch5_robustness} compares the two encodings after input
+removal and refitting.
 
 \section{Cross-family transfer}\label{sec:ch5_transfer}
 
 Figure~\ref{fig:ch5_ood}(b) trains on one circuit family and tests on the other.
 The result is strikingly asymmetric.
 
-Training on the Trotterized Ising family and testing on the hardware-efficient
-ansatz works for every learned arm: error reductions are $48.2\%$ for the quantum
-kernel, $48.0\%$ for trees, $43.9\%$ for ridge, $43.7\%$ for the neural network,
-$38.6\%$ for the data-reuploading VQC and $28.2\%$ for the bounded variant. Training
-on the hardware-efficient family and testing on Ising largely fails: only ridge
-regression ($47.7\%$) and gradient-boosted trees ($16.9\%$) remain useful, while the
-neural network ($-14.2\%$), the quantum kernel ($-19.8\%$) and the VQC ($-140.8\%$)
-fall below the unmitigated baseline. The analytic arms, again, transfer by
-construction: linear extrapolation reduces error by $32.4\%$ and $22.8\%$ in the two
-directions.
+With Ising-family training and hardware-efficient testing, RBF and fidelity
+reduce error by $46.3\%$
+and $48.2\%$.
+In the reverse direction, their reductions are
+$-2.0\%$ and
+$-19.8\%$.
+The Ising-to-HEA RBF-minus-fidelity difference is
+$+0.00192$ (95\% CI $[+0.00138,\allowbreak +0.00247]$).
+Linear extrapolation improves on the raw measurements in both directions.
 
-The asymmetry is not a consequence of the angle distributions, which are identical:
-both families draw every rotation angle uniformly from $[-\pi, \pi]$. It is
-consistent with the distributions of the \emph{ideal values} the circuits produce.
-The Ising-family values are spread more widely (standard deviation $0.286$, against
-$0.189$ for the hardware-efficient family), so a model trained on the Ising family
-sees the hardware-efficient targets as lying largely inside its training range and
-interpolates, whereas a model trained on the hardware-efficient family must
-extrapolate to the wider Ising range. This explanation is consistent with the data
-but has not been tested by a controlled experiment. Whether a target workload is interior to the reference set is therefore
-a question a practitioner must answer \emph{before} trusting a learned mitigation
-map, and it is not answerable from in-distribution validation error.
+The ideal target values have different spreads across the two circuit
+families. The Ising-family SD is $0.286$, and the hardware-efficient
+family SD is $0.189$. The transfer experiment changes the entire circuit
+family. Target support is one plausible source of the observed asymmetry.
 
 \section{Cost accounting}\label{sec:ch5_cost}
 
-Table~\ref{tab:ch5_cost} collects the costs. The operationally binding column is the
-first: circuit evaluations per mitigated expectation value.
+Table~\ref{tab:ch5_cost} reports circuit settings per prediction and the
+observed simulator fit times. The shot-resolved kernel analysis in
+Section~\ref{sec:ch5_shotkernel} counts the repetitions of these settings.
 
 \begin{table}[htbp]
 \centering
-\caption[Cost per method]{Cost per method. Circuit evaluations per prediction is the quantum cost.
-Trainable parameters counts model capacity; for kernel ridge it is the number of
-dual coefficients, which equals the training set size and therefore grows with the
-reference data. Training time is classical, one-off, and measured on the machine of
-Table~\ref{tab:ch4_stack}. Each circuit evaluation is estimated from $4096$ shots, so
-the three noise-scaled inputs cost $3 \times 4096 \approx 1.2 \times 10^{4}$ circuit
-executions per mitigated value.}
+\caption[Cost per method]{Circuit settings per prediction before shots.
+Kernel ridge has one dual coefficient per training row. Training times are
+wall times from this run, with other configurations executing concurrently
+in the environment in Table~\ref{tab:ch4_stack}. Three noise-scaled inputs
+at $4096$ shots each require $12{,}288$ circuit executions per prediction.}
 \label{tab:ch5_cost}
 \small
 \begin{tabular}{lcccc}
 \toprule
-\textbf{Method} & \textbf{Circuit evals / prediction} & \textbf{Parameters}
-& \textbf{Train time (s)}$^{\circ}$ & \textbf{Split A RMSE} \\
+\textbf{Method} & \textbf{Settings/estimate} & \textbf{Parameters}
+& \textbf{Fit (s)}$^{\circ}$ & \textbf{Split A RMSE} \\
 \midrule
-No mitigation           & 1 & 0    & 0.0  & 0.1035 \\
-ZNE, linear             & 3 & 0    & 0.0  & 0.0737 \\
-ZNE, Richardson (deg 2) & 3 & 0    & 0.0  & 0.0743 \\
-ZNE, exponential        & 3 & 0    & 0.0  & 0.1548 \\
-Ridge regression        & 3 & 7    & 0.0  & 0.0515 \\
-Gradient-boosted trees  & 3 & 4500$^{\dagger}$ & 41.3 & 0.0436 \\
-Neural net (64,64)      & 3 & 4673 & 0.2  & 0.0412 \\
-Quantum kernel ridge    & \textbf{3 + 3150}$^{\S}$ & 3150$^{\ddagger}$ & 42.1 & 0.0421 \\
-Data-reuploading VQC    & \textbf{3 + 1} & 114  & 19.8 & 0.0557$^{\P}$ \\
+No mitigation & 1 & 0 & 0.0 & 0.1035 \\
+ZNE, linear & 3 & 0 & 0.0 & 0.0737 \\
+ZNE, Richardson (deg 2) & 3 & 0 & 0.0 & 0.0743 \\
+ZNE, exponential & 3 & 0 & 0.0 & 0.1548 \\
+Ridge regression & 3 & 7 & 0.0 & 0.0515 \\
+Gradient-boosted trees & 3 & 4500$^{\dagger}$ & 6.5 & 0.0436 \\
+Neural net (64,64) & 3 & 4673 & 0.4 & 0.0412 \\
+Classical RBF kernel ridge & 3 & 3150$^{\ddagger}$ & 42.1 & 0.0404 \\
+Quantum kernel ridge & \textbf{3 + 3150}$^{\S}$ & 3150$^{\ddagger}$ & 73.0 & 0.0421 \\
+Data-reuploading VQC & \textbf{3 + 1} & 114 & 47.4 & 0.0533$^{\P}$ \\
 \bottomrule
-\multicolumn{5}{l}{\footnotesize $^{\dagger}$ total leaf count of the selected ensemble (300 trees $\times$ 15 leaves);
-$^{\ddagger}$ dual coefficients, equal to the training set size;}\\
-\multicolumn{5}{l}{\footnotesize $^{\S}$ one fidelity circuit per training point,
-each estimated with shots; $^{\P}$ seed 7, best of ten seeds.}\\
-\multicolumn{5}{l}{\footnotesize $^{\circ}$ includes the grouped cross-validation search for the trees and the kernel (over all}\\
-\multicolumn{5}{l}{\footnotesize \phantom{$^{\circ}$} bandwidths); a single fit for the network and the VQC; efficient leave-one-out \texttt{RidgeCV} for ridge.}
 \end{tabular}
+\par\smallskip
+\parbox{0.97\linewidth}{\footnotesize
+$^{\dagger}$ Total selected tree leaves. $^{\ddagger}$ Dual coefficients.
+$^{\S}$ One fidelity setting per training row for overlap measurement.
+$^{\P}$ Seed~7 in this fit.
+$^{\circ}$ Fits include each arm's tuning procedure.}
 \end{table}
 
-The classical learned arms are exactly cost-matched to zero-noise extrapolation:
-three circuit evaluations, the same three noise-scaled measurements, no additional
-quantum work. Their advantage over extrapolation is therefore free in quantum terms
-and paid for entirely in classical training and in the reference data needed to fit
-them.
+On the full feature set, each classical regressor and linear ZNE uses three
+noise-scaled measurements for a new prediction. The learned regressors also
+require labelled reference data and classical training. RBF evaluates
+test-to-training similarities numerically from those same input measurements.
 
-The hybrid arms are not cost-matched, and the two differ by orders of magnitude.
-The variational circuit adds one circuit per prediction, executed with enough shots
-to estimate its output. The fidelity kernel is far more expensive: predicting one
-value requires the kernel between the test point and \emph{every} training point,
-that is $M = 3150$ inversion-test circuits, each estimated from shots. Building the
-training Gram matrix requires a further $M(M+1)/2 = 4\,962\,825$ distinct circuits.
-For the $1350$ test rows of Split~A the total is $9\,215\,325$ distinct circuits,
-or $9.2 \times 10^{9}$ circuit executions at $1000$ shots each;
-Section~\ref{sec:ch5_shotkernel} measures what accuracy those shots buy. Since the
-quantum kernel is statistically tied with the neural network on accuracy, none of
-this extra cost is repaid on this task. Training the VQC on hardware would add the
-parameter-shift cost of $2 \times 114 = 228$ circuits per gradient step.
-\textbf{The hybrid arms as benchmarked here are practical only in simulation.} This is a concrete instance of the general point that mitigation
-methods must be compared at matched sampling cost~\cite{takagi2022fundamental}.
+An implementation using a measured fidelity kernel would add $3150$
+inversion-test settings per Split~A prediction, one per training row. Its
+dense training Gram matrix uses up to $4{,}962{,}825$ settings, counting the
+diagonal, before multiplication by shots. For the $1350$ Split~A test rows the
+two matrices add up to $9{,}215{,}325$ settings at one fixed bandwidth.
+Section~\ref{sec:ch5_shotkernel} measures finite-shot accuracy under this cost
+model. The variational circuit adds one inference setting per prediction.
+
+The two kernels use the same prediction features here. Their paired Split~A
+accuracy difference is $-0.00168$ (95\% CI $[-0.00324,\allowbreak -0.00071]$).
 
 \section{Robustness to the split, the seed and the input features}
 \label{sec:ch5_robustness}
 
-Every number so far comes from one circuit-grouped split (seed~7) and, for the
-variational arms, one initialisation. This section asks which of the comparisons
-survive when those choices are varied, and it tests the explanation for the
-out-of-distribution collapse of Section~\ref{sec:ch5_main} directly. To keep the
-cost of ten repetitions manageable the repeated runs use the reduced
-hyperparameter grid and the $30$-epoch variational budget of the sweeps.
+The reference random holdout uses split seed~7. The repeated holdouts use the
+reduced hyperparameter grid and $30$-epoch variational budget of the sweeps.
+The separate initialisation and feature-set comparisons use the settings
+described below.
 
-\paragraph{Ten independent splits.} Table~\ref{tab:ch5_robust} and
-Figure~\ref{fig:ch5_robustness}(a) repeat the main comparison over ten independent
+\paragraph{Ten grouped holdouts.} Table~\ref{tab:ch5_robust} and
+Figure~\ref{fig:ch5_robustness}(a) repeat the main comparison over ten repeated
 $70/30$ circuit-grouped splits (seeds $100$--$109$). For every split each arm is
-compared with three references by the paired bootstrap of
+compared with the reference arms by the paired bootstrap of
 Section~\ref{sec:ch3_metrics}.
 
 \begin{table}[htbp]
 \centering
-\caption[Idealized regime, ten circuit-grouped splits]{Idealized regime, ten circuit-grouped splits. RMSE is the mean $\pm$ standard
+\caption[Idealised regime, ten circuit-grouped splits]{Idealised regime, ten circuit-grouped splits. RMSE is the mean $\pm$ standard
 deviation over splits; ``rank'' is the mean rank within a split (1 = best). The last
 three columns count the splits, out of ten, in which the paired difference against
 the named reference is resolved in the stated direction.}
 \label{tab:ch5_robust}
 \small
+\setlength{\tabcolsep}{5pt}
 \begin{tabular}{lccccc}
 \toprule
 \textbf{Method} & \textbf{RMSE} & \textbf{Rank} & \textbf{Better than} & \textbf{Better than}
 & \textbf{Worse than} \\
  & & & \textbf{no mitigation} & \textbf{linear ZNE} & \textbf{neural net} \\
 \midrule
-Quantum kernel ridge    & $0.0425 \pm 0.0012$ & 1.4 & 10 & 10 & 0 \\
-Neural net (64,64)      & $0.0426 \pm 0.0009$ & 1.6 & 10 & 10 & --- \\
-Gradient-boosted trees  & $0.0471 \pm 0.0010$ & 3.0 & 10 & 10 & 10 \\
-Ridge regression        & $0.0531 \pm 0.0014$ & 4.5 & 10 & 10 & 10 \\
-Bounded-encoding VQC    & $0.0548 \pm 0.0033$ & 4.5 & 10 & 10 & 10 \\
-ZNE, linear             & $0.0738 \pm 0.0018$ & 6.3 & 10 & --- & 10 \\
-ZNE, Richardson (deg 2) & $0.0754 \pm 0.0012$ & 6.9 & 10 & 0 & 10 \\
-No mitigation           & $0.1018 \pm 0.0022$ & 8.3 & --- & 0 & 10 \\
-Data-reuploading VQC    & $0.1211 \pm 0.0359$ & 8.6 & 2 & 1 & 10 \\
-ZNE, exponential        & $0.1599 \pm 0.0086$ & 9.9 & 0 & 0 & 10 \\
+Classical RBF kernel ridge & $0.0416 \pm 0.0011$ & 1.1 & 10 & 10 & 0 \\
+Quantum kernel ridge & $0.0426 \pm 0.0012$ & 2.4 & 10 & 10 & 1 \\
+Neural net (64,64) & $0.0426 \pm 0.0009$ & 2.5 & 10 & 10 & --- \\
+Gradient-boosted trees & $0.0471 \pm 0.0010$ & 4.0 & 10 & 10 & 10 \\
+Ridge regression & $0.0531 \pm 0.0014$ & 5.3 & 10 & 10 & 10 \\
+Bounded-encoding VQC & $0.0552 \pm 0.0032$ & 5.9 & 10 & 10 & 10 \\
+ZNE, linear & $0.0738 \pm 0.0018$ & 7.8 & 10 & --- & 10 \\
+ZNE, Richardson (deg 2) & $0.0754 \pm 0.0012$ & 8.4 & 10 & 0 & 10 \\
+Data-reuploading VQC & $0.0842 \pm 0.0371$ & 7.8 & 8 & 4 & 10 \\
+No mitigation & $0.1018 \pm 0.0022$ & 9.8 & --- & 0 & 10 \\
+ZNE, exponential & $0.1599 \pm 0.0086$ & 11.0 & 0 & 0 & 10 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -632,57 +480,51 @@ ZNE, exponential        & $0.1599 \pm 0.0086$ & 9.9 & 0 & 0 & 10 \\
 \centering
 \includegraphics[width=\textwidth]{figures/ch5/fig_ch5_robustness.png}
 \caption[Robustness of the ranking over splits and seeds]{Robustness of the ranking. Panel~a: mean $\pm$ one standard deviation of test
-RMSE over ten circuit-grouped splits, in the idealized regime and in the realistic
-regime under both noise-scaling methods. Panel~b: the two variational arms refitted
-with ten initialisation seeds on the fixed reference split; the open diamond is
-seed~7, the value reported in Table~\ref{tab:ch5_main}, and the dotted line the
-unmitigated error.}
+RMSE over ten circuit-grouped splits, in the idealised regime and in the realistic
+regime under both noise-scaling methods. Panel~b: the separate ten-seed
+variational study on the fixed reference split. The open diamond marks
+seed~7 in that study, and the dotted line marks the unmitigated error.}
 \label{fig:ch5_robustness}
 \end{figure}
 
-Three statements hold in every one of the ten splits: the quantum kernel and the
-neural network are both resolvably better than linear extrapolation; neither is
-resolvably better than the other; and exponential extrapolation is resolvably worse
-than no mitigation. The data-reuploading VQC is the one arm whose standing depends on
-the split. It is resolvably worse than no mitigation in $6$ of $10$ splits and better
-in only $2$, and its mean error is above the unmitigated level.
+The two kernel means are $0.0416\pm0.0011$ for RBF and
+$0.0426\pm0.0012$ for fidelity. Paired intervals favour RBF in
+$9$ splits and favour fidelity in $0$ splits. Repeated
+holdouts overlap and measure split sensitivity on the same dataset.
 
-\paragraph{Ten initialisation seeds.} Figure~\ref{fig:ch5_robustness}(b) holds the
-reference split fixed and refits the variational arms with ten initialisation seeds
-at the $40$-epoch budget of the main run. On Split~A the data-reuploading VQC scores
-$0.0935 \pm 0.0327$ (range $0.0557$--$0.1511$) and is worse than no mitigation for
-$5$ of $10$ seeds; the value in Table~\ref{tab:ch5_main} is its best seed. The
+\paragraph{Ten initialisation seeds.} Figure~\ref{fig:ch5_robustness}(b) reports
+the earlier VQC-only study at the fixed data split and $40$-epoch budget.
+On Split~A the data-reuploading VQC scores
+$0.0935 \pm 0.0327$, with values from $0.0557$ to $0.1511$. No mitigation gives
+lower RMSE for five of the ten seeds. The
 bounded variant is far more stable at $0.0581 \pm 0.0096$ and better than no
 mitigation for every seed. On Split~B the reuploading arm is worse than no
 mitigation for all ten seeds ($0.1827$--$0.4900$) and the bounded arm for nine of
-ten. The reuploading arm's in-distribution accuracy is therefore not a property of
-the method but of a favourable initialisation, and a single-seed result would
-misstate its performance.
+ten. The study shows the reuploading arm's sensitivity to initialisation.
 
-\paragraph{Out-of-range inputs.} Section~\ref{sec:ch5_main} attributed the Split~B
-inversion to extrapolation behaviour. Table~\ref{tab:ch5_oodfeat} and
-Figure~\ref{fig:ch5_oodfeat} test that directly by refitting every learned arm on
-Split~B with three input sets: all six features; the three noise-scaled values only;
-and the noise-scaled values plus observable weight. Only the depth and the
-two-qubit gate count take values on the test set that are absent from training.
+\paragraph{Depth-related inputs.} Table~\ref{tab:ch5_oodfeat} and
+Figure~\ref{fig:ch5_oodfeat} compare refitted models on Split~B with all six
+features, the three noise-scaled values, and the noise-scaled values plus
+observable weight. The depth split separates shallow training circuits from
+deeper test circuits, shifting the depth and two-qubit gate count inputs.
 
 \begin{table}[htbp]
 \centering
-\caption[Depth extrapolation by input set]{Depth extrapolation (Split~B, idealized regime) by input set. RMSE; the
-unmitigated value is $0.1217$. Every entry in the last two columns is resolvably
-better than no mitigation by the paired bootstrap.}
+\caption[Depth extrapolation by input set]{Depth extrapolation (Split~B, idealised regime) by input set. RMSE; the
+unmitigated value is $0.1217$. Appendix~\ref{AppendixB} reports the paired differences against no mitigation.}
 \label{tab:ch5_oodfeat}
 \small
 \begin{tabular}{lccc}
 \toprule
 \textbf{Method} & \textbf{All six} & \textbf{Noise-scaled only} & \textbf{Noise-scaled + weight} \\
 \midrule
+Classical RBF kernel ridge & 0.0658 & 0.0709 & 0.0718 \\
 Gradient-boosted trees & 0.0665 & 0.0714 & 0.0721 \\
-Ridge regression       & 0.0717 & 0.0717 & 0.0717 \\
-Neural net (64,64)     & 0.1292 & 0.0696 & 0.0723 \\
-Quantum kernel ridge   & 0.1433 & 0.0720 & 0.0723 \\
-Bounded-encoding VQC   & 0.1543 & 0.0672 & 0.0773 \\
-Data-reuploading VQC   & 0.4900 & 0.0905 & 0.0781 \\
+Ridge regression & 0.0717 & 0.0717 & 0.0717 \\
+Neural net (64,64) & 0.1292 & 0.0696 & 0.0723 \\
+Quantum kernel ridge & 0.1433 & 0.0720 & 0.0723 \\
+Bounded-encoding VQC & 0.1543 & 0.0673 & 0.0773 \\
+Data-reuploading VQC & 0.3127 & 0.0968 & 0.0948 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -690,132 +532,91 @@ Data-reuploading VQC   & 0.4900 & 0.0905 & 0.0781 \\
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/ch5/fig_ch5_ood_features.png}
-\caption[Depth extrapolation with and without the structural inputs]{Depth extrapolation with and without the two structural inputs whose test
-values lie outside the training range (log scale; bars are $95\%$ bootstrap
-intervals). The dotted line is the unmitigated error.}
+\caption[Depth extrapolation with all inputs or noise-scaled inputs]{Depth
+extrapolation with all six inputs or the three noise-scaled values alone.
+The scale is logarithmic, bars are $95\%$ bootstrap intervals, and the dotted
+line marks the unmitigated RMSE.}
 \label{fig:ch5_oodfeat}
 \end{figure}
 
-Without the two out-of-range inputs every learned arm, including the neural network,
-the quantum kernel and both variational circuits, is resolvably better than no
-mitigation on the deeper circuits, and the five strongest are within $0.0672$--$0.0720$
-of one another. With them, only the two models that cannot respond freely to
-out-of-range values -- the trees, which are constant beyond their last split, and
-ridge, whose fit is unchanged to four decimals when the structural inputs are
-removed -- remain useful. The
-Split~B inversion is therefore an input-support problem, not a limitation of neural
-or quantum model families, and it has a simple remedy: do not give a learned
-mitigator inputs whose deployment values lie outside the range it was trained on.
+Removing depth and two-qubit gate count while keeping observable weight
+increases RBF's RMSE from $0.0658$ to $0.0718$ and lowers fidelity RMSE from
+$0.1433$ to $0.0723$. Removing observable weight as well gives $0.0709$ and
+$0.0720$, respectively. These refits change the inputs and reduce the width
+of the fidelity feature map. They measure sensitivity to the choice of
+feature set on this depth split.
 
-\section{Summary of findings, idealized regime}\label{sec:ch5_summary}
+\section{Summary of findings, idealised regime}\label{sec:ch5_summary}
 
-\begin{enumerate}
-    \item In-distribution, the three strongest learned arms reduce the residual error
-    of the best analytic extrapolation by $41$--$44\%$ ($0.0412$--$0.0436$ against
-    $0.0737$) at identical circuit cost for the classical arms. The advantage of the
-    kernel and the network over linear extrapolation is resolved in every one of ten
-    independent splits.
+The matched classical control reaches $0.0404$ RMSE on random held-out
+circuits and $0.0658$ on deeper circuits. The fidelity
+kernel reaches $0.0421$ and $0.1433$,
+respectively. The ablations and learning curves show how the comparison
+depends on the features and on the number of reference circuits. The separate seed study shows that the data-reuploading VQC is sensitive to initialisation.
 
-    \item The hybrid quantum kernel is tied with the classical neural network
-    ($0.0425 \pm 0.0012$ against $0.0426 \pm 0.0009$ over ten splits; resolved in
-    none) while requiring one shot-estimated circuit per training point for every
-    prediction, so it does not lead on a cost-normalized basis.
-
-    \item Quantum-kernel bandwidth is decisive: untuned at $\beta = 1$ the arm is
-    $47\%$ worse than no mitigation, and tuning changes its error by a factor of
-    $3.6$. At this system size the failure is a kernel that is too narrow, not
-    exponential concentration.
-
-    \item The data-reuploading VQC is unstable: over ten initialisation seeds its
-    in-distribution error ranges from $0.0557$ to $0.1511$ and is worse than no
-    mitigation for half of them; over ten splits its mean error exceeds the
-    unmitigated level. The bounded variant is stable and useful in-distribution.
-
-    \item Out of distribution the ranking inverts when depth and gate count are among
-    the inputs, because their test values lie outside the training range. Without
-    them every learned arm is resolvably better than no mitigation on deeper
-    circuits.
-
-    \item With scarce reference data a strongly regularised model is the safe choice:
-    at $31$ training circuits ridge and the quantum kernel are never worse than no
-    mitigation over $20$ draws, while the neural network is worse in $12$.
-
-    \item Cross-family transfer is asymmetric. Training on the family whose ideal
-    values are more widely spread transfers; the reverse mostly does not.
-\end{enumerate}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%  Regime II: device-realistic, non-Markovian
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{The realistic noise model carries verified memory}
+\section{Trace-distance revivals in the device-informed model}
 \label{sec:ch5_nonmarkov}
 
-Everything reported so far is in the idealized regime. The remaining sections use
-the device-realistic model of Section~\ref{sec:ch3_realistic}. Before any mitigation
-result is reported under it, the model's central new property is verified: that it is
-actually non-Markovian.
+Figure~\ref{fig:ch5_nonmarkov} applies the Breuer--Laine--Piilo trace-distance
+diagnostic of Section~\ref{sec:ch3_blp} to qubit $q_0$ during fourteen idle
+layers. With the defect coupled, the trace distance for the computational-basis
+probe pair falls from $0.907$ at the first idle layer to $0.015$ at the fifth
+and revives to $0.896$ at the tenth. This increase witnesses information
+backflow for the tested idle evolution. The maximum total revival across the
+two tested probe pairs is $\mathcal{N}_{\mathrm{probe}}=0.88$.
 
-Figure~\ref{fig:ch5_nonmarkov} shows the Breuer--Laine--Piilo diagnostic of
-Section~\ref{sec:ch3_blp}, measured on the idling register. With the defect coupled,
-the trace distance between the two probe states falls from $0.907$ at the first idle
-layer to $0.015$ at the fifth and then \emph{revives} to $0.896$ by the tenth,
-before falling again: distinguishability that the environment had absorbed is
-returned to the system. The total revival is $\mathcal{N} = 0.88$. Two controls give
-$\mathcal{N} = 0$ to machine precision. In the \emph{defect-removed} control the
-defect is decoupled and every other channel is unchanged. In the \emph{reset}
-control the defect is coupled exactly as in production but returned to its ground
-state at the end of every layer, so it cannot carry an excitation from one layer to
-the next. The reset control damages the system identically within a layer -- the
-first-layer trace distance is $0.907$ in both -- and differs from production only in
-memory. Sweeping the coupling gives
-$\mathcal{N} = 0$, $0$, $0.57$, $0.88$, $1.70$ and $2.70$ at
-$g = 0$, $0.05$, $0.10$, $0.15$, $0.25$ and $0.40$~rad; the measure increases
-monotonically over the sweep. The zero at $g = 0.05$ is a finite-window
-artifact rather than Markovian behaviour: at that coupling the exchange period
-exceeds the twelve idle layers probed, so no revival has occurred yet within the
-observation window.
+Both controls show zero revival for the same probes and idle window. The
+defect-removed control decouples the defect. The reset control preserves the
+collision and damping parameters and returns the defect to its ground state
+between layers. Its first-layer trace distance matches production. In a separate
+twelve-layer sweep, the finite-probe statistic gives $0$, $0$, $0.57$, $0.88$,
+$1.70$ and $2.70$ at $g=0$, $0.05$, $0.10$, $0.15$, $0.25$ and $0.40$~rad,
+respectively. A zero means that the sampled trace distances show no revival
+in the sweep window.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/ch5/fig_ch5_nonmarkov.png}
-\caption[Verification that the realistic model is non-Markovian]{Verification that the realistic model is non-Markovian, measured on an
-idling register. Panel~a: trace distance between the images of two probe states
-against idle layer. With the defect coupled the distance collapses and revives; with
-it decoupled the decay is monotone and $\mathcal{N} = 0$ exactly. Panel~b: the
-measure against defect coupling. The zero at $g = 0.05$ reflects the finite
-twelve-layer observation window, not Markovianity.}
+\caption[Idle trace-distance revivals with a coupled defect]{Panel~a shows the
+trace distance on $q_0$ across fourteen idle layers for the computational-basis
+probe pair in production and with the defect removed. Panel~b shows the maximum
+total revival over the two tested probe pairs in the twelve-layer coupling
+sweep, labelled $\mathcal{N}$ in the plot.}
 \label{fig:ch5_nonmarkov}
 \end{figure}
 
-The defect also costs accuracy outright, but not through its memory. Averaged over
-the $4500$ circuit--observable pairs, the mean absolute deviation of the unmitigated
-$\lambda = 1$ measurement from the ideal value is $0.0603$ with the defect removed,
-$0.0870$ with the defect reset every layer, $0.0877$ in production and $0.0930$
-after drift. Almost all of the defect's added raw error is therefore its
-energy loss, which the reset control shares; memory alone changes the raw error by
-less than one percent of its value. This distinction matters for every comparison
-that follows: a comparison against the defect-removed control measures loss and
-memory together, and only the reset control isolates memory.
+Across the $4500$ circuit--observable pairs, the mean absolute deviation of the
+unmitigated native measurement is $0.0603$ with the defect removed, $0.0870$
+with the defect reset between layers, $0.0877$ in production and $0.0930$ after
+drift. Most of the difference between production and defect removal persists
+when the defect is reset between layers. The production-minus-reset contrast
+measures the effect of that intervention with the collision parameters fixed.
 
 \section{Parameter scaling versus unitary folding}\label{sec:ch5_scaling}
 
-Table~\ref{tab:ch5_scaling} and Figure~\ref{fig:ch5_scaling} run the benchmark under
-both noise-scaling methods of Section~\ref{sec:ch3_realistic}: idealized parameter
-scaling, which multiplies every noise rate exactly, and layer-level unitary folding,
-which is what hardware can do. A noise-free unit test confirms that folded and
-unfolded circuits agree to $3.9 \times 10^{-16}$ (Section~\ref{sec:ch4_verification}),
-so folding changes only the noise, not the ideal circuit.
+Table~\ref{tab:ch5_scaling} and Figure~\ref{fig:ch5_scaling} compare the
+two scaling protocols on identical circuits and grouped splits in the
+reference production pool. The
+tuning budget is fixed across protocols, with $24$ candidates per
+kernel. Both use the same $4096$ scale-1 shots per circuit--observable pair.
+The three folded ZNE fits use the realised layer ratio for each observation
+(Eq.~\eqref{eq:ch3_fold_ratio}). The middle coordinate is $7/3$ at depth
+$3$ and $9/5$ at depth $5$. These depths account for $520$ of the $1350$
+test rows on Split~A and $920$ of the $1755$ test rows on Split~B.
+The noiseless folding test verifies that the
+folded circuits preserve the ideal expectation values to
+$3.9 \times 10^{-16}$ (Section~\ref{sec:ch4_verification}).
 
 \begin{table}[htbp]
 \centering
-\caption[Parameter scaling against unitary folding, realistic regime]{Realistic regime, production noise: parameter scaling against unitary
-folding on the reference split. The last column is the paired difference
-RMSE(folding) $-$ RMSE(parameter) on Split~A with its $95\%$ interval; an asterisk
-marks a resolved difference.}
+\caption[Parameter scaling against unitary folding, realistic regime]{Parameter
+scaling and unitary folding under production noise. The unmitigated
+observation is shared. The last column gives the paired difference
+RMSE(folding) $-$ RMSE(parameter) on Split~A and its $95\%$ interval.
+An asterisk marks a resolved difference.}
 \label{tab:ch5_scaling}
 \small
+\setlength{\tabcolsep}{5pt}
 \begin{tabular}{lccccc}
 \toprule
 & \multicolumn{2}{c}{\textbf{Split A}} & \multicolumn{2}{c}{\textbf{Split B}} & \\
@@ -823,16 +624,17 @@ marks a resolved difference.}
 \textbf{Method} & \textbf{Param.} & \textbf{Folding} & \textbf{Param.} & \textbf{Folding}
 & \textbf{$\Delta$ Split A} \\
 \midrule
-Quantum kernel ridge    & 0.0622 & 0.0757 & 0.0878 & 0.1031 & $+0.013\,[0.008, 0.019]^{*}$ \\
-Neural net (64,64)      & 0.0648 & 0.0798 & 0.1357 & 0.1287 & $+0.015\,[0.010, 0.020]^{*}$ \\
-Ridge regression        & 0.0673 & 0.0832 & 0.0912 & 0.1104 & $+0.016\,[0.011, 0.021]^{*}$ \\
-Gradient-boosted trees  & 0.0708 & 0.0831 & 0.0903 & 0.1040 & $+0.012\,[0.007, 0.018]^{*}$ \\
-Bounded-encoding VQC    & 0.0715 & 0.0971 & 0.1031 & 0.1242 & $+0.026\,[0.021, 0.030]^{*}$ \\
-Data-reuploading VQC    & 0.1012 & 0.1119 & 0.1374 & 0.1604 & $+0.011\,[0.005, 0.016]^{*}$ \\
-ZNE, linear             & 0.1023 & 0.0904 & 0.1253 & 0.1202 & $-0.012\,[-0.015, -0.009]^{*}$ \\
-ZNE, Richardson (deg 2) & 0.1201 & 0.1987 & 0.1076 & 0.1934 & $+0.079\,[0.063, 0.094]^{*}$ \\
-No mitigation           & 0.1239 & 0.1241 & 0.1370 & 0.1373 & $+0.000\,[-0.001, 0.001]$ \\
-ZNE, exponential        & 0.2074 & 0.1950 & 0.2022 & 0.1888 & $-0.012\,[-0.038, 0.016]$ \\
+Classical RBF kernel ridge & 0.0622 & 0.0762 & 0.0834 & 0.1031 & $+0.014\,[0.009, 0.019]^{*}$ \\
+Quantum kernel ridge & 0.0622 & 0.0757 & 0.0878 & 0.1025 & $+0.013\,[0.008, 0.019]^{*}$ \\
+Neural net (64,64) & 0.0648 & 0.0798 & 0.1357 & 0.1424 & $+0.015\,[0.010, 0.020]^{*}$ \\
+Ridge regression & 0.0673 & 0.0830 & 0.0912 & 0.1104 & $+0.016\,[0.011, 0.021]^{*}$ \\
+Gradient-boosted trees & 0.0708 & 0.0834 & 0.0903 & 0.1039 & $+0.013\,[0.007, 0.018]^{*}$ \\
+Bounded-encoding VQC & 0.0728 & 0.0907 & 0.1080 & 0.1879 & $+0.018\,[0.014, 0.022]^{*}$ \\
+ZNE, linear & 0.1023 & 0.0902 & 0.1253 & 0.1218 & $-0.012\,[-0.015, -0.009]^{*}$ \\
+ZNE, Richardson (deg 2) & 0.1201 & 0.2001 & 0.1076 & 0.1963 & $+0.080\,[0.064, 0.096]^{*}$ \\
+No mitigation & 0.1239 & 0.1239 & 0.1370 & 0.1370 & $0\,[0, 0]$ \\
+Data-reuploading VQC & 0.1511 & 0.0924 & 0.1120 & 0.1542 & $-0.059\,[-0.071, -0.046]^{*}$ \\
+ZNE, exponential & 0.2074 & 0.1870 & 0.2022 & 0.2014 & $-0.020\,[-0.047, 0.005]$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -841,64 +643,165 @@ ZNE, exponential        & 0.2074 & 0.1950 & 0.2022 & 0.1888 & $-0.012\,[-0.038, 
 \centering
 \includegraphics[width=\textwidth]{figures/ch5/fig_ch5_scaling.png}
 \caption[Parameter scaling against unitary folding, realistic regime]{Parameter scaling against unitary folding in the realistic regime, on
-held-out random circuits (panel~a) and deeper circuits (panel~b). The dotted line is
-the unmitigated error, which does not depend on the scaling method.}
+held-out random circuits (panel~a) and deeper circuits (panel~b). The dotted line
+marks the unmitigated RMSE shared by both protocols.}
 \label{fig:ch5_scaling}
 \end{figure}
 
-Moving to hardware-realizable folding has opposite effects on the two families of
-method. Every learned arm becomes resolvably worse on Split~A, by $0.011$ to $0.026$
-in RMSE. Linear extrapolation becomes resolvably \emph{better}, by $0.012$, and
-second-order Richardson extrapolation becomes much worse ($+0.079$). A plausible
-cause, not tested separately, is that folding amplifies the coherent and crosstalk
-components non-linearly in $\lambda$, which a quadratic fit through three points
-follows and a linear fit averages over. Over ten splits the quantum kernel goes from
-$0.0640 \pm 0.0019$ under parameter scaling to $0.0769 \pm 0.0043$ under folding and
-linear extrapolation from $0.1028 \pm 0.0049$ to $0.0938 \pm 0.0038$, so the
-kernel's margin over linear extrapolation falls from $38\%$ to $18\%$. It remains
-resolved: the kernel, the network, the trees and ridge are better than linear
-extrapolation in $10$ of $10$ splits under folding. The bounded VQC is not (better
-in $2$, worse in $1$), and the reuploading VQC is worse than linear extrapolation in
-$6$ of $10$.
+On Split~A, both learned kernels have higher RMSE under folding.
+RBF goes from $0.0622$ to $0.0762$ and fidelity goes from $0.0622$
+to $0.0757$. Linear ZNE improves from $0.1023$ to $0.0902$.
+The kernels' RMSE gap below linear ZNE narrows from about $0.040$
+with parameter scaling to $0.014$ with folding. On this reference pool,
+both kernels have lower RMSE than linear ZNE on both holdouts under
+both protocols, with paired intervals excluding zero. Richardson ZNE worsens from $0.1201$
+to $0.2001$ on Split~A.
 
-The practical reading is that a learned mitigator trained and evaluated on
-parameter-scaled data -- the setting of essentially all simulation studies --
-overstates its advantage over extrapolation by roughly a factor of two relative to
-what hardware-realizable scaling delivers, but on this model it does not reverse
-it.
+On the random split, the paired RBF-minus-fidelity interval includes zero
+under both protocols. On the depth split, the difference
+under parameter scaling is $-0.00438$ (95\% CI $[-0.00528,\allowbreak -0.00347]$).
+Under folding, RBF and fidelity reach $0.1031$ and $0.1025$.
+Their paired difference is $+0.00059$ (95\% CI
+$[-0.00158,\allowbreak +0.00289]$).
 
-\section{What non-Markovianity costs each method}\label{sec:ch5_markovianity}
+\section{Replication of the scaling comparison across circuit pools and shot draws}
+\label{sec:ch5_folding_seeds}
 
-Table~\ref{tab:ch5_regime} and Figure~\ref{fig:ch5_regime} compare the production
-model with both controls of Section~\ref{sec:ch5_nonmarkov}, under both scaling
-methods, on identical circuits. The paired column is production minus the reset
-control, which isolates memory.
+The scaling comparison was repeated under the reference production calibration on
+three independently generated pools of $900$ circuits. Each pool contains
+$450$ HEA and $450$ TFIM circuits with five observables per circuit. The
+circuit generator used seeds $2026112501$ through $2026112503$. For each pool,
+the exact expectations were computed once and used to simulate three
+independent sets of $4096$-shot observations per setting. The shot seed labels
+$2026112511$ through $2026112513$ were each combined with the circuit seed
+using NumPy's \texttt{SeedSequence} to initialise a separate shot stream per
+seed combination. The protocols shared one native-scale draw in each
+combination, and the folded extrapolators used the executed layer ratios.
+
+The eleven mitigation arms were evaluated for every seed combination under
+both scaling protocols. Within a pool, Split~A used the same $70/30$
+circuit-grouped holdout with seed~$7$, and Split~B trained on circuits at
+depth $\leq4$ and tested at depth $\geq5$. Split~A tested $270$ circuits
+per pool. Split~B tested $346$, $375$ and $341$ circuits in seed order.
+Both protocols reused these partitions for all shot draws in each pool.
+The learned arms were refit in each combination using the reference
+training budgets and the same six features. The kernels tuned on four
+matched circuit-grouped inner folds with $24$ candidates each.
+Each $95\%$ interval compares methods or protocols on the same test
+circuits within one seed combination. The nine combinations share circuits
+within each of three pools, so the interval counts describe the observed
+replications. Across-pool variation is summarised by the range of the three
+pool means, each averaged over its shot draws.
+
+Linear ZNE has lower RMSE with folding in all nine combinations on each
+split, with paired intervals excluding zero. Folded minus parameter-scaled
+RMSE averages $-0.00942$ on Split~A and $-0.00387$ on Split~B. The observed
+ranges are $[-0.01033,\allowbreak -0.00901]$ and
+$[-0.00470,\allowbreak -0.00291]$, respectively. The unmitigated RMSE is
+identical between the two protocols in each combination because the native
+shots are shared.
+
+Richardson ZNE has higher RMSE with folding in all seed combinations,
+with mean increases of $0.07287$ and $0.08112$ on Splits~A and~B.
+Figure~\ref{fig:ch5_foldingseed_scaling} shows the change in error for all
+eleven arms.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/ch5/fig_ch5_folding_seed_scaling.png}
+\caption[Scaling differences over circuit and shot seeds]{The paired change in
+test RMSE from parameter scaling to folding. Each marker is a circuit-pool and
+shot-draw combination. Colours identify pools and horizontal segments span the
+three shot draws in each pool. Negative values favour folding. The panels use
+different horizontal scales.}
+\label{fig:ch5_foldingseed_scaling}
+\end{figure}
+
+Both kernels have higher RMSE under folding than under parameter scaling,
+with paired intervals excluding zero in all nine combinations on each
+split. On random circuits, both kernels beat folded linear ZNE in all nine
+combinations. On deeper circuits, paired intervals favour fidelity over folded
+linear ZNE in all nine combinations and favour RBF over folded linear ZNE in seven.
+The other two RBF intervals include zero. Among the
+eleven arms, gradient-boosted trees give the lowest mean folded depth RMSE
+of $0.1036$.
 
 \begin{table}[htbp]
 \centering
-\caption[The cost of memory]{The cost of memory. RMSE on Split~A with the defect removed, reset every
-layer (no memory) and in production (memory). $\Delta$ is the paired difference
-RMSE(production) $-$ RMSE(reset) with its $95\%$ interval; an asterisk marks a
-resolved difference.}
+\caption[Kernel comparison over circuit and shot seeds]{Mean kernel RMSE
+across the nine seed combinations for each scaling protocol and split. The
+last three columns count within-combination paired intervals that favour
+RBF, favour fidelity or include zero.}
+\label{tab:ch5_folding_seed_kernels}
+\small
+\begin{tabular}{llccrrr}
+\toprule
+Split & Scaling & RBF RMSE & Fidelity RMSE & RBF & Fidelity & Includes 0 \\
+\midrule
+A & Parameter scaling & 0.0648 & 0.0652 & 3 & 0 & 6 \\
+A & Unitary folding & 0.0805 & 0.0812 & 4 & 0 & 5 \\
+B & Parameter scaling & 0.0841 & 0.0869 & 7 & 0 & 2 \\
+B & Unitary folding & 0.1131 & 0.1069 & 2 & 4 & 3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:ch5_folding_seed_kernels} and
+Figure~\ref{fig:ch5_foldingseed_kernels} show the direct kernel contrasts.
+On random circuits the paired intervals favour RBF in three parameter
+combinations and four folding combinations. On deeper circuits the
+parameter-scaled intervals favour RBF in seven combinations. The folded
+depth intervals favour fidelity in four combinations, RBF in two, and
+include zero in three. The folded depth mean RBF-minus-fidelity difference
+is $+0.00618$, and the three pool means range from $-0.00017$ to $+0.01868$.
+Three of the four favourable fidelity intervals are from the pool with
+circuit seed $2026112501$. Table~\ref{tab:appB_foldingseeds} reports the
+other paired scaling contrasts and their spread.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/ch5/fig_ch5_folding_seed_kernels.png}
+\caption[Paired kernel comparisons over circuit and shot seeds]{Classical RBF
+minus quantum fidelity RMSE for every seed combination. Whiskers show $95\%$
+paired circuit-bootstrap intervals within each combination. Filled markers
+denote intervals that exclude zero. Negative values favour RBF. Horizontal
+scales are shared within each split.}
+\label{fig:ch5_foldingseed_kernels}
+\end{figure}
+
+\section{Effects of resetting the defect between layers}\label{sec:ch5_markovianity}
+
+Table~\ref{tab:ch5_regime} and Figure~\ref{fig:ch5_regime} compare the production
+model with both controls of Section~\ref{sec:ch5_nonmarkov}, under both scaling
+methods, on identical circuits. Within each condition, the native-scale
+shots are shared by the two protocols. The two $\Delta$ columns compare production with resetting the defect between layers, at fixed collision and damping
+parameters.
+
+\begin{table}[htbp]
+\centering
+\caption[Defect removal and reset controls]{RMSE on Split~A with the defect
+removed, reset between layers and in production. $\Delta$ is the paired difference RMSE(production) $-$ RMSE(reset) with its $95\%$ interval, computed from unrounded values. An
+asterisk marks a resolved difference.}
 \label{tab:ch5_regime}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lcccccccc}
 \toprule
 & \multicolumn{4}{c}{\textbf{Parameter scaling}} & \multicolumn{4}{c}{\textbf{Unitary folding}} \\
 \cmidrule(lr){2-5} \cmidrule(lr){6-9}
-\textbf{Method} & \textbf{Removed} & \textbf{Reset} & \textbf{Prod.} & \textbf{$\Delta$ memory}
-& \textbf{Removed} & \textbf{Reset} & \textbf{Prod.} & \textbf{$\Delta$ memory} \\
+\textbf{Method} & \textbf{Removed} & \textbf{Reset} & \textbf{Prod.} & \textbf{$\Delta$}
+& \textbf{Removed} & \textbf{Reset} & \textbf{Prod.} & \textbf{$\Delta$} \\
 \midrule
-Quantum kernel ridge    & 0.0404 & 0.0525 & 0.0622 & $+0.010\,[0.006, 0.014]^{*}$ & 0.0464 & 0.0570 & 0.0757 & $+0.019\,[0.012, 0.025]^{*}$ \\
-Neural net (64,64)      & 0.0417 & 0.0562 & 0.0648 & $+0.009\,[0.004, 0.014]^{*}$ & 0.0474 & 0.0592 & 0.0798 & $+0.021\,[0.014, 0.028]^{*}$ \\
-Ridge regression        & 0.0424 & 0.0604 & 0.0673 & $+0.007\,[0.003, 0.011]^{*}$ & 0.0500 & 0.0612 & 0.0832 & $+0.022\,[0.016, 0.029]^{*}$ \\
-Gradient-boosted trees  & 0.0474 & 0.0599 & 0.0708 & $+0.011\,[0.006, 0.016]^{*}$ & 0.0529 & 0.0636 & 0.0831 & $+0.020\,[0.014, 0.025]^{*}$ \\
-Bounded-encoding VQC    & 0.0533 & 0.0691 & 0.0715 & $+0.002\,[-0.006, 0.009]$ & 0.0543 & 0.0676 & 0.0971 & $+0.030\,[0.023, 0.037]^{*}$ \\
-Data-reuploading VQC    & 0.0445 & 0.0949 & 0.1012 & $+0.006\,[0.000, 0.013]^{*}$ & 0.1497 & 0.1057 & 0.1119 & $+0.006\,[-0.006, 0.017]$ \\
-ZNE, linear             & 0.0522 & 0.1130 & 0.1023 & $-0.011\,[-0.020, -0.001]^{*}$ & 0.0567 & 0.0863 & 0.0904 & $+0.004\,[-0.002, 0.010]$ \\
-ZNE, Richardson (deg 2) & 0.0665 & 0.1086 & 0.1201 & $+0.012\,[0.003, 0.020]^{*}$ & 0.0835 & 0.1378 & 0.1987 & $+0.061\,[0.047, 0.076]^{*}$ \\
-No mitigation           & 0.0807 & 0.1247 & 0.1239 & $-0.001\,[-0.006, 0.004]$ & 0.0804 & 0.1251 & 0.1241 & $-0.001\,[-0.006, 0.003]$ \\
-ZNE, exponential        & 0.1435 & 0.1866 & 0.2074 & $+0.021\,[-0.006, 0.046]$ & 0.1382 & 0.1507 & 0.1950 & $+0.044\,[0.015, 0.071]^{*}$ \\
+Classical RBF kernel ridge & 0.0402 & 0.0527 & 0.0622 & $+0.010\,[0.005, 0.014]^{*}$ & 0.0462 & 0.0552 & 0.0762 & $+0.021\,[0.014, 0.029]^{*}$ \\
+Quantum kernel ridge & 0.0404 & 0.0525 & 0.0622 & $+0.010\,[0.006, 0.014]^{*}$ & 0.0460 & 0.0553 & 0.0757 & $+0.020\,[0.013, 0.028]^{*}$ \\
+Neural net (64,64) & 0.0417 & 0.0562 & 0.0648 & $+0.009\,[0.004, 0.014]^{*}$ & 0.0477 & 0.0561 & 0.0798 & $+0.024\,[0.017, 0.031]^{*}$ \\
+Ridge regression & 0.0424 & 0.0604 & 0.0673 & $+0.007\,[0.003, 0.011]^{*}$ & 0.0504 & 0.0595 & 0.0830 & $+0.023\,[0.017, 0.031]^{*}$ \\
+Gradient-boosted trees & 0.0474 & 0.0599 & 0.0708 & $+0.011\,[0.006, 0.016]^{*}$ & 0.0534 & 0.0628 & 0.0834 & $+0.021\,[0.013, 0.028]^{*}$ \\
+Bounded-encoding VQC & 0.0533 & 0.0691 & 0.0728 & $+0.004\,[-0.004, 0.010]$ & 0.0543 & 0.0714 & 0.0907 & $+0.019\,[0.013, 0.025]^{*}$ \\
+ZNE, linear & 0.0522 & 0.1130 & 0.1023 & $-0.011\,[-0.020, -0.001]^{*}$ & 0.0574 & 0.0857 & 0.0902 & $+0.004\,[-0.002, 0.011]$ \\
+ZNE, Richardson (deg 2) & 0.0665 & 0.1086 & 0.1201 & $+0.012\,[0.003, 0.020]^{*}$ & 0.0816 & 0.1383 & 0.2001 & $+0.062\,[0.049, 0.076]^{*}$ \\
+No mitigation & 0.0807 & 0.1247 & 0.1239 & $-0.001\,[-0.006, 0.004]$ & 0.0807 & 0.1247 & 0.1239 & $-0.001\,[-0.006, 0.004]$ \\
+Data-reuploading VQC & 0.0782 & 0.0860 & 0.1511 & $+0.065\,[0.054, 0.076]^{*}$ & 0.1249 & 0.1107 & 0.0924 & $-0.018\,[-0.028, -0.009]^{*}$ \\
+ZNE, exponential & 0.1435 & 0.1866 & 0.2074 & $+0.021\,[-0.006, 0.046]$ & 0.1506 & 0.1531 & 0.1870 & $+0.034\,[0.008, 0.059]^{*}$ \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -907,41 +810,23 @@ ZNE, exponential        & 0.1435 & 0.1866 & 0.2074 & $+0.021\,[-0.006, 0.046]$ &
 \centering
 \includegraphics[width=\textwidth]{figures/ch5/fig_ch5_regime.png}
 \caption[The cost of the defect under both scaling methods]{The cost of the defect under parameter scaling (panel~a) and unitary
-folding (panel~b). Green: defect removed; amber: defect reset every layer, which has
-the same per-layer damage but no memory; red: production, with memory. The dotted
-line is the unmitigated error with the defect removed.}
+folding (panel~b). Green denotes defect removal, amber denotes a fresh
+defect at each layer, and red denotes production with memory. The dotted
+line marks the shared unmitigated RMSE with the defect removed.}
 \label{fig:ch5_regime}
 \end{figure}
 
-Three results follow. The first two hold only against the reset control; the
-defect-removed control alone points the other way.
-
-First, memory does not change the unmitigated error: the paired difference between
-production and the reset control is $-0.0007$ under parameter scaling and $-0.0010$
-under folding, both unresolved. Everything the defect-removed control adds on top is
-the defect's energy loss.
-
-Second, memory resolvably worsens every non-variational learned arm under both
-scaling methods -- by $0.007$--$0.011$ under parameter scaling and $0.019$--$0.022$
-under folding -- while it leaves linear extrapolation unchanged under folding and
-actually \emph{improves} it under parameter scaling. The comparison against the
-defect-removed control had suggested the opposite ordering, that memory costs
-extrapolation more than learning; that conclusion was an artefact of the control
-removing the defect's loss along with its memory, which penalises extrapolation more
-because extrapolation is more sensitive to the overall noise level. With loss held
-fixed, the learned arms are the ones that pay for memory. A plausible mechanism is
-that the learned map relates the noise-scaled measurements of a circuit to its ideal
-value through a function fitted across circuits, and memory makes the damage a
-layer suffers depend on the history of earlier layers, which varies between circuits
-in a way the three noise-scaled values do not fully capture. This mechanism has not
-been tested separately.
-
-Third, the ordering survives: under production noise the kernel ($0.0622$) and the
-network ($0.0648$) remain far better than linear extrapolation ($0.1023$) under
-parameter scaling, and better than it ($0.0757$, $0.0798$ against $0.0904$) under
-folding. Over ten splits the kernel is resolvably better than the network in $10$ of
-$10$ splits under parameter scaling ($0.0640$ against $0.0662$), a small margin of
-about $3\%$, and tied with it under folding (resolved in $1$ of $10$).
+Under parameter scaling, the production-minus-reset RMSE differences are
+$0.0095$
+for RBF and
+$0.0098$
+for fidelity. Under folding, they are $0.0211$ and $0.0204$,
+respectively. All four paired intervals exclude zero
+(Table~\ref{tab:ch5_regime}). For folded linear ZNE, the
+production-minus-reset interval includes zero.
+For the unmitigated estimate, the production-minus-reset interval includes zero
+under both scaling methods. The changes in the fitted kernels are specific to
+the features and fitted models under this reset intervention.
 
 \section{Calibration drift}\label{sec:ch5_drift}
 
@@ -953,8 +838,7 @@ calibration~A on identical held-out circuits.
 
 \begin{table}[htbp]
 \centering
-\caption[Calibration drift under parameter scaling]{Calibration drift under parameter scaling. RMSE; $\Delta$ is the paired
-difference RMSE(B, held-out) $-$ RMSE(A, held-out); an asterisk marks a resolved
+\caption[Calibration drift under parameter scaling]{Calibration drift under parameter scaling. RMSE; $\Delta$ is the paired difference RMSE(B, held-out) $-$ RMSE(A, held-out), computed from unrounded values; an asterisk marks a resolved
 difference.}
 \label{tab:ch5_drift}
 \small
@@ -964,16 +848,17 @@ difference.}
 \textbf{Method} & \textbf{A, held-out} & \textbf{B, training} & \textbf{B, held-out}
 & \textbf{$\Delta$ drift} \\
 \midrule
-Quantum kernel ridge    & 0.0622 & 0.0666 & 0.0636 & $+0.0014\,[-0.0013, 0.0041]$ \\
-Neural net (64,64)      & 0.0648 & 0.0666 & 0.0653 & $+0.0005\,[-0.0019, 0.0031]$ \\
-Ridge regression        & 0.0673 & 0.0740 & 0.0707 & $+0.0034\,[0.0009, 0.0058]^{*}$ \\
-Gradient-boosted trees  & 0.0708 & 0.0688 & 0.0696 & $-0.0012\,[-0.0045, 0.0022]$ \\
-Bounded-encoding VQC    & 0.0715 & 0.0759 & 0.0738 & $+0.0023\,[-0.0004, 0.0047]$ \\
-Data-reuploading VQC    & 0.1012 & 0.1024 & 0.1010 & $-0.0002\,[-0.0030, 0.0024]$ \\
-ZNE, linear             & 0.1023 & 0.1063 & 0.1066 & $+0.0043\,[0.0020, 0.0064]^{*}$ \\
+Classical RBF kernel ridge & 0.0622 & 0.0667 & 0.0635 & $+0.0014\,[-0.0014, 0.0041]$ \\
+Quantum kernel ridge & 0.0622 & 0.0666 & 0.0636 & $+0.0014\,[-0.0013, 0.0041]$ \\
+Neural net (64,64) & 0.0648 & 0.0666 & 0.0653 & $+0.0005\,[-0.0019, 0.0031]$ \\
+Ridge regression & 0.0673 & 0.0740 & 0.0707 & $+0.0034\,[0.0009, 0.0058]^{*}$ \\
+Gradient-boosted trees & 0.0708 & 0.0688 & 0.0696 & $-0.0012\,[-0.0045, 0.0022]$ \\
+Bounded-encoding VQC & 0.0728 & 0.0762 & 0.0734 & $+0.0005\,[-0.0019, 0.0028]$ \\
+ZNE, linear & 0.1023 & 0.1063 & 0.1066 & $+0.0043\,[0.0020, 0.0064]^{*}$ \\
 ZNE, Richardson (deg 2) & 0.1201 & 0.1115 & 0.1153 & $-0.0048\,[-0.0093, 0.0001]$ \\
-No mitigation           & 0.1239 & 0.1263 & 0.1298 & $+0.0059\,[0.0044, 0.0073]^{*}$ \\
-ZNE, exponential        & 0.2074 & 0.1941 & 0.1922 & $-0.0152\,[-0.0429, 0.0120]$ \\
+No mitigation & 0.1239 & 0.1263 & 0.1298 & $+0.0059\,[0.0044, 0.0073]^{*}$ \\
+Data-reuploading VQC & 0.1511 & 0.1456 & 0.1484 & $-0.0027\,[-0.0083, 0.0036]$ \\
+ZNE, exponential & 0.2074 & 0.1941 & 0.1922 & $-0.0152\,[-0.0429, 0.0120]$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -987,124 +872,118 @@ circuits (amber) and calibration~B on held-out circuits (red).}
 \label{fig:ch5_drift}
 \end{figure}
 
-Drift raises the raw error resolvably ($+0.0059$), and linear extrapolation and ridge
-regression inherit a resolved increase. For the other learned arms the change is
-smaller than the paired interval can resolve: the kernel, the network and the trees
-trained before the drift remain as accurate after it to within $0.0015$. A learned
-map trained on one calibration therefore transferred to a $30\%$-drifted
-calibration of the same device with no resolvable loss for most arms. This is one
-drift magnitude on one simulated device, and it is not evidence that retraining is
-unnecessary in general; it does show that the learned maps are not fitting the
-calibration so tightly that a moderate drift breaks them.
+For RBF, the difference from calibration~A to calibration~B on the same
+held-out circuits is
+$+0.00135$ (95\% CI $[-0.00136,\allowbreak +0.00408]$).
+For the fidelity kernel it is
+$+0.00140$ (95\% CI $[-0.00127,\allowbreak +0.00412]$).
+The intervals quantify sensitivity to this drift draw on the simulated device.
 
-\section{What the hybrid kernel actually costs}\label{sec:ch5_shotkernel}
+\section{Finite-shot fidelity kernels and circuit cost}
+\label{sec:ch5_shotkernel}
 
-Every quantum-kernel result so far uses the exact Gram matrix, which only a simulator
-can provide. Table~\ref{tab:ch5_shotkernel} and Figure~\ref{fig:ch5_shotkernel}
-re-estimate every kernel entry from a finite number of shots, as hardware must, with
-five independent shot-noise draws at each budget. The shot-estimated Gram matrix is
-projected onto the positive semidefinite cone before the ridge solve
-(Appendix~\ref{sec:appA_kernelcost}).
+R4 evaluates the fidelity kernel on the parameter-scaled Split~A of the
+realistic regime. Each fidelity entry is estimated by simulating the
+binomial shot noise of an inversion test. The simulation uses ideal
+inversion-test probabilities and captures sampling variability alone.
+For each of the four circuit-grouped inner folds, the feature scaler and
+positive semidefinite (PSD) repair are fitted on that fold's training data.
+The validation cross-kernel is projected onto the positive eigenspace of
+that same training block. After mean validation $R^2$ selects the ridge
+penalty, a fresh scaler and repair are fitted on all outer training data.
+The final held-out cross-kernel uses the same projection rule
+(Eq.~\eqref{eq:appA_shot_projection}). The outer holdout stays fixed
+across the five shot-noise draws at each budget.
 
 \begin{table}[htbp]
 \centering
-\caption[Shot-limited quantum kernel]{Shot-limited quantum kernel, realistic regime, Split~A. ``Per prediction''
-counts the circuit executions needed to mitigate one expectation value: one fidelity
-circuit per training point ($M = 3150$) times the shots per entry. ``Total'' adds the
-training Gram matrix. RMSE is the mean over five shot-noise draws with the range in
-brackets. Unmitigated RMSE is $0.1239$; the neural network, which needs only the
-three noise-scaled measurements ($\approx 1.2 \times 10^{4}$ executions), scores
-$0.0648$ on the same split. The exact row is a separate fit with $\beta$ fixed at
-$0.15$ and the 12-point $\alpha$ grid used for every row of this table, so it differs
-from the $0.0622$ of Table~\ref{tab:ch5_scaling}, which tunes $\beta$ on the reduced
-grid of Table~\ref{tab:ch4_grids}.}
+\caption[Shot-limited quantum kernel]{Shot-limited fidelity kernel on realistic Split~A.
+RMSE is the mean and range over five independent shot draws at each finite budget.
+Counts are per draw. Tuning includes the training and validation matrices for all
+four inner folds. Final counts the outer training and test matrices. Per prediction
+counts the additional fidelity
+executions for a new input after fitting. The exact-Gram control uses the same folds,
+$\beta=0.15$, projection rule and 12-point $\alpha$ grid with exact fidelities.}
 \label{tab:ch5_shotkernel}
 \small
-\begin{tabular}{lccc}
+\begin{tabular}{lrrrc}
 \toprule
-\textbf{Shots per entry} & \textbf{Per prediction} & \textbf{Total executions}
-& \textbf{RMSE (range)} \\
+\textbf{Shots/entry} & \textbf{Tuning} & \textbf{Final fit/test} & \textbf{Per prediction}
+    & \textbf{RMSE (range)} \\
 \midrule
-$10^2$ & $3.2 \times 10^{5}$ & $9.2 \times 10^{8}$  & 0.1875 (0.1819--0.1963) \\
-$10^3$ & $3.2 \times 10^{6}$ & $9.2 \times 10^{9}$  & 0.0843 (0.0835--0.0855) \\
-$10^4$ & $3.2 \times 10^{7}$ & $9.2 \times 10^{10}$ & 0.0899 (0.0878--0.0926) \\
-$10^5$ & $3.2 \times 10^{8}$ & $9.2 \times 10^{11}$ & 0.0671 (0.0657--0.0678) \\
-exact (simulator) & --- & --- & 0.0629 \\
+$10^{2}$ & $1.86\times 10^{9}$ & $9.22\times 10^{8}$ & $3.15\times 10^{5}$ & 0.0925 (0.0919--0.0933) \\
+$10^{3}$ & $1.86\times 10^{10}$ & $9.22\times 10^{9}$ & $3.15\times 10^{6}$ & 0.0740 (0.0735--0.0745) \\
+$10^{4}$ & $1.86\times 10^{11}$ & $9.22\times 10^{10}$ & $3.15\times 10^{7}$ & 0.0700 (0.0689--0.0733) \\
+$10^{5}$ & $1.86\times 10^{12}$ & $9.22\times 10^{11}$ & $3.15\times 10^{8}$ & 0.0658 (0.0657--0.0660) \\
+Exact Gram & --- & --- & --- & 0.0629 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.8\textwidth]{figures/ch5/fig_ch5_shotkernel.png}
-\caption[Shot-estimated quantum kernel against circuit executions]{Accuracy of the shot-estimated quantum kernel against total circuit
-executions; the top axis gives the shots per Gram-matrix entry. Error bars span the
-five shot-noise draws.}
+\includegraphics[width=0.82\textwidth]{figures/ch5/fig_ch5_shotkernel.png}
+\caption[Shot-estimated quantum kernel against circuit executions]{Accuracy against the
+total fidelity executions per draw for tuning and final fit/test. Error bars span the five
+shot-noise draws. The RBF reference uses the same holdout with its R1 tuning grid.}
 \label{fig:ch5_shotkernel}
 \end{figure}
 
-At $100$ shots per entry the kernel is $51\%$ worse than no mitigation after
-$9.2 \times 10^8$ executions. It needs about $10^5$ shots per entry --
-$3.2 \times 10^8$ executions to mitigate a single expectation value -- to come within
-$0.005$ of its exact-Gram accuracy, and even then it does not reach the neural
-network, which needs only the three noise-scaled measurements -- about
-$1.2 \times 10^{4}$ executions at $4096$ shots each, some $2.6 \times 10^{4}$ times
-fewer.
+Table~\ref{tab:ch5_shotkernel} lists the accuracy and acquisition counts at each budget,
+and Figure~\ref{fig:ch5_shotkernel} plots accuracy against total fidelity executions.
+Mean RMSE declines at each tested increase in the shot budget. At the largest tested budget of $10^5$ shots per entry,
+mean RMSE is $0.0658$ against $0.0629$ for the exact-Gram control,
+a difference of $+0.0029$.
+The simulated acquisition counts are $2.78\times 10^{12}$ fidelity executions to
+tune, fit and test the model on this split and $3.15\times 10^{8}$ additional
+executions for one subsequent prediction. The shared feature measurements
+require $12{,}288$ executions per input row and are counted separately. The RBF fit
+provides a cost reference with RMSE $0.0622$ and uses classical computation
+for its kernel entries.
 
-The error in Table~\ref{tab:ch5_shotkernel} is not monotone in the shot budget: every
-one of the five draws at $10^4$ shots is worse than every draw at $10^3$. A follow-up
-diagnosis (\texttt{results/shot\_kernel\_alpha\_diagnosis.csv}) traces this to the
-selection of the ridge penalty, not to the kernel estimate. Shot noise makes about
-half of the $3150$ Gram eigenvalues negative before projection, and the most negative
-one shrinks roughly as one over the square root of the shots ($-3.4$, $-1.07$,
-$-0.34$ and $-0.11$ at $10^2$ to $10^5$ shots), so the penalty must track that noise
-floor. Keeping $\alpha$ at its exact-Gram value ($0.0066$) gives RMSE above $0.30$ at
-every finite budget. The 12-point grid moves $\alpha$ in steps of about $4.3\times$,
-and between $10^3$ and $10^4$ shots its cross-validated choice drops from $0.53$ to
-$0.12$, below the noise floor at $10^4$. With a 25-point grid on independent
-shot-noise draws the cross-validated error falls monotonically, from $0.155$ through
-$0.099$ and $0.076$ to $0.068$ (means over five draws), and even the penalty that is
-best on the test set itself -- a diagnostic bound, not a valid selection -- gives
-$0.0653$--$0.0666$ at $10^5$ shots, still short of the network's $0.0648$. The
-conclusion is unchanged: on cost, the hybrid kernel is not a competitive mitigator at
-any shot budget examined here.
+The penalty diagnostic compares the primary 12-point grid with a
+nested 23-point grid on the same shot draws and folds. Both select $\alpha$
+using grouped validation. The budget-wise mean RMSE difference (23-point $-$ 12-point) ranges from $-0.0008$ to $+0.0000$. The grid comparison is recorded in
+\texttt{results/shot\_kernel\_alpha\_diagnosis.csv}.
 
-\section{Which conclusions survive the realistic regime}
+\section{Matched kernels across both noise regimes}
 \label{sec:ch5_realistic_summary}
 
-\paragraph{Unchanged.}
-\begin{enumerate}
-    \item The non-variational learned arms beat the best analytic extrapolation
-    in-distribution under both scaling methods; over ten splits the kernel, the
-    network, the trees and ridge are resolvably better than linear extrapolation in
-    every split, in both regimes.
-    \item The quantum kernel is not resolvably better than the neural network in the
-    idealized regime or under unitary folding; under parameter scaling in the realistic
-    regime it is better by a small ($\approx 3\%$) but consistently resolved margin.
-    \item Exponential extrapolation is worse than no mitigation in every setting of
-    this chapter that uses finite shots.
-\end{enumerate}
+Table~\ref{tab:ch5_kernelcompare} reports the direct RBF and fidelity
+comparison across ten grouped holdouts of the reference pool for each setting.
+The same training circuits, held-out circuits and candidate count are used
+for both models in each holdout. These counts describe split sensitivity on fixed simulated datasets.
+Section~\ref{sec:ch5_folding_seeds} compares the kernels across independent
+circuit pools and shot draws.
 
-\paragraph{Changed.}
-\begin{enumerate}
-    \item Hardware-realizable folding halves the learned arms' margin over linear
-    extrapolation (kernel: $38\%$ to $18\%$ lower error), because folding improves
-    linear extrapolation and worsens every learned arm.
-\end{enumerate}
+\begin{table}[htbp]
+\centering
+\caption{Matched kernel comparison across the two noise regimes. RMSE is mean
+$\pm$ SD over ten holdouts. The last three columns count paired circuit-bootstrap
+intervals that favour RBF, favour fidelity or include zero.}
+\label{tab:ch5_kernelcompare}
+\small
+\begin{tabular}{lccrrr}
+\toprule
+Setting & RBF RMSE & Fidelity RMSE & RBF & Fidelity & Includes 0 \\
+\midrule
+Idealised & $0.0416\pm0.0011$ & $0.0426\pm0.0012$ & 9 & 0 & 1 \\
+Realistic, param. & $0.0638\pm0.0019$ & $0.0640\pm0.0019$ & 5 & 0 & 5 \\
+Realistic, folding & $0.0771\pm0.0042$ & $0.0776\pm0.0043$ & 6 & 0 & 4 \\
+Reset, param. & $0.0532\pm0.0008$ & $0.0533\pm0.0008$ & 2 & 1 & 7 \\
+Reset, folding & $0.0571\pm0.0006$ & $0.0571\pm0.0006$ & 3 & 0 & 7 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\paragraph{New.} These have no counterpart in the idealized regime.
-\begin{enumerate}
-    \item Memory, isolated by the reset control, does not change the raw error but
-    resolvably worsens every non-variational learned arm while leaving linear
-    extrapolation unchanged or better. Non-Markovian noise therefore narrows the
-    learned advantage; it does not, as the defect-removed comparison suggested,
-    favour learning over extrapolation.
-    \item A $30\%$ calibration drift costs most learned arms no resolvable accuracy;
-    it does cost ridge regression, linear extrapolation and the raw measurement.
-    \item Estimated from shots as hardware requires, the quantum kernel needs
-    $\sim 10^5$ shots per Gram entry -- $3.2 \times 10^8$ circuit executions per
-    mitigated value -- to approach its simulator accuracy, and does not reach the
-    classical network's accuracy at any budget tested.
-\end{enumerate}
+Both kernels have lower RMSE than folded linear ZNE in all ten
+repeated holdouts for both the production and reset conditions, with
+paired intervals excluding zero. The direct kernel comparison favours
+RBF in six production holdouts and three reset holdouts under folding.
+
+With shot-estimated entries, the fidelity kernel reaches $0.0658$ RMSE on the
+parameter-scaled random holdout at $10^5$ shots per entry, against $0.0622$ for
+RBF (Section~\ref{sec:ch5_shotkernel}). Finite fidelity also requires overlap measurements for the train and held-out
+blocks, whereas RBF computes similarities from the shared observable features.
 
 \end{document}
