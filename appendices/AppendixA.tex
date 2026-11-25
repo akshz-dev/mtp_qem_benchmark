@@ -25,7 +25,7 @@ Lagrange form,
     \;=\; \prod_{j \neq k} \frac{\lambda_j}{\lambda_j - \lambda_k}.
     \label{eq:appA_coeffs}
 \end{equation}
-Substituting Eq.~\eqref{eq:appA_expansion} into Eq.~\eqref{eq:appA_coeffs} and using
+Substituting eqn.~\eqref{eq:appA_expansion} into eqn.~\eqref{eq:appA_coeffs} and using
 the interpolation identities
 $\sum_k c_k = 1$ and $\sum_k c_k \lambda_k^{\,j} = 0$ for $1 \leq j \leq m$, the
 first $m$ orders of the noise expansion cancel exactly and
@@ -40,7 +40,7 @@ justification for the method: increasing the polynomial order cancels more terms
 
 The cost appears when the measurements are noisy. With the three
 parameter-scaling coordinates $\lambda \in \{1,2,3\}$ and $m=2$,
-Eq.~\eqref{eq:appA_coeffs} gives
+eqn.~\eqref{eq:appA_coeffs} gives
 \begin{equation}
     c_0 = \frac{(2)(3)}{(2-1)(3-1)} = 3,
     \qquad
@@ -64,7 +64,7 @@ budget the trade need not be favourable -- which is the mechanism behind the
 shot-budget results of Section~\ref{sec:ch5_shots}. Least-squares fitting of a
 degree-one polynomial to the same three points, as used by the linear arm, has
 smaller coefficient magnitudes and therefore less variance inflation, at the price of
-cancelling only the first order of Eq.~\eqref{eq:appA_expansion}.
+cancelling only the first order of eqn.~\eqref{eq:appA_expansion}.
 For folding, the actual layer ratios determine the weights. At depths
 $3$ and $5$ the corresponding equal-variance factors are $21.34$ and
 $21.72$, respectively.
@@ -152,19 +152,19 @@ states,
 \end{equation}
 that is, channels are contractive in trace distance. Operationally $D$ is the
 optimal bias with which a single measurement can distinguish the two states, so
-Eq.~\eqref{eq:appA_contraction} says no channel can make two states easier to tell
+eqn.~\eqref{eq:appA_contraction} says no channel can make two states easier to tell
 apart.
 
 Suppose the layer-to-layer dynamics is Markovian in the CP-divisible sense: the map
 from layer $l$ to layer $l+1$ is itself a channel $\Lambda_{l+1,l}$, independent of
-history. Applying Eq.~\eqref{eq:appA_contraction} to that map gives
+history. Applying eqn.~\eqref{eq:appA_contraction} to that map gives
 \begin{equation}
     D^{(l+1)} \;=\; D\!\left( \Lambda_{l+1,l}\rho_1^{(l)},\,
     \Lambda_{l+1,l}\rho_2^{(l)} \right) \;\leq\; D^{(l)}
     \label{eq:appA_monotone}
 \end{equation}
 for every $l$ and every initial pair, so $D^{(l)}$ is non-increasing and the sum of
-positive increments in Eq.~\eqref{eq:ch3_blp} vanishes identically. A measured
+positive increments in eqn.~\eqref{eq:ch3_blp} vanishes identically. A measured
 revival $D^{(l+1)} > D^{(l)}$ is therefore incompatible with CP-divisibility: the
 step from $l$ to $l+1$ cannot be a channel acting on the system alone, which is to
 say the environment has returned information it previously held. This is why
@@ -287,9 +287,9 @@ $\mathbb{E}[\widehat{\mu}_N] = 2q - 1 = \mu$, with variance
     \label{eq:appA_var}
 \end{equation}
 so the sampling noise is largest for observables whose expectation is near zero and
-vanishes as $|\mu| \to 1$. Applying Eq.~\eqref{eq:appA_q} to the simulator expectation reproduces the
+vanishes as $|\mu| \to 1$. Applying eqn.~\eqref{eq:appA_q} to the simulator expectation reproduces the
 sampling distribution for independent Pauli shots under the simulated measurement
 model. Storing both the exact and the sampled values additionally makes the
 shot-budget sweep of Section~\ref{sec:ch5_shots} a re-sampling operation rather than
-a re-simulation, since Eq.~\eqref{eq:appA_var} can be realised at any $N$ from the
+a re-simulation, since eqn.~\eqref{eq:appA_var} can be realised at any $N$ from the
 same exact values.

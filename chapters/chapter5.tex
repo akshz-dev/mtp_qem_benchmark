@@ -214,12 +214,12 @@ $1\times$ and $4\times$ and include zero at $2\times$.
 
 Figure~\ref{fig:ch5_sweeps}(b) varies the shots used to estimate each input
 observable, from $256$ to exact expectation values. The sweep resamples the
-stored exact values using Eq.~\eqref{eq:ch3_shots} and refits on the same
+stored exact values using eqn.~\eqref{eq:ch3_shots} and refits on the same
 circuit-grouped split. Fidelity-kernel entries remain exact throughout.
 
 At $256$ shots, Richardson extrapolation reaches
 $0.2684$, consistent with
-the variance amplification in Eq.~\eqref{eq:appA_variance}. Across
+the variance amplification in eqn.~\eqref{eq:appA_variance}. Across
 $256$ shots, $4096$ shots and exact inputs, RBF achieves
 $0.1013$, $0.0411$, $0.0029$.
 The fidelity-kernel estimates under those same three conditions are
@@ -310,7 +310,7 @@ Both kernels use the reduced grid in each feature condition.
 Table~\ref{tab:ch5_bounded} adds the bounded-encoding arm to the depth-extrapolation
 comparison. On Split~B, data reuploading gives $2.57$ times the unmitigated RMSE.
 The periodic encoding $R_Y(w \cdot x + b)$ can map distinct feature values to
-equivalent rotations. The bounded variant of Eq.~\eqref{eq:ch3_bounded} uses
+equivalent rotations. The bounded variant of eqn.~\eqref{eq:ch3_bounded} uses
 a $\tanh$ transform to confine angles to $[-\pi/2, \pi/2]$. The transform also
 changes angles within the training range, so this is a comparison of the two
 encodings as fitted.

@@ -103,7 +103,7 @@ every conclusion to the noise model can be read off directly.
 Three modifications make the model device-like.
 
 \emph{Per-qubit inhomogeneity.} Each rate is drawn once per device realisation
-according to Eq.~\eqref{eq:ch3_qubit_rate},
+according to eqn.~\eqref{eq:ch3_qubit_rate},
 \begin{equation}
   r_q = \bar{r} \cdot \max\bigl(0.3,\ \min(2.0,\ 1 + 0.35\,\xi_q)\bigr),
   \qquad \xi_q \sim \mathcal{N}(0,1),
@@ -210,7 +210,7 @@ The benchmark uses $k=0$, $k=\operatorname{round}(d/2)$, and $k=d$,
 with ties rounded to an even integer. For even $d$ the middle ratio is $2$.
 For depths $3$ and $5$ it is $7/3$ and $9/5$, respectively. The
 inverse layer is noisy and the always-on crosstalk and defect interaction
-also act during the extra layers. Equation~\eqref{eq:ch3_fold_ratio}
+also act during the extra layers. Eqn.~\eqref{eq:ch3_fold_ratio}
 measures circuit length. The amplification of each noise process depends
 on its dynamics (Appendix~\ref{sec:appA_folding}).
 
@@ -299,7 +299,7 @@ which is exactly the sampling distribution of the measured estimator. The defaul
 budget is $N = 4096$ shots per expectation value. Both the exact and the sampled
 values are stored, which allows the shot-budget sweep of
 Section~\ref{sec:ch5_shots} to be performed by re-sampling
-Eq.~\eqref{eq:ch3_shots} without re-simulating any circuit.
+eqn.~\eqref{eq:ch3_shots} without re-simulating any circuit.
 
 The primary dataset comprises $900$ circuits ($450$ per family) at $n = 5$ qubits,
 giving $4500$ rows. The noise-strength sweep uses a separate pool of $500$
@@ -383,7 +383,7 @@ degree $m$ fitted to $m+1$ noise levels, the estimator is the linear combination
 whose coefficients satisfy $\sum_k c_k = 1$ and alternate in sign. The alternation
 is the source of the method's characteristic weakness: the coefficients are not all bounded by one in magnitude ($3$, $-3$ and $1$ for $\lambda = 1, 2, 3$), so the estimator amplifies the statistical noise of the
 inputs even as it cancels the systematic bias. Appendix~\ref{AppendixA} derives
-Eq.~\eqref{eq:ch3_richardson} and its variance inflation.
+eqn.~\eqref{eq:ch3_richardson} and its variance inflation.
 
 \textbf{Exponential extrapolation} fits $\mu(\lambda) = a e^{-b\lambda} + c$ by
 non-linear least squares, motivated by the observation that under global
@@ -471,7 +471,7 @@ differentiation through the simulator.
 
 \subsection{Bounded-encoding variant}\label{sec:ch3_bounded}
 
-Eq.~\eqref{eq:ch3_reupload} has a property that is easy to overlook: the map from
+Eqn.~\eqref{eq:ch3_reupload} has a property that is easy to overlook: the map from
 feature to rotation angle is \emph{periodic}. A feature value outside the range seen
 during training produces an angle that wraps around the circle, so the model's output
 does not merely become inaccurate -- it becomes uncontrolled, and can take any value

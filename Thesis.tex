@@ -25,37 +25,17 @@
 \usepackage{booktabs}
 \usepackage{multicol}
 \usepackage{multirow}
-\usepackage{mathpazo}            % Palatino-style mathematics, matching Book Antiqua
+\usepackage{mathptmx}            % Times-style mathematics, matching the text font
 \usepackage{fontspec}
-%% IITJ thesis guideline fonts: Book Antiqua (text) and Candara (headings, \sffamily).
-%% On a Mac with Microsoft Office they are read from Word's font folder; elsewhere
-%% (e.g. Overleaf) the build falls back to TeX Gyre Pagella and Latin Modern Sans.
-\newcommand{\msofficefonts}{/Applications/Microsoft Word.app/Contents/Resources/DFonts/}
-\IfFontExistsTF{Book Antiqua}
-  {\setmainfont[Numbers=Lining]{Book Antiqua}}
-  {\IfFileExists{\msofficefonts Book Antiqua.ttf}
-     {\setmainfont[
-       Numbers=Lining,
-       Path=\msofficefonts,
-       BoldFont={Book Antiqua Bold.ttf},
-       ItalicFont={Book Antiqua Italic.ttf},
-       BoldItalicFont={Book Antiqua Bold Italic.ttf}
-      ]{Book Antiqua.ttf}}
-     {\setmainfont{texgyrepagella}[Extension=.otf, Numbers=Lining,
-        UprightFont=*-regular, BoldFont=*-bold,
-        ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
-      \PackageWarningNoLine{Thesis}{Book Antiqua unavailable; using TeX Gyre Pagella}}}
-\IfFontExistsTF{Candara}
-  {\setsansfont[Numbers=Lining]{Candara}}
-  {\IfFileExists{\msofficefonts Candara.ttf}
-     {\setsansfont[
-       Numbers=Lining,
-       Path=\msofficefonts,
-       BoldFont={Candarab.ttf},
-       ItalicFont={Candarai.ttf},
-       BoldItalicFont={Candaraz.ttf}
-      ]{Candara.ttf}}
-     {\PackageWarningNoLine{Thesis}{Candara unavailable; using Latin Modern Sans}}}
+%% IITJ M.Tech guideline (item 4): 12 pt Times New Roman throughout. macOS and
+%% Windows ship Times New Roman; elsewhere (e.g. Overleaf or Linux) the build
+%% falls back to TeX Gyre Termes, a metric-compatible Times clone.
+\IfFontExistsTF{Times New Roman}
+  {\setmainfont{Times New Roman}}
+  {\setmainfont{texgyretermes}[Extension=.otf,
+     UprightFont=*-regular, BoldFont=*-bold,
+     ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+   \PackageWarningNoLine{Thesis}{Times New Roman unavailable; using TeX Gyre Termes}}
 \usepackage{tocbibind}
 \usepackage{nomencl}
 \usepackage{etoolbox}
@@ -94,14 +74,15 @@
 \setlength{\emergencystretch}{2em}
 \usepackage[explicit]{titlesec}
 
+%% Guideline item 8: section headings 14 pt bold capitals; sub-section headings italic.
 \titleformat{\chapter}[display]
-  {\fontsize{27}{27}\sffamily\bfseries\filleft\hyphenpenalty=10000}{\thechapter}{0pt}{#1}
+  {\fontsize{27}{27}\bfseries\filleft\hyphenpenalty=10000}{\thechapter}{0pt}{#1}
 \titleformat{\section}
-  {\fontsize{14}{17}\selectfont\bfseries\sffamily\raggedright\hyphenpenalty=10000}{\thesection}{0.5em}{\MakeUppercase{#1}}
+  {\fontsize{14}{17}\selectfont\bfseries\raggedright\hyphenpenalty=10000}{\thesection}{0.5em}{\MakeUppercase{#1}}
 \titleformat{\subsection}
-  {\normalsize\bfseries\sffamily\raggedright\hyphenpenalty=10000}{\thesubsection}{0.5em}{\MakeUppercase{#1}}
+  {\normalsize\itshape\raggedright\hyphenpenalty=10000}{\thesubsection}{0.5em}{#1}
 \titleformat{\subsubsection}
-  {\sffamily\raggedright\hyphenpenalty=10000}{\thesubsubsection}{0.5em}{\MakeUppercase{#1}}
+  {\normalsize\itshape\raggedright\hyphenpenalty=10000}{\thesubsubsection}{0.5em}{#1}
 %% Blank verso page with no number, used between the one-page front-matter items
 %% (two-sided layout of the IITJ template). Inserts a page only when needed.
 \newcommand\myemptypage{\clearpage\ifodd\value{page}\else\null\thispagestyle{empty}\newpage\fi}
@@ -187,19 +168,20 @@ for Quantum Error Mitigation under Markovian and Non-Markovian Noise}
 \subfile{chapters/chapter7.tex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% References (guideline items 6 and 12: IEEE style, citation order, before the appendices)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\cleardoublepage
+\renewcommand{\bibname}{References}
+\bibliographystyle{ieeetr}
+\bibliography{chapters/refs}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Appendices
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \appendix
 \include{appendices/AppendixA}
 \include{appendices/AppendixB}
 \include{appendices/AppendixC}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Bibliography
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\clearpage
-\bibliographystyle{unsrt}
-\bibliography{chapters/refs}
 
 %----------------------------------------------------------------------------------------
 \end{document}

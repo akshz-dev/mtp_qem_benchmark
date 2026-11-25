@@ -73,7 +73,7 @@ by a target circuit $U$, the noisy device returns
 where $\widetilde{\mathcal{E}}$ is the composition of the per-layer noise
 channels interleaved with the ideal layers and $b(\lambda)$ is a bias that
 depends on an effective noise strength $\lambda$. Under global depolarising
-noise and a traceless observable, Eq.~\eqref{eq2:bias} collapses to the
+noise and a traceless observable, eqn.~\eqref{eq2:bias} collapses to the
 particularly simple multiplicative form
 $\langle O\rangle_{\mathrm{noisy}} = (1-p)\,\langle O\rangle_{\mathrm{ideal}}$.
 Every mitigation method reviewed below is, at bottom, an estimator of
@@ -121,7 +121,7 @@ A practical corollary of the characterisation literature is that the effective
 noise seen by a mitigation routine is partly a matter of compilation choice
 rather than device physics. Coherent errors accumulate quadratically in
 amplitude and are not described by a Pauli channel, so their contribution to
-the bias $b(\lambda)$ in Eq.~\eqref{eq2:bias} is neither monotone nor smooth
+the bias $b(\lambda)$ in eqn.~\eqref{eq2:bias} is neither monotone nor smooth
 in the number of repetitions of a gate; twirling them into stochastic Pauli
 noise by randomised compiling restores the smooth, approximately exponential
 $\lambda$-dependence on which both extrapolation and learned regression
@@ -165,7 +165,7 @@ measured values,
   \qquad \sum_{i} \gamma_{i} = 1 .
   \label{eq2:richardson}
 \end{equation}
-Two properties of Eq.~\eqref{eq2:richardson} govern everything that follows.
+Two properties of eqn.~\eqref{eq2:richardson} govern everything that follows.
 First, the residual bias is
 $\mathcal{O}(\lambda_{0}^{m+1})$ only if the expansion~\eqref{eq2:zne-series}
 is valid over the whole sampled range; when the true dependence is not
@@ -531,14 +531,14 @@ truncated Fourier series in the data,
 where the accessible frequency spectrum $\Omega$ is fixed by the eigenvalues of
 the encoding generators and by the number of reuploading layers, while the
 coefficients $c_{\omega}$ are what training adjusts
-\cite{schuld2021effect}. Equation~\eqref{eq2:fourier} makes two predictions
+\cite{schuld2021effect}. Eqn.~\eqref{eq2:fourier} makes two predictions
 that this thesis tests directly. Within the range of data on which the
 frequencies were fitted, richer spectra permit closer approximation; outside
 it, the model is not merely inaccurate but \emph{periodic}, so a
 data-reuploading regressor extrapolates by repeating its learned pattern rather
 than by continuing any trend. Angle-encoded quantum models therefore carry a
 structural disadvantage on extrapolation tasks that no amount of training data
-inside the original range can remove. Eq.~\eqref{eq2:fourier} therefore
+inside the original range can remove. Eqn.~\eqref{eq2:fourier} therefore
 suggests a specific mechanism for out-of-distribution failure of the
 data-reuploading arm; Section~\ref{sec:ch5_bounded} tests it and finds that
 periodicity accounts for the size of that failure but not for the failure itself,
@@ -556,7 +556,7 @@ the fidelity (or quantum embedding) kernel
   \label{eq2:fidkernel}
 \end{equation}
 which is estimated on hardware either by the inversion test implied by the
-right-hand side of Eq.~\eqref{eq2:fidkernel} or by a swap test. Havl\'i\v{c}ek
+right-hand side of eqn.~\eqref{eq2:fidkernel} or by a swap test. Havl\'i\v{c}ek
 et al.\ introduced this construction with the IQP-style encoding that remains
 the standard choice, and demonstrated both a variational classifier and a
 kernel estimator on superconducting hardware \cite{havlicek2019supervised}.
