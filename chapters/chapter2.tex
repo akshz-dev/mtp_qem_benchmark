@@ -15,10 +15,7 @@ analytic extrapolation with a regression model learned from data. The third is
 quantum machine learning (QML), which supplies the hybrid models benchmarked
 here --- fidelity-kernel methods and data-reuploading variational circuits ---
 together with a substantial body of negative and cautionary results about when
-such models can be expected to help. A final strand, treated separately,
-concerns decoding for quantum error correction (QEC), where machine-learned
-decoders are a mature and well-benchmarked subfield and therefore a useful
-methodological mirror for the mitigation work.
+such models can be expected to help. 
 
 The chapter is organised so that the research gap identified in
 Section~\ref{sec2:gap} follows from the review rather than being asserted on
@@ -661,142 +658,6 @@ recommended practice, which this thesis follows, is to fix the task, tune
 every model including the classical ones, and report the comparison at matched
 cost rather than at matched convenience.
 
-\section{Quantum error correction and the decoding problem}\label{sec2:qec}
-
-Mitigation buys accuracy on shallow circuits; error correction buys
-scalability. The second track of this thesis concerns decoding, and the
-literature there is instructive because it is a machine-learning subfield with
-mature benchmarking conventions --- a fixed code, a fixed noise model, a single
-reported figure of merit, and a widely used classical baseline.
-
-\subsection{Surface codes and the decoding problem}
-
-Kitaev's toric code introduced the idea of protecting quantum information in
-the topology of a lattice of qubits with local stabiliser measurements
-\cite{kitaev2003fault}, and Dennis, Kitaev, Landahl and Preskill developed the
-planar variant into a full fault-tolerance framework, establishing the
-mapping between decoding and a statistical-mechanical model and deriving
-threshold estimates \cite{dennis2002topological}. Fowler et al.\ turned this
-into an engineering blueprint, specifying the measurement circuits, the
-lattice surgery operations and the resource estimates that made the surface
-code the default architecture for superconducting processors
-\cite{fowler2012surface}.
-
-Operationally, a distance-$d$ surface code is measured repeatedly; each round
-of stabiliser measurements yields a syndrome, and the differences between
-consecutive rounds define \emph{detection events}. The decoder receives the
-detection-event history $\mathbf{s}$ and must output a correction. The
-statistically optimal rule is maximum-likelihood decoding over error classes,
-\begin{equation}
-  \widehat{c} \;=\; \arg\max_{c \,\in\, \{\text{logical classes}\}}\;
-  \sum_{E \,:\, \sigma(E)=\mathbf{s},\; [E]=c} \Pr(E),
-  \label{eq2:mld}
-\end{equation}
-where $\sigma(E)$ is the syndrome of error $E$ and $[E]$ its logical class.
-Equation~\eqref{eq2:mld} is intractable in general, so practical decoding is a
-search for accurate approximations that run faster than the syndrome
-measurement cycle. Because decoding research depends on generating enormous
-volumes of syndrome data under circuit-level noise, the field's progress is
-tied to fast stabiliser simulation; Gidney's Stim made
-million-shot circuit-level sampling routine and is now the standard data
-generator \cite{gidney2021stim}.
-
-\subsection{Matching decoders and their fast descendants}
-
-The dominant classical approach maps decoding to minimum-weight perfect
-matching (MWPM) on a graph whose vertices are detection events and whose edge
-weights are negative log-likelihoods of the corresponding error mechanisms; the
-matching itself is solved by Edmonds' blossom algorithm
-\cite{edmonds1965paths}. This reduction, already present in
-\cite{dennis2002topological}, is near-optimal for independent bit-flip and
-phase-flip noise but suboptimal when errors are correlated between the two
-lattices --- notably for $Y$ errors and for measurement errors with realistic
-circuit-level structure. Higgott's PyMatching provided the open
-implementation that made MWPM the universal baseline
-\cite{higgott2022pymatching}, and the throughput problem was addressed by
-Delfosse and Nickerson's union-find decoder, which achieves almost-linear
-time in the number of syndrome bits at a modest cost in threshold by growing
-and merging clusters instead of solving an exact matching
-\cite{delfosse2021almost}. The practical decoder design space is thus a
-trade-off surface between accuracy and latency, and any new decoder --- learned
-or not --- is expected to report where it sits on that surface.
-
-\subsection{Neural network decoders}
-
-Machine-learned decoding was proposed to recover the accuracy that matching
-gives up. Torlai and Melko trained a restricted Boltzmann machine as a
-generative model of the error distribution conditioned on the syndrome and
-showed it could decode the toric code near threshold \cite{torlai2017neural};
-Varsamopoulos, Criger and Bertels trained feed-forward networks on small
-surface codes, framing decoding as classification of the logical correction
-\cite{varsamopoulos2018decoding}; and Baireuther et al.\ introduced recurrent
-networks so that a decoder could consume an arbitrary number of measurement
-rounds and, importantly, learn correlated error behaviour directly from data
-rather than from a specified error model \cite{baireuther2018machine}. The
-unifying argument in this literature is that a learned decoder needs no prior
-estimate of physical error rates and can absorb error correlations that a
-matching graph cannot express.
-
-Recent work has made that argument quantitative. Varbanov et al.\ evaluated a
-recurrent neural-network decoder on both simulated and experimental transmon
-data for small-distance surface codes and found roughly $25\%$ lower logical
-error rate than MWPM on the experimental data set, approaching
-maximum-likelihood performance, with the gain traced specifically to better
-handling of correlated defects such as those from $Y$ errors; they also
-incorporated the soft (analog) readout information that a matching decoder
-discards \cite{varbanov2025neural}. Lange et al.\ formulated decoding as a
-graph classification problem and showed that a graph neural network trained
-only on simulated experimental data can outperform a matching decoder under
-circuit-level noise even when the matching decoder is given full knowledge of
-the underlying error model \cite{lange2025data}. The current state of the art
-is the transformer-based AlphaQubit decoder of Bausch et al., which
-was pre-trained on simulated data, fine-tuned on experimental data, and
-reported lower logical error rates than both matching and correlated-matching
-baselines on Google's distance-3 and distance-5 surface code experiments
-\cite{bausch2024learning}.
-
-The methodological contrast with the mitigation literature is stark and
-deliberate here. Every decoder paper cited above reports a common metric --- logical error rate per round --- against a common baseline --- MWPM, usually via PyMatching --- on a common noise model,
-and recent papers additionally report latency or throughput because a decoder
-that cannot keep up with the syndrome cycle is useless regardless of accuracy.
-Generalisation is also tested as a matter of course: decoders are evaluated at
-code distances and error rates they were not trained on, and on experimental
-data after training on simulation
-\cite{varbanov2025neural,lange2025data,bausch2024learning}.
-
-There is a second transferable lesson. Learned decoders win where the
-classical baseline throws information away --- correlated $Y$ errors, analog
-readout confidence, circuit-level error structure that a matching graph cannot
-represent \cite{varbanov2025neural,lange2025data} --- and they do not win by
-being more flexible in general. That is a useful diagnostic to carry into
-mitigation: a learned mitigator should be expected to help where the analytic
-estimator discards structure, for example by using several observables jointly
-or by exploiting circuit metadata, and should not be expected to help merely
-because it has more parameters than a polynomial fit. It also suggests the
-right null hypothesis for a mitigation benchmark. Since the mitigation map for
-global depolarising noise is a one-parameter rescaling
-(Eq.~\eqref{eq2:depol}), a flexible regressor has little structure left to
-exploit once that rescaling is captured, and the appropriate expectation is
-parity with a well-tuned analytic estimator rather than a large improvement.
-
-\subsection{Experimental status}
-
-The experimental milestones establish that the whole enterprise is no longer
-hypothetical. Google's surface code experiments demonstrated first a
-distance-3 to distance-5 comparison and then, decisively, operation below
-threshold: a distance-7 logical qubit with a logical error rate suppressed by
-roughly a factor of two per distance increment, together with real-time
-decoding at the measurement cycle rate \cite{google2025below}. In a different
-hardware modality, Bluvstein et al.\ demonstrated a reconfigurable
-neutral-atom processor performing logical operations on up to 48 logical
-qubits with transversal gates and mid-circuit measurement
-\cite{bluvstein2024logical}. Both results make decoder quality and decoder
-latency the binding constraints on near-term logical performance, which is
-precisely why learned decoders are studied so carefully and why the standards
-of comparison in that subfield are worth importing into the mitigation
-literature.
-
-
 \section{Research gap}\label{sec2:gap}
 
 Existing mitigation studies compare different reference methods, circuit
@@ -835,7 +696,6 @@ Existing work includes cross-device and extrapolation tests
 depth and family holdouts and a controlled change in the simulator's noise
 rates. It records transfer separately from random holdout performance
 and measures the effect of removing structural inputs that extend beyond
-their training range. The repetition-code benchmark studies a distinct
-task with a physical matching graph and an exact posterior reference.
+their training range. 
 
 \end{document}

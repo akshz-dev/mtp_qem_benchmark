@@ -9,7 +9,7 @@
 \chapter{Experimental Setup and Implementation}\label{chap4:setup}
 
 This chapter records the implementation in enough detail to reproduce every number
-in Chapters~\ref{chap5:results} and~\ref{chap6:decoding}. The intent is that a
+in Chapter~\ref{chap5:results}. The intent is that a
 reader with the accompanying source tree and these version pins can regenerate the
 result tables and figures without contacting the author.
 
@@ -37,14 +37,12 @@ scikit-learn      & 1.9.1 \\
 Matplotlib        & 3.11.1 \\
 Autograd          & 1.8.0 \\
 threadpoolctl     & 3.8.0 \\
-PyMatching        & 2.4.0 (syndrome decoding) \\
+
 \bottomrule
 \end{tabular}
 \end{table}
 
-The revised syndrome-decoding sweep used eight concurrent configurations with
-one numerical-library thread per worker.
-The exact package versions are recorded in \texttt{qec\_run\_metadata.json}.
+
 The matched-kernel mitigation rerun used Python 3.12.10 and the package pins in
 \texttt{requirements.txt}. Timings reflect concurrent execution of configurations.
 
@@ -199,7 +197,7 @@ Table~\ref{tab:ch4_files} maps the main drivers to their outputs. The reference
 mitigation fit consumes one table of circuit groups, circuit descriptors,
 noisy expectations and ideal labels. The folded comparisons additionally
 require the stored exact expectation values, executed layer ratios and provenance
-manifests. The decoder consumes packed detector data and logical labels.
+manifests. 
 
 \begin{longtable}{p{4.9cm} >{\raggedright\arraybackslash}p{10.0cm}}
 \caption[Source files and their outputs]{Source files and their outputs. Scripts are in \texttt{code/} and
@@ -277,19 +275,7 @@ Appendix~\ref{AppendixB} from the result files. \\
 \texttt{make\_figures\_\allowbreak realistic.py} &
 The realistic-regime and robustness figures, including the circuit--shot
 replication. \\
-\addlinespace
-\texttt{qec\_gen\_data.py} &
-Repetition-code syndrome datasets under phenomenological noise
-(Section~\ref{chap6:decoding} states why this substitutes for the surface code). \\
-\texttt{qec\_bench.py} &
-Decoder benchmark, paired test-shot comparisons, coverage, and the figures of
-Chapter~\ref{chap6:decoding}. \\
-\texttt{qec\_matching.py} &
-Physical repetition-code detector graph, matching decoders, and exhaustive
-distance-3 validation. \\
-\texttt{qec\_posterior.py} &
-Exact logical-class posterior decoder and comparison with exhaustive
-distance-3 fault enumeration. \\
+
 \end{longtable}
 
 \section{Verification practices}\label{sec:ch4_verification}
@@ -326,6 +312,6 @@ pools as the inference units.
 
 Fifth, the accompanying \texttt{results/claims\_audit.csv} records an earlier
 audit. The current comparisons use the updated result artifacts of
-Chapters~\ref{chap5:results} and~\ref{chap6:decoding}.
+Chapter~\ref{chap5:results}.
 
 \end{document}

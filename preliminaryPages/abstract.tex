@@ -4,9 +4,9 @@
 \end{flushright}
 \addcontentsline{toc}{chapter}{Abstract}
 
-This thesis benchmarks simulated expectation-value mitigation and repetition-code
-syndrome decoding. Mitigation uses circuit-grouped holdouts under idealised and
-device-informed noise. On idealised random circuits, classical RBF kernel ridge
+This thesis benchmarks learned and analytic mitigation of simulated expectation
+values on circuit-grouped holdouts under idealised Markovian and device-informed
+non-Markovian noise. On idealised random circuits, classical RBF kernel ridge
 reaches $0.0404$ RMSE, fidelity kernel ridge $0.0421$, and linear zero-noise
 extrapolation $0.0737$; across ten grouped holdouts the paired comparison favours RBF in nine and fidelity in none; the tenth interval includes zero. Under device-informed noise, the paired
 RBF-minus-fidelity intervals on the random holdout include zero under both
@@ -15,11 +15,8 @@ narrows the kernels' margin below linear extrapolation from about $0.040$ to
 $0.014$ RMSE. With fidelity entries estimated from $10^5$ shots, the fidelity
 kernel reaches $0.0658$ RMSE against $0.0629$ with exact entries, and each
 prediction needs $3.15\times10^8$ simulated overlap executions in addition to
-the $12{,}288$ input executions that both kernels share. Under phenomenological
-noise, corrected matching and exact logical-class decoding improve across tested
-distances at $p=0.02$. At distance three, the best valid minimum-weight matching
-tie choices attain exact posterior risk at each sampled error rate.
+the $12{,}288$ input executions that both kernels share.
 
 \vspace{0.4cm}
-\noindent\textbf{Keywords:} quantum error mitigation, quantum error correction,
-quantum kernels, syndrome decoding.
+\noindent\textbf{Keywords:} quantum error mitigation, zero-noise extrapolation,
+quantum kernels, non-Markovian noise.

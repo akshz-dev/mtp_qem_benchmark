@@ -27,7 +27,6 @@ venv/
 
 # Scratch run directory and regenerable raw data
 run/
-qec_data/
 
 # OS and editors
 .DS_Store

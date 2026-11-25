@@ -116,26 +116,3 @@ quantifies concentration.
 
 \lstinputlisting[language=Python, caption={code/bandwidth\_study.py},
                  label={lst:bandwidth}]{code/bandwidth_study.py}
-
-\section{Repetition-code decoding}
-
-Chapter~\ref{chap6:decoding} uses \texttt{qec\_gen\_data.py} for the
-phenomenological memory simulation. It stores bit-packed detector strings,
-the logical labels, and a manifest of circuit distances, noise rates,
-shot counts and seeds. \texttt{qec\_matching.py} constructs the physical
-space-time graph and implements the two matching decoders.
-\texttt{qec\_posterior.py} computes the logical-class posterior using the
-simulated fault probability. Both modules contain their own distance-3
-checks against all $2^{15}$ fault histories.
-
-\texttt{qec\_bench.py} fits the learned arms on the training blocks and
-generates the Chapter~\ref{chap6:decoding} figures. In \texttt{results/},
-\texttt{qec\_decoder\_results.csv} gives test counts, logical error rates,
-intervals and shared-prefix counts. \texttt{qec\_paired\_results.csv} records
-the two discordant counts used for each paired comparison. The
-\texttt{qec\_matching\_validation.json} and
-\texttt{qec\_posterior\_validation.json} artifacts give the independent
-checks, including the range of logical error rates across legal matching
-tie choices. The threshold, coverage and PCA JSON files record the
-corresponding diagnostics. \texttt{qec\_run\_metadata.json} identifies
-the package versions and execution settings for this sweep.

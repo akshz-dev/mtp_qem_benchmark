@@ -32,7 +32,7 @@ Maintaining a given estimation accuracy can require sampling overhead
 exponential in circuit depth under noise models such as local depolarisation
 \cite{takagi2022fundamental,quek2024exponentially}.
 
-This thesis is a benchmarking study of machine-learning approaches to both problems,
+This thesis is a benchmarking study of machine-learning approaches to error mitigation,
 with particular attention to \emph{hybrid quantum--classical} models -- models in
 which a parametrised quantum circuit does part of the computation and a classical
 optimiser or regressor does the rest. The study asks when these models improve
@@ -132,12 +132,7 @@ The objectives of this work are:
     initialisation. The fixed-setting and feature ablations test which changes
     account for differences on the paired holdouts.
 
-    \item To extend the study to quantum error correction by benchmarking
-    machine-learning syndrome decoders, including a hybrid quantum--classical
-    decoder, against minimum-weight perfect matching and exact logical-class
-    posterior decoding on syndrome
-    data~\cite{edmonds1965paths,higgott2022pymatching,torlai2017neural,bausch2024learning},
-    using logical error rate as the metric.
+    
 \end{enumerate}
 
 \section{Research contributions}
@@ -207,20 +202,13 @@ The substantive contributions of this thesis are as follows.
     circuit. A feature ablation measures the effect of removing depth and gate
     count, which both go beyond their training range on this split.
 
-    \item \textbf{A syndrome-decoding benchmark} comparing neural and hybrid
-    quantum--classical decoders with matching on the physical detector graph
-    and exact logical-class posterior decoding on the distance-$3$ to $9$
-    repetition code under phenomenological noise. The benchmark reports logical
-    error rate and batched decoding cost. The repetition code
-    substitutes for the surface code, for reasons stated in
-    Chapter~\ref{chap6:decoding}.
+    
 \end{enumerate}
 
 \subsection{Organisation of thesis}
 
-Chapter~\ref{chap2:background} reviews the noise models, mitigation techniques,
-quantum machine-learning primitives and decoding algorithms on which this work
-builds, and states the research gap precisely.
+Chapter~\ref{chap2:background} reviews the noise models, mitigation techniques and
+quantum machine-learning primitives on which this work builds, and states the research gap precisely.
 Chapter~\ref{chap3:methodology} formalises the benchmark: the noise model, the
 circuit families, the feature construction, the evaluation protocol, every model
 arm, and the metrics.
@@ -233,8 +221,8 @@ ablation and the two out-of-distribution experiments in the idealised regime, an
 then repeats the main comparison under a device-realistic, non-Markovian noise model
 with hardware-realisable noise scaling, calibration drift and a shot-limited
 quantum kernel.
-Chapter~\ref{chap6:decoding} reports the syndrome-decoding track.
-Chapter~\ref{chap7:conclusion} states the conclusions, the limits of what has been
+
+Chapter~\ref{chap6:conclusion} states the conclusions, the limits of what has been
 established, and the directions that follow from the failure modes identified here.
 Appendix~\ref{AppendixA} collects the derivations,
 Appendix~\ref{AppendixB} the complete result tables and selected hyperparameters,
