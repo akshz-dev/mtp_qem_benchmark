@@ -34,8 +34,10 @@ Split~A ($3150$ training rows, $1350$ test rows, grouped by circuit) and Split~B
 bootstrap confidence intervals; error reduction relative to the unmitigated
 estimator on the same fold. Arms are ordered by Split~A error. Negative error
 reduction means the method is worse than no mitigation. All values are for the
-single reference fit. Section~\ref{sec:ch5_robustness} reports a separate
-ten-seed VQC study.}
+single reference fit. The data-reuploading VQC row is the seed-7 fit of
+\texttt{bench.py}; over ten initialisation seeds the same arm gives
+$0.0935 \pm 0.0327$ on Split~A and $0.3034 \pm 0.0938$ on Split~B
+(Section~\ref{sec:ch5_robustness}).}
 \label{tab:ch5_main}
 \small
 \begin{tabular}{llcccc}
@@ -87,7 +89,12 @@ Linear ridge regression reaches $0.0515$ and improves on every analytic method
 on Split~A. Exponential extrapolation reaches $0.1548$, which is $49.6\%$ above
 the unmitigated RMSE. Fitting a three-parameter curve with three noisy observations
 leaves no redundant measurements to constrain the extrapolation.
-Appendix~\ref{sec:appA_exp} describes the resulting sensitivity to shot noise.
+The arm falls back to linear extrapolation on $317$ of the $1350$ test rows
+(Section~\ref{sec:ch3_analytic}). On the other $1033$ rows the exponential fit itself
+reaches $0.1724$, against $0.0742$ for linear extrapolation on the same rows. With
+shot-free inputs the same fit reaches $0.0119$ (Section~\ref{sec:ch5_shots}), so the
+failure comes from amplified shot noise. Appendix~\ref{sec:appA_exp} describes this
+sensitivity.
 
 \subsection{Out-of-distribution depth extrapolation}
 
@@ -162,7 +169,7 @@ nearly orthogonal. Unmitigated RMSE on this fold is $0.1035$.}
 Panel~a: RMSE against bandwidth, with the shaded band the $95\%$ bootstrap interval
 and the dotted line the unmitigated error level. Panel~b: the mean off-diagonal
 entry of the Gram matrix over the same bandwidths; the band is $\pm 1$ standard
-deviation across entries.}
+deviation across entries, drawn within the range $[0,1]$ of a fidelity.}
 \label{fig:ch5_bandwidth}
 \end{figure}
 
@@ -171,6 +178,24 @@ $\beta=1$ and a minimum observed error of $0.0421$ at
 $\beta=0.15$. The off-diagonal kernel entries change as
 bandwidth spreads the embedded data. The resulting error spread motivates
 a tuned bandwidth for each fidelity comparison.
+
+The failure at $\beta=1$ is not the identity-like Gram matrix of exponential
+concentration. Its mean off-diagonal entry is $0.2041$ with standard deviation
+$0.1792$, more than ten times the Haar value $1/2^{6} \approx 0.016$ for the six
+encoding qubits. At that bandwidth the kernel is narrow rather than concentrated, and
+its cross-validated $R^2$ falls to $0.577$.
+
+At the selected $\beta=0.15$ the fidelity kernel is close to a Gaussian kernel on the
+same standardised features. Over the $3150$ Split~A training rows, its off-diagonal
+entries have correlation $0.993$ with $\exp(-\gamma_{\mathrm{RBF}}\lVert x-x'\rVert_2^2)$ at
+$\gamma_{\mathrm{RBF}}=0.0063$, with a root-mean-square entry difference of $0.011$. The smallest
+value in the RBF grid, $\gamma_{\mathrm{RBF}}=0.005$, gives correlation $0.993$ and root-mean-square
+difference $0.022$ (\texttt{results/thesis\_diagnostics.csv}). The RBF search therefore
+contains a close approximation to the tuned fidelity kernel, and cross-validation
+selected the narrower $\gamma_{\mathrm{RBF}}=0.08$ instead. This is the similarity between
+bandwidth-tuned quantum kernels and classical kernels reported by Fl\'orez-Ablan et
+al.~\cite{florezablan2025similarity}, and it is consistent with the close agreement of
+the two kernels throughout this chapter and Chapter~\ref{chap6:realistic}.
 
 \section{Noise-strength sweep}\label{sec:ch5_noise}
 
@@ -223,7 +248,10 @@ the variance amplification in eqn.~\eqref{eq:appA_variance}. Across
 $256$ shots, $4096$ shots and exact inputs, RBF achieves
 $0.1013$, $0.0411$, $0.0029$.
 The fidelity-kernel estimates under those same three conditions are
-$0.1013$, $0.0427$, $0.0031$.
+$0.1013$, $0.0427$, $0.0031$. At the default $4096$ shots, therefore, about $93\%$ of
+both kernels' error comes from shot noise in the three inputs. Exponential
+extrapolation reaches $0.0119$ with shot-free inputs, the lowest error of the analytic
+arms, against $0.1506$ at $4096$ shots.
 
 \section{System-size sweep}\label{sec:ch5_qubits}
 
@@ -232,8 +260,12 @@ The classical RBF RMSEs are
 $0.0418$, $0.0404$, $0.0428$,
 and the corresponding fidelity-kernel RMSEs are
 $0.0419$, $0.0421$, $0.0434$.
-The settings differ in their circuit and observable construction and span
-a small size range. The comparison describes the three tested settings.
+The $n=5$ point is the primary $900$-circuit dataset fitted with the full grid,
+while $n=4$ and $n=6$ use $500$-circuit datasets and the reduced grid
+(Table~\ref{tab:ch4_grids}), so the three points differ in pool size and tuning
+budget as well as in qubit count. The fidelity kernel embeds the six features on six
+qubits at every system size, so the sweep changes the data but not the kernel's
+dimension. The comparison describes the three tested settings.
 
 \section{Learning curves}\label{sec:ch5_learning}
 
@@ -265,7 +297,10 @@ The spread comes from changing reference circuits while holding the test set fix
 At $31$ circuits, the paired intervals favour RBF in
 $4$
 draws and fidelity in
-$9$.
+$9$. At $63$ circuits they favour RBF in $8$ draws and fidelity in $5$. At $31$
+circuits ridge regression gives the lowest mean RMSE, $0.0526$, and the boosted trees
+and the neural network are worse than no mitigation in $15$ and $12$ of the $20$ draws
+(Table~\ref{tab:appB_learnvar}).
 
 \section{Feature ablation}\label{sec:ch5_ablation}
 
@@ -277,7 +312,7 @@ the learned advantage comes from.
 \caption[Feature ablation on Split~A]{Feature ablation on Split~A (RMSE). ``Noise-scaled only'' uses the three
 noise-scaled expectation values, the same information an analytic extrapolation
 consumes; ``native + structure'' uses the native noisy value plus the three structural descriptors; ``full'' uses all six features. Unmitigated RMSE is $0.1035$.
-The bounded VQC uses the 30-epoch sweep budget.}
+All arms use the reduced grid, and the bounded VQC uses the 30-epoch sweep budget.}
 \label{tab:ch5_ablation}
 \small
 \begin{tabular}{lccc}
@@ -302,7 +337,10 @@ reaches $0.0737$ on the same test fold. With the native noisy measurement
 and the three structural descriptors, the kernels reach
 $0.0440$ and
 $0.0457$.
-Both kernels use the reduced grid in each feature condition.
+Both kernels and the boosted trees use the reduced grid in each feature condition.
+The trees' full-input value of $0.0456$ therefore differs from the $0.0436$ of
+Table~\ref{tab:ch5_main}, where the full search selected 15 leaves instead of the
+reduced grid's 31.
 
 \section{Bounded encoding under depth extrapolation}
 \label{sec:ch5_bounded}
@@ -345,7 +383,8 @@ Data-reuploading VQC & 0.3127 (0.3028--0.3215) & $-156.8$ & higher error \\
 \includegraphics[width=\textwidth]{figures/ch5/fig_ch5_ood.png}
 \caption[Out-of-distribution behaviour]{Out-of-distribution behaviour. Panel~a: depth extrapolation with the
 bounded-encoding arm added; the dotted line is the unmitigated error level.
-Panel~b: cross-family transfer in both directions.}
+Panel~b: cross-family transfer in both directions. Exponential extrapolation is
+omitted from both panels; Table~\ref{tab:appB_sweeps} lists all eleven arms.}
 \label{fig:ch5_ood}
 \end{figure}
 
@@ -368,6 +407,9 @@ $-19.8\%$.
 The Ising-to-HEA RBF-minus-fidelity difference is
 $+0.00192$ (95\% CI $[+0.00138,\allowbreak +0.00247]$).
 Linear extrapolation improves on the raw measurements in both directions.
+From hardware-efficient to Ising circuits, ridge regression gives the lowest RMSE of
+all arms, $0.0546$ ($47.7\%$ reduction), ahead of linear and Richardson extrapolation
+at $0.0705$ and $0.0734$.
 
 The ideal target values have different spreads across the two circuit
 families. The Ising-family SD is $0.286$, and the hardware-efficient
@@ -410,13 +452,17 @@ Data-reuploading VQC & \textbf{3 + 1} & 114 & 47.4 & 0.0533$^{\P}$ \\
 \parbox{0.97\linewidth}{\footnotesize
 $^{\dagger}$ Total selected tree leaves. $^{\ddagger}$ Dual coefficients.
 $^{\S}$ One fidelity setting per training row for overlap measurement.
-$^{\P}$ Seed~7 in this fit.
+$^{\P}$ Seed~7 in this fit; the ten-seed mean is $0.0935$ (Section~\ref{sec:ch5_robustness}).
 $^{\circ}$ Fits include each arm's tuning procedure.}
 \end{table}
 
 On the full feature set, each classical regressor and linear ZNE uses three
 noise-scaled measurements for a new prediction. The learned regressors also
-require labelled reference data and classical training. RBF evaluates
+require labelled reference data and classical training. On Split~A this means the
+three noisy inputs for each of the $3150$ reference rows,
+$3150 \times 12{,}288 \approx 3.87\times10^{7}$ executions at $4096$ shots per setting,
+and a classically computed ideal value for each row. The analytic extrapolations
+need neither. RBF evaluates
 test-to-training similarities numerically from those same input measurements.
 
 An implementation using a measured fidelity kernel would add $3150$
@@ -499,6 +545,12 @@ bounded variant is far more stable at $0.0581 \pm 0.0096$ and better than no
 mitigation for every seed. On Split~B the reuploading arm is worse than no
 mitigation for all ten seeds ($0.1827$--$0.4900$) and the bounded arm for nine of
 ten. The study shows the reuploading arm's sensitivity to initialisation.
+Seed~7 gives $0.0557$ on Split~A here and $0.0533$ in the main fit of
+Table~\ref{tab:ch5_main}, although both scripts call the same training function on
+the same split; on Split~B the two values are $0.4900$ and $0.3127$. At the 30-epoch
+budget seed~7 gives $0.1836$ on Split~A, the highest of the ten seeds. The single fit
+in Table~\ref{tab:ch5_main} is therefore not reproducible across scripts, and the
+ten-seed values are the reference for this arm.
 
 \paragraph{Depth-related inputs.} Table~\ref{tab:ch5_oodfeat} and
 Figure~\ref{fig:ch5_oodfeat} compare refitted models on Split~B with all six
@@ -542,14 +594,35 @@ increases RBF's RMSE from $0.0658$ to $0.0718$ and lowers fidelity RMSE from
 $0.1433$ to $0.0723$. Removing observable weight as well gives $0.0709$ and
 $0.0720$, respectively. These refits change the inputs and reduce the width
 of the fidelity feature map. They measure sensitivity to the choice of
-feature set on this depth split.
+feature set on this depth split. With the three noise-scaled values alone, the
+bounded VQC gives the lowest RMSE of the learned arms, $0.0673$, followed by the
+neural network at $0.0696$ and RBF at $0.0709$. Ridge regression gives $0.0717$ with
+all three input sets.
 
 \section{Summary of findings, idealised regime}\label{sec:ch5_summary}
 
 The matched classical control reaches $0.0404$ RMSE on random held-out
 circuits and $0.0658$ on deeper circuits. The fidelity
 kernel reaches $0.0421$ and $0.1433$,
-respectively. The ablations and learning curves show how the comparison
-depends on the features and on the number of reference circuits. The separate seed study shows that the data-reuploading VQC is sensitive to initialisation.
+respectively. At the selected bandwidth the fidelity kernel is close to a Gaussian
+kernel that the RBF search nearly contains, and the failure of the untuned kernel at
+$\beta=1$ comes from a narrow kernel, not from concentration.
+
+In distribution, ridge regression, the boosted trees, the neural network, both
+kernels and the bounded VQC improve on linear extrapolation, the strongest analytic arm,
+in all ten repeated holdouts; the data-reuploading VQC does so in four. At $4096$ shots
+most of the kernels' remaining error is input shot noise. Exponential extrapolation fails through amplified shot noise and
+falls back to the linear value on about a quarter of the rows.
+
+Out of distribution the learned arms separate. With all six inputs on deeper circuits,
+RBF, the boosted trees and ridge regression stay $41$--$46\%$ below the unmitigated
+error, while the neural network, the fidelity kernel and both variational circuits are
+worse than no mitigation; without the depth and gate-count inputs every learned arm
+improves on the raw measurement. Across circuit families, ridge regression transfers
+best from hardware-efficient to Ising circuits. With $31$ reference circuits, ridge
+regression has the lowest mean error of the five arms refitted over $20$ draws, and the
+fidelity kernel is favoured over RBF in more draws than the reverse. The separate seed study shows that the
+data-reuploading VQC is sensitive to initialisation and that its single main-table fit
+is not reproducible across scripts.
 
 \end{document}

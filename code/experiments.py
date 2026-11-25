@@ -34,7 +34,7 @@ from threadpoolctl import threadpool_limits
 
 from bench import (FEATS, KERNEL_MODELS, LAMS, boot_rmse_ci, dr_predict, fit_dr_vqc,
                    matched_kernel_difference, rmse, zne_exp, zne_poly)
-from kernel_models import fit_kernel_ridge, qk_states as qk_states_n, quantum_gram
+from kernel_models import fit_kernel_ridge
 from noise_sweep_data import GENERATOR, NOISE_LEVELS
 
 SEED = 7

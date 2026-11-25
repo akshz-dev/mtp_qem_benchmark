@@ -52,7 +52,8 @@ in the sweep window.
 \includegraphics[width=\textwidth]{figures/ch5/fig_ch5_nonmarkov.png}
 \caption[Idle trace-distance revivals with a coupled defect]{Panel~a shows the
 trace distance on $q_0$ across fourteen idle layers for the computational-basis
-probe pair in production and with the defect removed. Panel~b shows the maximum
+probe pair in production, with the defect reset after every layer and with the
+defect removed. Panel~b shows the maximum
 total revival over the two tested probe pairs in the twelve-layer coupling
 sweep, labelled $\mathcal{N}$ in the plot.}
 \label{fig:ch5_nonmarkov}
@@ -62,7 +63,10 @@ Across the $4500$ circuit--observable pairs, the mean absolute deviation of the
 unmitigated native measurement is $0.0603$ with the defect removed, $0.0870$
 with the defect reset between layers, $0.0877$ in production and $0.0930$ after
 drift. Most of the difference between production and defect removal persists
-when the defect is reset between layers. The production-minus-reset contrast
+when the defect is reset between layers. Resetting turns the exchange into a
+memoryless loss channel on $q_0$: under eqn.~\eqref{eq:ch3_tls}, an excitation on
+$q_0$ moves to a fresh defect with probability $\sin^2(2g) \approx 0.087$ per layer at
+$g = 0.15$. The production-minus-reset contrast
 measures the effect of that intervention with the collision parameters fixed.
 
 \section{Parameter scaling versus unitary folding}\label{sec:ch5_scaling}
@@ -130,6 +134,17 @@ both kernels have lower RMSE than linear ZNE on both holdouts under
 both protocols, with paired intervals excluding zero. Richardson ZNE worsens from $0.1201$
 to $0.2001$ on Split~A.
 
+Parameter scaling also multiplies the coherent over-rotation, the crosstalk angle and
+the defect coupling (Section~\ref{sec:ch3_drift}), so its scaled settings change the
+coherent dynamics as well as the noise strength. On shot-free values, the absolute
+error of the production model fails to grow monotonically across the three settings
+for $32.5\%$ of the $4500$ circuit--observable pairs under parameter scaling and
+$39.7\%$ under folding, against $12.1\%$ and $17.8\%$ with the defect removed and
+$4.0\%$ in Regime~I. Linear extrapolation of the shot-free production values gives
+$0.0997$ RMSE under parameter scaling and $0.0910$ under folding, against $0.1206$
+unmitigated, so in this regime most of linear extrapolation's residual error is bias
+rather than shot noise (\texttt{results/thesis\_diagnostics.csv}).
+
 On the random split, the paired RBF-minus-fidelity interval includes zero
 under both protocols. On the depth split, the difference
 under parameter scaling is $-0.00438$ (95\% CI $[-0.00528,\allowbreak -0.00347]$).
@@ -196,8 +211,8 @@ split. On random circuits, both kernels beat folded linear ZNE in all nine
 combinations. On deeper circuits, paired intervals favour fidelity over folded
 linear ZNE in all nine combinations and favour RBF over folded linear ZNE in seven.
 The other two RBF intervals include zero. Among the
-eleven arms, gradient-boosted trees give the lowest mean folded depth RMSE
-of $0.1036$.
+eleven arms, gradient-boosted trees, at the single reduced-grid setting of
+Table~\ref{tab:ch4_grids}, give the lowest mean folded depth RMSE of $0.1036$.
 
 \begin{table}[htbp]
 \centering
@@ -355,7 +370,7 @@ The intervals quantify sensitivity to this drift draw on the simulated device.
 \section{Finite-shot fidelity kernels and circuit cost}
 \label{sec:ch5_shotkernel}
 
-R4 evaluates the fidelity kernel on the parameter-scaled Split~A of the
+In the shot-limited study (R4 in the result files), the fidelity kernel is evaluated on the parameter-scaled Split~A of the
 realistic regime. Each fidelity entry is estimated by simulating the
 binomial shot noise of an inversion test. The simulation uses ideal
 inversion-test probabilities and captures sampling variability alone.
@@ -398,7 +413,8 @@ Exact Gram & --- & --- & --- & 0.0629 \\
 \includegraphics[width=0.82\textwidth]{figures/ch5/fig_ch5_shotkernel.png}
 \caption[Shot-estimated quantum kernel against circuit executions]{Accuracy against the
 total fidelity executions per draw for tuning and final fit/test. Error bars span the five
-shot-noise draws. The RBF reference uses the same holdout with its R1 tuning grid.}
+shot-noise draws. The RBF reference uses the same holdout with the reduced tuning grid of
+Section~\ref{sec:ch5_scaling}.}
 \label{fig:ch5_shotkernel}
 \end{figure}
 
@@ -425,7 +441,10 @@ using grouped validation. The budget-wise mean RMSE difference (23-point $-$ 12-
 Table~\ref{tab:ch5_kernelcompare} reports the direct RBF and fidelity
 comparison across ten grouped holdouts of the reference pool for each setting.
 The same training circuits, held-out circuits and candidate count are used
-for both models in each holdout. These counts describe split sensitivity on fixed simulated datasets.
+for both models in each holdout. These counts describe split sensitivity on fixed simulated datasets. The two regimes
+use different circuit pools: Regime~I has $900$ rows at each depth, while Regime~II
+draws each circuit's depth at random ($1755$ deeper-circuit test rows against $1800$).
+Rows of the table are paired within a regime but not across regimes.
 Section~\ref{sec:ch5_folding_seeds} compares the kernels across independent
 circuit pools and shot draws.
 

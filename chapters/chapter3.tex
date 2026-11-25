@@ -43,7 +43,7 @@ distinction becomes important in Section~\ref{sec:ch3_protocol}.
 
 The benchmark is run under two noise regimes. This section defines the first, an
 idealised gate-local Markovian model with homogeneous rates and exact noise
-scaling; Section~\ref{sec:ch3_realistic} defines the second, a device-realistic
+scaling; Section~\ref{sec:ch3_realistic} defines the second, a device-informed
 model with inhomogeneous rates, coherent errors, crosstalk and non-Markovian
 dynamics. Reporting both is deliberate: a conclusion that holds in only one of them
 is a conclusion about the noise model, and the reader needs to be able to tell which
@@ -51,8 +51,9 @@ is which. The idealised regime is presented first because it is the regime in wh
 essentially all published machine-learning mitigation results are obtained, so it is
 the setting in which this thesis can be compared to the literature.
 
-Noise is applied as a gate-level Kraus channel model. After each single-qubit gate a
-depolarising channel acts on the gate's qubit,
+Noise is applied as a gate-level Kraus channel model. After the single-qubit
+rotations that a layer applies to a qubit (one $R_X$ in the TFIM family, the
+$R_Y R_Z$ pair in the HEA family), a depolarising channel acts on that qubit,
 \begin{equation}
     \mathcal{E}^{\text{dep}}_{p}(\rho) \;=\; (1 - p)\,\rho \;+\; \frac{p}{3}
     \left( X \rho X + Y \rho Y + Z \rho Z \right),
@@ -89,7 +90,7 @@ Section~\ref{sec:ch3_validity}: results here describe the behaviour of mitigatio
 methods given ideal noise scaling, and a hardware study would additionally inherit
 the error of the scaling technique itself.
 
-\section[Noise regime II: device-realistic non-Markovian model]{Noise regime II: device-realistic model}
+\section[Noise regime II: device-informed non-Markovian model]{Noise regime II: device-informed model}
 \label{sec:ch3_realistic}
 
 The idealised model of Section~\ref{sec:ch3_noise} is gate-local, Markovian,
@@ -254,6 +255,12 @@ also change how much energy transfers in a layer because it changes the defect's
 incoming state (Section~\ref{sec:ch5_markovianity}). Training on A and testing on
 B measures transfer under the simulated drift intervention. Under parameter
 scaling the defect coupling and decay are multiplied by $\lambda$ in A and R.
+Because parameter scaling also multiplies the coherent over-rotation and the
+crosstalk angle, its scaled settings change the coherent part of each layer as
+well as the strength of the incoherent noise. At $\lambda=3$ the qubit--defect
+exchange angle per layer is three times its native value, so the scaled
+measurements combine stronger noise with different coherent dynamics
+(Section~\ref{sec:ch5_scaling}).
 
 \section{Circuit families and observables}\label{sec:ch3_circuits}
 
@@ -263,12 +270,15 @@ which mitigation is usually deployed.
 The \textbf{hardware-efficient ansatz} (HEA) family applies, in each layer, an
 $R_Y(\theta)$ and an $R_Z(\varphi)$ rotation to every qubit followed by a ring of
 CNOT gates. Rotation angles are drawn independently and uniformly from
-$[-\pi, \pi]$. This is the circuit shape used by variational algorithms~\cite{cerezo2021vqa}.
+$[-\pi, \pi]$. This is the circuit shape used by variational algorithms~\cite{kandala2017hardware,cerezo2021vqa}.
 
-The \textbf{Trotterised transverse-field Ising} (TFIM) family applies, in each layer,
-an $R_X(\theta)$ rotation to every qubit followed by a ring of $R_{ZZ}(\theta)$
-couplings, which is one Trotter step of evolution under a transverse-field Ising
-Hamiltonian. This is the circuit shape used by quantum simulation workloads.
+The \textbf{transverse-field Ising} (TFIM) family applies, in each layer, an
+$R_X$ rotation to every qubit followed by a ring of $R_{ZZ}$ couplings, the gate
+pattern of one Trotter step of transverse-field Ising evolution. Every rotation and
+coupling angle is drawn independently and uniformly from $[-\pi,\pi]$, so the
+circuits share the gate structure of Trotterised Ising dynamics without implementing
+a Trotterisation of one fixed Hamiltonian. This is the circuit shape used by quantum
+simulation workloads.
 
 Both families are generated at depths $d \in \{2, 3, 4, 5, 6\}$ layers. Five Pauli
 observables are measured on every circuit: $Z_0$, $Z_0 Z_1$, $X_0 X_1$,
@@ -340,7 +350,7 @@ test sets, allowing a model to exploit those common inputs. Outer evaluation
 splits keep the five rows together and measure performance on unseen
 circuits. Grouped inner cross-validation uses this same
 constraint for both kernels and the trees. Ridge penalty selection and neural
-early stopping are described in Chapter~\ref{chap4:setup}.
+early stopping validate on rows rather than circuits (Chapter~\ref{chap4:setup}).
 
 \subsection{The three splits}
 
@@ -390,7 +400,13 @@ non-linear least squares, motivated by the observation that under global
 depolarising noise the expectation value decays exponentially in circuit
 volume~\cite{endo2018practical,cai2021multiexponential}. With
 three data points and three free parameters the fit is exactly determined, and is
-included here specifically to show what that costs.
+included here specifically to show what that costs. The asymptote $c$ is left free
+because amplitude damping drives the $Z$-string observables towards a non-zero fixed
+point (Appendix~\ref{sec:appA_exp}). If the fit fails, returns a non-finite value, or
+extrapolates beyond $1.5$ in magnitude, the arm returns the linear extrapolation for
+that row. In the stored predictions this happens for $317$ of the $1350$ Split~A test
+rows and $505$ of the $1800$ Split~B test rows
+(\texttt{results/thesis\_diagnostics.csv}).
 
 \section{Classical machine-learning arms}\label{sec:ch3_classical}
 
@@ -413,11 +429,11 @@ trained to convergence with early stopping on an internal validation split.
 \textbf{Classical radial basis function (RBF) kernel ridge regression} uses
 the Gaussian kernel on the standardised feature vectors,
 \begin{equation}
-    k_\mathrm{RBF}(x,x') = \exp\!\bigl(-\gamma \lVert x-x'\rVert_2^2\bigr),
+    k_\mathrm{RBF}(x,x') = \exp\!\bigl(-\gamma_{\mathrm{RBF}} \lVert x-x'\rVert_2^2\bigr),
     \label{eq:ch3_rbf}
 \end{equation}
 and solves the same regularised dual regression problem as fidelity-kernel ridge.
-The RBF coefficient $\gamma$ controls the kernel's decay with feature distance.
+The RBF coefficient $\gamma_{\mathrm{RBF}}$ controls the kernel's decay with feature distance.
 The two models receive identical input features, inner circuit folds, and numbers
 of tuning candidates. Both select the spread parameter and ridge penalty by mean
 validation $R^2$ and refit on the full training set. Evaluating the Gaussian kernel
@@ -443,10 +459,13 @@ Gram matrix is computed from the stored state vectors as a single matrix product
 which is what makes the arm tractable at this dataset size.
 
 A \textbf{bandwidth} hyperparameter $\beta$ rescales the input before embedding,
-$x \mapsto \beta x$. Its role is not cosmetic. As the embedded states spread over a
-large fraction of Hilbert space, off-diagonal fidelities collapse towards zero, the
-Gram matrix approaches the identity, and the regressor degenerates to memorising the
-training set with no ability to generalise. Bandwidth controls the kernel's spectrum
+$x \mapsto \beta x$. Its role is not cosmetic. A larger bandwidth spreads the embedded
+states, lowers the off-diagonal fidelities and makes the kernel narrower, so each
+prediction depends on fewer, closer training points. In the limit of states spread
+over a large fraction of Hilbert space the Gram matrix approaches the identity and the
+regressor can only memorise the training set (Appendix~\ref{sec:appA_kernel}).
+Section~\ref{sec:ch5_bandwidth} shows that the tested bandwidths stay far from that
+limit. Bandwidth controls the kernel's spectrum
 and hence its inductive bias, so it is selected here by grouped cross-validation
 over $\beta \in \{0.05, 0.15, 0.4, 1.0\}$ jointly with the ridge
 penalty~\cite{shaydulin2022importance,canatar2023bandwidth}.
@@ -463,10 +482,12 @@ applies
     \label{eq:ch3_reupload}
 \end{equation}
 followed by a ring of CNOT gates; the data vector $x$ therefore re-enters the circuit
-at every layer, which is what gives the model its expressivity~\cite{schuld2021effect}. The prediction is an
+at every layer, which is what gives the model its expressivity~\cite{schuld2021effect}.
+The same bias $b_{\ell q}$ enters both rotations, so each layer and qubit has six
+input weights and one bias. The prediction is an
 affine function $a \langle Z_0 \rangle + c$ of the expectation value of $Z_0$, with
-$a$, $c$, $\{w_{\ell q}\}$ and $\{b_{\ell q}\}$ all trainable. Training uses the Adam
-optimiser on the mean squared error, with gradients obtained by automatic
+$a$, $c$, $\{w_{\ell q}\}$ and $\{b_{\ell q}\}$ all trainable, $114$ parameters in total.
+Training uses the Adam optimiser~\cite{kingma2015adam} on the mean squared error, with gradients obtained by automatic
 differentiation through the simulator.
 
 \subsection{Bounded-encoding variant}\label{sec:ch3_bounded}
@@ -500,11 +521,20 @@ the ideal expectation value over the test fold,
 Mean absolute error and the coefficient of determination $R^2$ are reported
 alongside. Predictions for the mitigation comparisons are clipped to
 $[-1.5,1.5]$ before scoring. This common numerical guard permits predictions
-outside the physical expectation-value range of $[-1,1]$.
-Uncertainty for an individual holdout is obtained by bootstrap resampling \emph{over
+outside the physical expectation-value range of $[-1,1]$. Clipping at $[-1,1]$
+instead changes only two main-benchmark arms at four decimals: the Split~A
+fidelity kernel ($0.0421$ to $0.0414$) and exponential extrapolation ($0.1548$ to
+$0.1427$ on Split~A and $0.1805$ to $0.1602$ on Split~B). The paired Split~A
+RBF-minus-fidelity difference then becomes $-0.00101$ ($95\%$ CI
+$[-0.00152,\allowbreak -0.00054]$) instead of $-0.00168$
+(\texttt{results/thesis\_diagnostics.csv}).
+Uncertainty for an individual holdout is obtained by bootstrap
+resampling~\cite{efron1979bootstrap} \emph{over
 test circuits} rather than over rows, so that the resampling unit matches the
 grouping unit of the split; $95\%$ intervals are reported as percentiles of the
-bootstrap distribution. Error reduction is quoted relative to the unmitigated
+bootstrap distribution. These marginal intervals use $1000$ resamples in the main
+benchmark, $400$ in the sweep, bandwidth and realistic-regime tables, and $300$ in
+the variational-seed and shot-limited-kernel tables. Error reduction is quoted relative to the unmitigated
 estimator on the same fold,
 $100 \times (1 - \mathrm{RMSE}_{\text{method}} / \mathrm{RMSE}_{\text{unmitigated}})$,
 so a negative value means the method is worse than not mitigating at all.
@@ -527,9 +557,9 @@ The cost ledger distinguishes measurement settings from individual shot
 executions. The native estimator uses one setting, and a full three-scale
 input costs $3N$ executions for $N$ shots per setting. The variational arm adds
 an ansatz evaluation, computed exactly in the simulator. For an inversion-test
-kernel with $n$ training rows and $M$ shots per entry, collecting the training
-Gram triangle including its diagonal costs $Mn(n+1)/2$ executions, and a new
-prediction costs $Mn$ additional executions
+kernel with $n$ training rows and $N_{\mathrm{K}}$ shots per entry, collecting the training
+Gram triangle including its diagonal costs $N_{\mathrm{K}}n(n+1)/2$ executions, and a new
+prediction costs $N_{\mathrm{K}}n$ additional executions
 (Appendix~\ref{sec:appA_kernelcost}). These are acquisition counts. The
 tables report reference-feature acquisition and fidelity-kernel measurements
 alongside the simulator's classical training time and model size.
@@ -563,7 +593,9 @@ Its parameters are synthetic, so reported error magnitudes apply to the
 simulated calibration. Regime II includes several effects jointly.
 The paired scaling, drift and defect comparisons quantify the specific
 interventions used in the benchmark. The mitigation simulator omits readout
-assignment errors and leakage.
+assignment errors and leakage. The two regimes also use different circuit pools:
+Regime~I has $900$ rows at each depth, while Regime~II draws each circuit's depth at
+random. Absolute errors are therefore paired within a regime but not across regimes.
 
 Second, the defect model supplies one memory mechanism with a single time scale.
 Other mechanisms can include fluctuators with different time scales and

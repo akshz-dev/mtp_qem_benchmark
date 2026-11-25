@@ -46,3 +46,8 @@ class FoldingSeedRobustnessTests(TestCase):
         self.assertEqual(summary.n_resolved_negative.item(), 1)
         self.assertEqual(summary.n_pool_means_positive.item(), 1)
         self.assertEqual(summary.n_pool_means_negative.item(), 1)
+
+
+if __name__ == "__main__":
+    import unittest
+    unittest.main()

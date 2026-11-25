@@ -1,14 +1,15 @@
-"""Checks for forward-depth grouped tuning of both kernel regressors."""
+"""Checks for the circuit-grouped tuning of both kernel regressors."""
 from unittest import TestCase
 
 import numpy as np
 from sklearn.metrics.pairwise import rbf_kernel
+from sklearn.model_selection import GroupKFold
 from sklearn.preprocessing import StandardScaler
 
-from kernel_models import KERNEL_MODELS, fit_kernel_ridge, forward_depth_splits, qk_states, quantum_gram
+from kernel_models import KERNEL_MODELS, fit_kernel_ridge, qk_states, quantum_gram
 
 
-class KernelDepthTuningTests(TestCase):
+class KernelTuningTests(TestCase):
     def setUp(self):
         self.depths = np.repeat((2, 3, 4), 8)
         self.groups = np.repeat(np.arange(12), 2)
@@ -16,29 +17,15 @@ class KernelDepthTuningTests(TestCase):
         self.X = np.column_stack((rng.uniform(-1, 1, size=(24, 3)), self.depths))
         self.y = 0.6 * self.X[:, 0] + 0.2 * self.X[:, 1] ** 2
 
-    def test_all_validation_rows_are_deeper_and_circuit_groups_stay_whole(self):
-        folds = forward_depth_splits(self.depths, self.groups)
-        self.assertEqual(len(folds), 4)
-        for (tr, va), depth in zip(folds, (3, 3, 4, 4), strict=True):
-            np.testing.assert_array_equal(tr, np.flatnonzero(self.depths < depth))
-            np.testing.assert_array_equal(self.depths[va], depth)
-            groups = np.unique(self.groups[va])
-            np.testing.assert_array_equal(va, np.flatnonzero(np.isin(self.groups, groups)))
-        np.testing.assert_array_equal(
-            np.sort(np.concatenate([va for _, va in folds])),
-            np.flatnonzero(self.depths >= 3),
-        )
-
-    def test_held_out_depth_and_cross_depth_groups_are_rejected(self):
-        with self.assertRaisesRegex(ValueError, "outer training depths"):
-            forward_depth_splits(np.r_[self.depths, 5], np.r_[self.groups, 12])
-        groups = self.groups.copy()
-        groups[8] = groups[0]
-        with self.assertRaisesRegex(ValueError, "single depth"):
-            forward_depth_splits(self.depths, groups)
+    def test_split_circuit_groups_are_rejected(self):
+        folds = list(GroupKFold(n_splits=4).split(self.X, groups=self.groups))
+        tr, va = folds[0]
+        leaky = [(np.r_[tr, va[:1]], va)]
+        with self.assertRaisesRegex(ValueError, "splits a circuit group"):
+            fit_kernel_ridge("rbf_krr", self.X, self.y, self.groups, fast=True, cv_splits=leaky)
 
     def test_matched_kernel_fold_scores_and_refit(self):
-        folds = forward_depth_splits(self.depths, self.groups)
+        folds = list(GroupKFold(n_splits=4).split(self.X, groups=self.groups))
         for model in KERNEL_MODELS:
             with self.subTest(model=model):
                 fitted = fit_kernel_ridge(
@@ -55,6 +42,7 @@ class KernelDepthTuningTests(TestCase):
 
                 scale, alpha = fitted.scale, fitted.alpha
                 for fold, (tr, va) in enumerate(folds):
+                    self.assertFalse(set(self.groups[tr]) & set(self.groups[va]))
                     scaler = StandardScaler().fit(self.X[tr])
                     train, valid = scaler.transform(self.X[tr]), scaler.transform(self.X[va])
                     if model == "rbf_krr":
@@ -73,3 +61,8 @@ class KernelDepthTuningTests(TestCase):
 
                 self.assertEqual(len(fitted.coefficients), len(self.X))
                 np.testing.assert_allclose(fitted.scaler.mean_, self.X.mean(axis=0))
+
+
+if __name__ == "__main__":
+    import unittest
+    unittest.main()

@@ -4,7 +4,7 @@ Row = (circuit, observable). Features = noise-scaled noisy expectation values
 (the standard ZNE feature set) + circuit structure. Target = ideal expectation.
 
 Noise model (base strengths, scaled by lambda):
-  - single-qubit gate: DepolarizingChannel(p1)
+  - after each qubit's single-qubit rotations in a layer: DepolarizingChannel(p1)
   - two-qubit gate:    DepolarizingChannel(p2) on both wires
   - after every layer: AmplitudeDamping(gamma) on every wire (idle/T1 decay)
 Noise scaling for ZNE is parameter scaling: (p1,p2,gamma) -> lambda*(p1,p2,gamma).

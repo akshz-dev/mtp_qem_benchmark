@@ -37,10 +37,12 @@
 \nomenclature[M, 04]{$\lambda$}{Noise scale factor; $\lambda=1$ is the bare device}
 \nomenclature[M, 05]{$K$}{Number of noise scales measured per circuit}
 \nomenclature[M, 06]{$c_k$}{Extrapolation coefficient for noise scale $\lambda_k$}
-\nomenclature[M, 07]{$p_1$}{Depolarising probability per single-qubit gate}
+\nomenclature[M, 07]{$p_1$}{Depolarising probability on a qubit after its single-qubit rotations in a layer}
 \nomenclature[M, 08]{$p_2$}{Depolarising probability per two-qubit gate}
 \nomenclature[M, 09]{$\gamma$}{Amplitude-damping rate per qubit per layer}
 \nomenclature[M, 10]{$N$}{Number of measurement shots per expectation value}
+\nomenclature[M, 11]{$N_{\mathrm{K}}$}{Number of shots per fidelity-kernel entry}
+\nomenclature[M, 12]{$s_i$}{Noise scale factor $\lambda_i/\lambda_0$ in the review of zero-noise extrapolation}
 
 %%% Learning and evaluation
 \nomenclature[L, 01]{$x$}{Feature vector supplied to a learned mitigation model}
@@ -48,7 +50,9 @@
 \nomenclature[L, 03]{$k(x,x')$}{Kernel function}
 \nomenclature[L, 04]{$K$}{Gram matrix of a kernel (context distinguishes it from the scale count)}
 \nomenclature[L, 05]{$\beta$}{Quantum-kernel bandwidth}
+\nomenclature[L, 05b]{$\gamma_{\mathrm{RBF}}$}{Width coefficient of the classical RBF kernel}
 \nomenclature[L, 06]{$\alpha$}{Ridge regularisation strength}
+\nomenclature[L, 06b]{$\nu_i$}{Dual coefficient of kernel ridge regression}
 \nomenclature[L, 07]{$w_{\ell q}, b_{\ell q}$}{Trainable weights and biases of layer $\ell$, qubit $q$}
 \nomenclature[L, 08]{$M$}{Number of rows (circuit--observable pairs) in a fold}
 \nomenclature[L, 09]{$R^2$}{Coefficient of determination}

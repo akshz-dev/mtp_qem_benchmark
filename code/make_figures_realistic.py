@@ -1,6 +1,7 @@
-"""Figures for the device-realistic regime (Chapter 6).
+"""Figures for the device-informed regime (Chapter 6).
 
-Reads sweep_realistic.csv and writes:
+Reads sweep_realistic.csv and the other files in results/ and writes:
+  fig_ch5_nonmarkov.png idle trace distance and coupling sweep (nonmarkovianity_check.json)
   fig_ch5_scaling.png   parameter scaling vs unitary folding, both splits
   fig_ch5_regime.png    memory: production vs reset (memoryless) and defect-free controls
   fig_ch5_robustness.png ranking over 10 grouped splits; VQC seed spread
@@ -8,32 +9,18 @@ Reads sweep_realistic.csv and writes:
   fig_ch5_drift.png     calibration drift
   fig_ch5_shotkernel.png shot-limited quantum kernel: error vs tuning and final execution costs
 
-Use --folding-seed-pairs for the initial circuit/shot replication and
---folding-depth-pairs with --folding-depth-summary for the depth expansion.
-Use --folding-depth-retuned with --folding-depth-previous to compare the two
-kernel tuning protocols on matched depth holdouts.
-Use --folding-depth-validation to plot the fresh locked cohort alongside
-the earlier depth-aware estimate.
-Use --folding-depth-shot to plot the locked folded depth holdout across
-fidelity-kernel shot budgets.
-Use --folding-depth-shot-crossover to compare fixed and retuned models on
-the same folded depth holdouts across new kernel-shot seeds.
-Use --folding-depth-shot-fixed to plot the fixed-parameter sweep on fresh pools.
-Use --folding-depth-shot-fixed-rbf to compare the matched RBF baseline.
-Use --folding-depth-shot-fixed-both to compare the kernels with fixed settings.
-Use --folding-depth-shot-recalibrated for matched earlier-pool selection.
-Use --folding-depth-shot-budget-calibrated for selection by finite shot budget.
+Use --folding-seed-pairs for the circuit-pool and shot-draw replication.
 
 Usage: python make_figures_realistic.py --outdir <dir>
 """
 import argparse
 from itertools import cycle
+import json
 import os
 
 import matplotlib as mpl
-from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import NullFormatter
 import numpy as np
 import pandas as pd
 
@@ -263,6 +250,9 @@ def fig_ood_features(out):
     u = float(d[d.model == "no_mitigation"]["rmse"].iloc[0])
     ax.axvline(u, color="0.45", ls=":", lw=1.1, label=f"no mitigation: {u:.3f}")
     ax.set_xscale("log")
+    ticks = [0.06, 0.08, 0.1, 0.15, 0.2, 0.3]
+    ax.set_xticks(ticks, [f"{t:g}" for t in ticks])
+    ax.xaxis.set_minor_formatter(NullFormatter())
     ax.set_yticks(y); ax.set_yticklabels([NAME[m] for m in arms])
     ax.set_xlabel("Test RMSE on deeper circuits (Split B), log scale")
     ax.set_title("Depth extrapolation with and without structural features", loc="left")
@@ -270,6 +260,50 @@ def fig_ood_features(out):
     fig.tight_layout()
     fig.savefig(os.path.join(out, "fig_ch5_ood_features.png"), bbox_inches="tight")
     plt.close(fig)
+
+
+def fig_nonmarkov(nm, path):
+    """Idle trace distance on q0 for production and both controls, and the coupling sweep.
+
+    Reads the record written by nonmarkov_check.py; nothing is re-simulated.
+    """
+    with plt.style.context("default"):
+        fig, axes = plt.subplots(1, 2, figsize=(10.2, 3.8))
+        ax = axes[0]
+        prod = nm["nonmarkovian_production"]["pairs"]
+        key = max(prod, key=lambda k: prod[k]["blp"])
+        x = np.arange(1, nm["n_layers"] + 1)
+        for label, condition, color in (
+                ("production (defect retains its state)", "nonmarkovian_production", "#c2591a"),
+                ("defect reset every layer", "reset_control", "#d79a1e"),
+                ("defect removed", "markovian_control", "#3f7f5f")):
+            pair = nm[condition]["pairs"][key]
+            ax.plot(x, pair["trace_distance"], "-o", color=color, ms=5,
+                    label=f"{label}, $\\mathcal{{N}}$={pair['blp']:.2f}")
+        ax.set_xlabel("Idle layer"); ax.set_ylabel("Trace distance $D(\\rho_1,\\rho_2)$")
+        ax.set_xticks(x)
+        ax.set_title("Trace distance revives only when the defect keeps its state",
+                     loc="left", fontsize=9.5)
+        ax.legend(fontsize=7, frameon=False)
+        ax = axes[1]
+        sweep = nm["coupling_sweep"]
+        g = [s["g_tls"] for s in sweep]; b = [s["blp_max"] for s in sweep]
+        ax.plot(g, b, "-o", color="#c2591a", ms=5)
+        ax.axhline(0, color="0.6", lw=0.8, ls=":")
+        ax.set_xlabel("TLS exchange coupling $g$ (rad)")
+        ax.set_ylabel("Non-Markovianity $\\mathcal{N}$")
+        ax.set_title("Non-Markovianity grows with coupling, zero without it",
+                     loc="left", fontsize=9.5)
+        ax.annotate("production\nsetting", xy=(0.15, [s["blp_max"] for s in sweep
+                    if s["g_tls"] == 0.15][0]), xytext=(-6, 26),
+                    textcoords="offset points", fontsize=7, ha="center", color="0.35",
+                    arrowprops=dict(arrowstyle="-", lw=0.8, color="0.5"))
+        for a_, l in zip(axes, "ab"):
+            a_.spines[["top", "right"]].set_visible(False)
+            a_.text(-0.16, 1.06, l, transform=a_.transAxes, fontsize=11, fontweight="bold")
+        fig.tight_layout()
+        fig.savefig(path, dpi=300, bbox_inches="tight")
+        plt.close(fig)
 
 
 def fig_folding_seed_scaling(pairs, out):
@@ -339,468 +373,17 @@ def fig_folding_seed_kernels(pairs, out):
     plt.close(fig)
 
 
-def fig_folding_depth_pools(pairs, summary, out, *,
-                           cohorts=(("all_pools", "All pools"), ("new_pools", "New pools")),
-                           filename="fig_ch5_folding_depth_pools.png"):
-    """Paired kernel effects by independent pool and cohort."""
-    effects = pairs[pairs.comparison.str.endswith(":rbf_minus_fidelity")]
-    pools = sorted(effects.circuit_seed.unique())
-    positions = np.arange(len(pools))
-    cohort_positions = [len(pools) + 0.15, len(pools) + 1.15]
-    colors = ["#0072b2", "#d55e00"]
-    fig, axes = plt.subplots(1, 2, figsize=(7.8, 5.7), sharey=True)
-    for ax, (protocol, title), color in zip(axes, SEED_PROTOCOLS, colors):
-        comparison = f"{protocol}:rbf_minus_fidelity"
-        draws = effects[effects.comparison == comparison]
-        estimates = summary[summary.comparison == comparison].set_index("cohort")
-        for y, pool in zip(positions, pools):
-            shot_differences = draws.loc[draws.circuit_seed == pool, "diff"].to_numpy()
-            ax.hlines(y, shot_differences.min(), shot_differences.max(), lw=0.9, color="0.62")
-            ax.plot(shot_differences, np.full(shot_differences.size, y), "o",
-                    ms=3.0, color="0.53", alpha=0.72, zorder=3)
-            ax.plot(shot_differences.mean(), y, "o", color=color, ms=5.0, zorder=4)
-        for y, (cohort, _) in zip(cohort_positions, cohorts):
-            r = estimates.loc[cohort]
-            ax.hlines(y, r.ci95_t_lo, r.ci95_t_hi, lw=1.6, color=color)
-            ax.plot(r.diff_mean, y, "D", color=color, ms=5.2, zorder=4,
-                    mfc=color if cohort == "all_pools" else "white")
-        ax.axhline(len(pools) - 0.46, lw=0.65, color="0.78")
-        ax.axvline(0, color="0.32", lw=0.9, ls="--")
-        cohort_labels = [f"{label} ({int(estimates.loc[cohort, 'n_pools'])})"
-                         for cohort, label in cohorts]
-        ax.set_yticks([*positions, *cohort_positions], [*map(str, pools), *cohort_labels])
-        ax.set_ylim(cohort_positions[-1] + 0.65, -0.6)
-        ax.set_title(title, loc="left")
-        ax.tick_params(labelsize=8)
-        ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
-        ax.grid(axis="y", alpha=0)
-    axes[0].set_ylabel("Circuit seed or cohort")
-    handles = [
-        Line2D([], [], marker="o", ms=3, lw=0.9, color="0.53", label="Shot draws"),
-        Line2D([], [], marker="o", ms=5, lw=0, color="0.25", label="Pool mean"),
-        Line2D([], [], marker="D", ms=5, lw=1.6, color="0.25", label="Cohort mean and 95% interval"),
-    ]
-    fig.legend(handles=handles, loc="upper center", ncol=len(handles))
-    fig.supxlabel("Classical RBF RMSE $-$ quantum fidelity RMSE", fontsize=9)
-    fig.tight_layout(rect=(0, 0.015, 1, 0.94))
-    fig.savefig(os.path.join(out, filename), bbox_inches="tight")
-    plt.close(fig)
-
-
-def fig_folding_depth_retuning(previous_pools, depth_aware_pools, previous_summary,
-                               depth_aware_summary, out):
-    """Compare RBF minus fidelity on paired pools before and after retuning."""
-    labels = ["Mixed-depth tuning", "Depth-aware tuning"]
-    colors = ["#0072b2", "#d55e00"]
-    markers = ["o", "s"]
-    offsets = [-0.16, 0.16]
-    fig, axes = plt.subplots(1, 2, figsize=(8.0, 5.45), sharey=True)
-    for ax, (protocol, title) in zip(axes, SEED_PROTOCOLS):
-        comparison = f"{protocol}:rbf_minus_fidelity"
-        pool_values = [frame.loc[frame.comparison == comparison].set_index(
-            "circuit_seed")["diff_mean"].sort_index()
-            for frame in (previous_pools, depth_aware_pools)]
-        if not pool_values[0].index.is_unique or not pool_values[0].index.equals(pool_values[1].index):
-            raise ValueError(f"Unmatched circuit pools for {protocol}")
-        pools = pool_values[0].index
-        positions = np.arange(len(pools))
-        cohorts = ["all_pools", "new_pools"]
-        cohort_positions = np.array([len(pools) + 0.1, len(pools) + 1.1])
-        for y, before, after in zip(positions, *pool_values):
-            ax.plot([before, after], y + np.array(offsets), color="0.76", lw=0.8, zorder=1)
-        for values, summary, color, marker, offset in zip(
-                pool_values, (previous_summary, depth_aware_summary), colors, markers, offsets):
-            ax.plot(values, positions + offset, marker, color=color, ms=4, zorder=3)
-            estimates = summary.loc[summary.comparison == comparison].set_index("cohort").loc[cohorts]
-            y = cohort_positions + offset
-            ax.hlines(y, estimates.ci95_t_lo, estimates.ci95_t_hi, color=color, lw=1.5)
-            ax.plot(estimates.diff_mean, y, marker, color=color, ms=4.5, zorder=3)
-        ax.axhline(len(pools) - 0.47, lw=0.6, color="0.78")
-        ax.axvline(0, color="0.32", lw=0.9, ls="--")
-        cohort_labels = [f"{label} ({int(estimates.loc[cohort, 'n_pools'])})"
-                         for label, cohort in zip(["All pools", "Additional pools"], cohorts)]
-        ax.set_yticks([*positions, *cohort_positions],
-                      [*map(str, pools), *cohort_labels])
-        ax.set_ylim(cohort_positions[-1] + 0.68, -0.62)
-        ax.set_title(title, loc="left")
-        ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
-        ax.grid(axis="y", alpha=0)
-    axes[0].set_ylabel("Circuit seed or cohort")
-    handles = [Line2D([], [], marker=marker, ms=4.5, ls="", color=color, label=label)
-               for marker, color, label in zip(markers, colors, labels)]
-    fig.legend(handles=handles, loc="upper center", ncol=len(handles))
-    fig.supxlabel("Classical RBF RMSE $-$ quantum fidelity RMSE", fontsize=9)
-    fig.tight_layout(rect=(0, 0.02, 1, 0.94))
-    fig.savefig(os.path.join(out, "fig_ch5_folding_depth_retuning.png"), bbox_inches="tight")
-    plt.close(fig)
-
-
-def fig_folding_depth_influential(previous_scores, depth_aware_scores, out):
-    """Show the matched shot draws on the influential folded pool."""
-    seed = 2026112525
-    draw_colors = ["#0072b2", "#d55e00", "#00845f"]
-    fig, axes = plt.subplots(1, 2, figsize=(7.8, 2.7), sharey=True)
-    for ax, (model, title) in zip(axes, [("rbf_krr", "Classical RBF"),
-                                        ("qk_ridge_quantum", "Quantum fidelity")]):
-        rmse = [frame.loc[(frame.config == "unitary_folding") & (frame.model == model) &
-                          (frame.circuit_seed == seed)].set_index(
-                              "shot_seed")["rmse"].sort_index()
-                for frame in (previous_scores, depth_aware_scores)]
-        if (len(rmse[0]) != 3 or not rmse[0].index.is_unique
-                or not rmse[0].index.equals(rmse[1].index)):
-            raise ValueError(f"Unmatched shot draws for pool {seed} and model {model}")
-        for i, (color, marker, before, after) in enumerate(zip(draw_colors, SHOT_MARKERS, *rmse), 1):
-            ax.plot([0, 1], [before, after], color=color, marker=marker, ms=4.8,
-                    lw=0.95, label=f"Draw {i}")
-        ax.set_xticks([0, 1], ["Mixed-depth tuning", "Depth-aware tuning"])
-        ax.set_xlim(-0.15, 1.15)
-        ax.set_title(title, loc="left")
-        ax.grid(axis="x", alpha=0)
-    axes[0].set_ylabel("Depth-holdout RMSE")
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=len(handles))
-    fig.tight_layout(rect=(0, 0, 1, 0.88))
-    fig.savefig(os.path.join(out, "fig_ch5_folding_depth_influential.png"), bbox_inches="tight")
-    plt.close(fig)
-
-
-def fig_folding_depth_shot(scores, pool_summary, summary, out):
-    """Compare shot-estimated fidelity with its matched folded depth references."""
-    budgets = [100, 1000, 10000, 100000, 0]
-    labels = [r"$10^2$", r"$10^3$", r"$10^4$", r"$10^5$", "Exact"]
-    positions = np.arange(len(budgets))
-    fidelity = scores[scores.model == "qk_ridge_quantum"]
-    pool_error = fidelity.groupby(["shots_per_entry", "circuit_seed"])["rmse"].mean()
-    error = pool_error.groupby("shots_per_entry").mean().loc[budgets]
-    contrast_pools = pool_summary[pool_summary.comparison == "rbf_minus_fidelity"]
-    contrast = summary[summary.comparison == "rbf_minus_fidelity"].set_index(
-        "shots_per_entry").loc[budgets]
-    fig, (left, right) = plt.subplots(1, 2, figsize=(7.9, 3.75))
-    color = "#a33f12"
-    for x, budget in zip(positions, budgets):
-        values = pool_error.loc[budget].to_numpy()
-        effects = contrast_pools.loc[contrast_pools.shots_per_entry == budget, "diff_mean"]
-        for ax, points in ((left, values), (right, effects)):
-            ax.scatter(np.full(len(points), x), points, s=10, color="0.53", alpha=0.46, zorder=2)
-    left.plot(positions[:-1], error.iloc[:-1], "-o", color=color, ms=4.6, lw=1.25, zorder=3,
-              label="Fidelity across pools")
-    left.plot(positions[-1], error.iloc[-1], "D", color=color, ms=4.6, zorder=3)
-    for model, label, style in (
-            ("rbf_krr", "Classical RBF", "--"),
-            ("zne_linear", "Linear ZNE", "-."),
-            ("no_mitigation", "No mitigation", ":")):
-        reference = scores.loc[scores.model == model].groupby("circuit_seed")["rmse"].mean().mean()
-        left.axhline(reference, color="#09737b" if model == "rbf_krr" else "0.37",
-                     ls=style, lw=1.05, label=label)
-    right.axhline(0, color="0.37", ls="--", lw=1)
-    right.vlines(positions, contrast.ci95_t_lo, contrast.ci95_t_hi, color=color, lw=1.45, zorder=3)
-    right.plot(positions[:-1], contrast.diff_mean.iloc[:-1], "o", color=color, ms=4.6, zorder=4)
-    right.plot(positions[-1], contrast.diff_mean.iloc[-1], "D", color=color, ms=4.6, zorder=4)
-    left.set_title("a   Folded depth-holdout error", loc="left")
-    right.set_title("b   Paired kernel comparison", loc="left")
-    left.set_ylabel("RMSE vs ideal")
-    right.set_ylabel("RBF RMSE − fidelity RMSE")
-    for ax in (left, right):
-        ax.axvline(3.5, color="0.70", lw=0.8)
-        ax.set_xticks(positions, labels)
-        ax.set_xlim(-0.38, positions[-1] + 0.38)
-        ax.set_xlabel("Fidelity shots per entry")
-        ax.grid(axis="x", alpha=0)
-    handles, labels = left.get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", ncol=4)
-    fig.tight_layout(rect=(0, 0, 1, 0.89))
-    fig.savefig(os.path.join(out, "fig_ch5_folding_depth_shot.png"), bbox_inches="tight")
-    plt.close(fig)
-
-
-def fig_folding_depth_shot_crossover(pool_summary, summary, out):
-    """Show paired budget and penalty effects with circuit-pool uncertainty."""
-    estimates = summary.loc[summary.cohort == "all_kernel_seeds"].set_index("comparison")
-    pools = pool_summary.loc[pool_summary.cohort == "all_kernel_seeds"]
-    panels = [
-        ("a   Higher shot budget", "RMSE at $10^5$ minus RMSE at $10^4$", [
-            ("budget_gap_retuned", "Retuned"),
-            ("budget_gap_fixed_alpha_0.1", r"Fixed $\alpha=0.1$"),
-            ("budget_gap_fixed_alpha_0.01", r"Fixed $\alpha=0.01$"),
-        ]),
-        ("b   Penalty changes and residual", "Paired RMSE difference", [
-            ("alpha_gap_10000", r"$\alpha=0.01$ minus $0.1$ at $10^4$"),
-            ("alpha_gap_100000", r"$\alpha=0.01$ minus $0.1$ at $10^5$"),
-            ("retuned_gap_minus_fixed_switch_gap", "Retuned gap minus\nfixed switch gap"),
-        ]),
-    ]
-    fig, axes = plt.subplots(1, 2, figsize=(8.5, 2.85), layout="constrained")
-    color = "#a33f12"
-    for ax, (title, xlabel, comparisons) in zip(axes, panels):
-        positions = np.arange(len(comparisons))
-        names, labels = zip(*comparisons)
-        aggregate = estimates.loc[list(names)]
-        for y, name in zip(positions, names):
-            values = pools.loc[pools.comparison == name, "diff_mean"]
-            ax.scatter(values, np.full(len(values), y + 0.19), s=11, color="0.47", alpha=0.58, zorder=2)
-        errors = np.stack([
-            aggregate.diff_mean - aggregate.ci95_t_lo,
-            aggregate.ci95_t_hi - aggregate.diff_mean,
-        ])
-        ax.errorbar(aggregate.diff_mean, positions, xerr=errors, fmt="|", color=color,
-                    markersize=7, markeredgewidth=0.9, elinewidth=1.25, capsize=2, zorder=3)
-        ax.axvline(0, color="0.37", lw=0.9, ls="--")
-        ax.set_yticks(positions, labels)
-        ax.set_ylim(positions[-1] + 0.52, -0.38)
-        ax.set_title(title, loc="left")
-        ax.set_xlabel(xlabel)
-        ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
-        ax.tick_params(axis="y", length=0)
-        ax.grid(axis="y", alpha=0)
-    fig.savefig(os.path.join(out, "fig_ch5_folding_depth_shot_crossover.png"), bbox_inches="tight")
-    plt.close(fig)
-
-
-def fig_folding_depth_shot_fixed(pool_summary, summary, out):
-    """Plot absolute fidelity RMSE and paired budget changes on fresh pools."""
-    aggregate = summary.loc[summary.cohort == "all_kernel_seeds"].set_index("comparison")
-    pools = pool_summary.loc[pool_summary.cohort == "all_kernel_seeds"]
-    budgets = [100, 1000, 10000, 100000]
-    budget_labels = [r"$10^2$", r"$10^3$", r"$10^4$", r"$10^5$"]
-    absolute_names = [f"absolute_rmse_{budget}" for budget in budgets] + ["absolute_rmse_exact"]
-    adjacent_names = [f"budget_gap_{hi}_minus_{lo}" for lo, hi in zip(budgets, budgets[1:])]
-    adjacent_labels = [f"{hi} − {lo}" for lo, hi in zip(budget_labels, budget_labels[1:])]
-
-    fig, (left, right) = plt.subplots(1, 2, figsize=(7.9, 3.45), layout="constrained")
-    color = "#a33f12"
-    for ax, comparisons, labels in (
-        (left, absolute_names, [*budget_labels, "Exact"]),
-        (right, adjacent_names, adjacent_labels),
-    ):
-        positions = np.arange(len(comparisons))
-        estimates = aggregate.loc[comparisons]
-        for x, name in zip(positions, comparisons):
-            values = pools.loc[pools.comparison == name, "diff_mean"]
-            ax.scatter(np.full(len(values), x), values, s=13, color="0.47", alpha=0.56, zorder=2)
-        errors = np.stack([
-            estimates.diff_mean - estimates.ci95_t_lo,
-            estimates.ci95_t_hi - estimates.diff_mean,
-        ])
-        ax.errorbar(positions, estimates.diff_mean, yerr=errors, fmt="_", markersize=7,
-                    markeredgewidth=0.9, elinewidth=1.25, capsize=2, color=color, zorder=4)
-        ax.set_xticks(positions, labels)
-        ax.set_xlim(-0.33, positions[-1] + 0.33)
-        ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-        ax.grid(axis="x", alpha=0)
-
-    left.plot(np.arange(len(budgets)), aggregate.loc[absolute_names[:-1], "diff_mean"],
-              color=color, lw=1.15, zorder=3)
-    left.axvline(len(budgets) - 0.5, color="0.66", lw=0.8)
-    left.set_title("a   Fixed-parameter fidelity error", loc="left")
-    left.set(xlabel="Fidelity shots per entry", ylabel="Depth-holdout RMSE")
-    right.axhline(0, color="0.37", lw=0.9, ls="--")
-    right.set_title("b   Paired change at each budget step", loc="left")
-    right.set(xlabel="Higher minus lower shots per entry", ylabel="Paired RMSE difference")
-    fig.savefig(os.path.join(out, "fig_ch5_folding_depth_shot_fixed.png"), bbox_inches="tight")
-    plt.close(fig)
-
-
-def _plot_rbf_fidelity_differences(ax, pool_summary, summary, budgets, budget_labels, color):
-    comparisons = [f"rbf_minus_fixed_fidelity_{b}" for b in [*budgets, "exact"]]
-    aggregate = summary.loc[summary.cohort == "all_kernel_seeds"].set_index("comparison")
-    effects = aggregate.loc[comparisons]
-    pools = pool_summary.loc[pool_summary.cohort == "all_kernel_seeds"]
-    all_positions = np.arange(len(comparisons))
-    for x, comparison in zip(all_positions, comparisons):
-        values = pools.loc[pools.comparison == comparison, "diff_mean"]
-        ax.scatter(np.full(len(values), x), values, s=13, color="0.47", alpha=0.56, zorder=2)
-    errors = np.stack([
-        effects.diff_mean - effects.ci95_t_lo, effects.ci95_t_hi - effects.diff_mean,
-    ])
-    ax.errorbar(all_positions, effects.diff_mean, yerr=errors, fmt="_", markersize=7,
-                markeredgewidth=0.9, elinewidth=1.25, capsize=2, color=color, zorder=3)
-    ax.axhline(0, color="0.37", lw=0.9, ls="--")
-    ax.axvline(len(budgets) - 0.5, color="0.66", lw=0.8)
-    ax.set(ylabel="RBF RMSE minus fidelity RMSE", xlabel="Fidelity shots per entry")
-    ax.set_xticks(all_positions, [*budget_labels, "Exact"])
-    ax.set_xlim(-0.33, all_positions[-1] + 0.33)
-    ax.yaxis.set_major_locator(MaxNLocator(nbins=5))
-
-
-def fig_folding_depth_shot_fixed_rbf(pool_summary, summary, costs, out):
-    """Show paired RBF RMSE and measured executions for a new prediction."""
-    budgets = [100, 1000, 10000, 100000]
-    budget_labels = [r"$10^2$", r"$10^3$", r"$10^4$", r"$10^5$"]
-    positions = np.arange(len(budgets))
-    fidelity_color, rbf_color = "#a33f12", "#006b72"
-
-    fig, (left, right) = plt.subplots(1, 2, figsize=(7.9, 3.2), layout="constrained")
-    _plot_rbf_fidelity_differences(left, pool_summary, summary, budgets, budget_labels, fidelity_color)
-    left.set_title("a   Paired depth-holdout error", loc="left")
-
-    cost = costs.set_index(["model", "shots_per_entry"])["measured_executions_new_row_mean"]
-    rbf = cost.loc["rbf_krr", 0]
-    fidelity = cost.loc["qk_ridge_quantum"].loc[budgets]
-    right.plot(positions, fidelity, "o-", color=fidelity_color, lw=1.15, ms=4, label="Sampled fidelity")
-    right.axhline(rbf, color=rbf_color, ls="--", lw=1.15, label="Classical RBF")
-    right.set_title("b   Circuit executions per prediction", loc="left")
-    right.set(ylabel="Observed-feature and kernel executions", xlabel="Fidelity shots per entry", yscale="log")
-    right.set_xticks(positions, budget_labels)
-    right.set_xlim(-0.33, positions[-1] + 0.33)
-    right.legend(loc="upper left")
-    for ax in (left, right):
-        ax.grid(axis="x", alpha=0)
-    fig.savefig(os.path.join(out, "fig_ch5_folding_depth_shot_fixed_rbf.png"), bbox_inches="tight")
-    plt.close(fig)
-
-
-def fig_folding_depth_shot_fixed_both(pool_summary, summary, fixed, out, *,
-                                     filename="fig_ch5_folding_depth_shot_fixed_both.png",
-                                     zoom_exact=False, fidelity_label="Fixed fidelity"):
-    """Compare fixed kernel models on the same fresh depth holdouts."""
-    budgets = [100, 1000, 10000, 100000]
-    budget_labels = [r"$10^2$", r"$10^3$", r"$10^4$", r"$10^5$"]
-    names = [f"absolute_rmse_{budget}" for budget in [*budgets, "exact"]]
-    positions = np.arange(len(names))
-    fidelity_color, rbf_color = "#a33f12", "#006b72"
-
-    fig, (left, right) = plt.subplots(1, 2, figsize=(7.9, 3.2), layout="constrained")
-    fidelity = fixed.loc[fixed.cohort == "all_kernel_seeds"].set_index("comparison").loc[names]
-    rbf = summary.loc[(summary.cohort == "all_kernel_seeds") &
-                      (summary.comparison == "absolute_rmse_rbf")].iloc[0]
-    errors = np.stack([
-        fidelity.diff_mean - fidelity.ci95_t_lo, fidelity.ci95_t_hi - fidelity.diff_mean,
-    ])
-    left.axhspan(rbf.ci95_t_lo, rbf.ci95_t_hi, color=rbf_color, alpha=0.13, lw=0, zorder=1)
-    left.axhline(rbf.diff_mean, color=rbf_color, ls="--", lw=1.15, label="Locked RBF", zorder=2)
-    left.plot(positions[:-1], fidelity.diff_mean.iloc[:-1], color=fidelity_color,
-              lw=1.15, label=fidelity_label, zorder=3)
-    left.errorbar(positions, fidelity.diff_mean, yerr=errors, fmt="_", markersize=7,
-                  markeredgewidth=0.9, elinewidth=1.25, capsize=2, color=fidelity_color, zorder=4)
-    left.axvline(len(budgets) - 0.5, color="0.66", lw=0.8)
-    left.set_title("a   Mean depth-holdout RMSE", loc="left")
-    left.set(xlabel="Fidelity shots per entry", ylabel="Held-out RMSE")
-    left.set_xticks(positions, [*budget_labels, "Exact"])
-    left.set_xlim(-0.33, positions[-1] + 0.33)
-    left.yaxis.set_major_locator(MaxNLocator(nbins=5))
-    left.legend(loc="upper right")
-
-    _plot_rbf_fidelity_differences(right, pool_summary, summary, budgets, budget_labels, fidelity_color)
-    right.set_title("b   Paired depth-holdout error", loc="left")
-    if zoom_exact:
-        contrast = "rbf_minus_fixed_fidelity_exact"
-        exact = summary.loc[(summary.cohort == "all_kernel_seeds") & (summary.comparison == contrast)].iloc[0]
-        pools = pool_summary.loc[(pool_summary.cohort == "all_kernel_seeds") &
-                                 (pool_summary.comparison == contrast), "diff_mean"]
-        inset = right.inset_axes([0.50, 0.10, 0.43, 0.39])
-        inset.scatter(np.zeros(len(pools)), pools, s=10, color="0.47", alpha=0.56, zorder=2)
-        inset.errorbar(0, exact.diff_mean, fmt="_", markersize=7, elinewidth=1.25,
-                       yerr=[[exact.diff_mean - exact.ci95_t_lo], [exact.ci95_t_hi - exact.diff_mean]],
-                       capsize=2, color=fidelity_color, zorder=3)
-        inset.axhline(0, color="0.37", lw=0.8, ls="--")
-        inset.set_title("Exact entry", loc="left", fontsize=8)
-        inset.set(xticks=[], xlim=(-0.45, 0.45))
-        inset.yaxis.set_major_locator(MaxNLocator(nbins=4))
-        inset.tick_params(axis="y", labelsize=7)
-    for ax in (left, right):
-        ax.grid(axis="x", alpha=0)
-    fig.savefig(os.path.join(out, filename), bbox_inches="tight")
-    plt.close(fig)
-
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--outdir", default=".")
-    modes = ap.add_mutually_exclusive_group()
-    modes.add_argument("--folding-seed-pairs", help="plot the initial circuit/shot seed replication")
-    modes.add_argument("--folding-depth-pairs", help="plot the depth expansion")
-    modes.add_argument("--folding-depth-retuned", help="directory containing depth-aware results")
-    modes.add_argument("--folding-depth-validation", help="directory containing fresh locked validation results")
-    modes.add_argument("--folding-depth-shot", help="directory containing the folded-depth shot-budget results")
-    modes.add_argument("--folding-depth-shot-crossover", help="directory containing the folded-depth kernel-shot crossover results")
-    modes.add_argument("--folding-depth-shot-fixed", help="directory containing the fixed-parameter folded-depth sweep results")
-    modes.add_argument("--folding-depth-shot-fixed-rbf", help="directory containing matched RBF contrasts and circuit costs")
-    modes.add_argument("--folding-depth-shot-fixed-both", help="directory containing the locked-kernel accuracy contrasts")
-    modes.add_argument("--folding-depth-shot-recalibrated", help="directory containing the matched earlier-pool selection results")
-    modes.add_argument("--folding-depth-shot-budget-calibrated", help="directory containing the results for selection by budget")
-    ap.add_argument("--folding-depth-summary", help="pool-level intervals for the depth expansion")
-    ap.add_argument("--folding-depth-previous", help="directory containing mixed-depth tuning results")
-    ap.add_argument("--folding-depth-context", default="results",
-                    help="directory containing the corresponding archived folded-depth results")
+    ap.add_argument("--folding-seed-pairs", help="plot the circuit-pool and shot-draw replication")
     a = ap.parse_args()
-    if bool(a.folding_depth_pairs) != bool(a.folding_depth_summary):
-        ap.error("--folding-depth-pairs and --folding-depth-summary must be supplied together")
-    if bool(a.folding_depth_retuned) != bool(a.folding_depth_previous):
-        ap.error("--folding-depth-retuned and --folding-depth-previous must be supplied together")
     os.makedirs(a.outdir, exist_ok=True)
     style()
     if a.folding_seed_pairs:
         pairs = pd.read_csv(a.folding_seed_pairs)
         fig_folding_seed_scaling(pairs, a.outdir)
         fig_folding_seed_kernels(pairs, a.outdir)
-    elif a.folding_depth_pairs:
-        fig_folding_depth_pools(
-            pd.read_csv(a.folding_depth_pairs), pd.read_csv(a.folding_depth_summary), a.outdir,
-        )
-    elif a.folding_depth_retuned:
-        previous = os.path.join(a.folding_depth_previous, "folding_depth")
-        retuned = os.path.join(a.folding_depth_retuned, "folding_depth_aware")
-        fig_folding_depth_retuning(
-            pd.read_csv(previous + "_pool_summary.csv"), pd.read_csv(retuned + "_pool_summary.csv"),
-            pd.read_csv(previous + "_summary.csv"), pd.read_csv(retuned + "_summary.csv"), a.outdir,
-        )
-        fig_folding_depth_influential(
-            pd.read_csv(previous + "_scores.csv"), pd.read_csv(retuned + "_scores.csv"), a.outdir,
-        )
-    elif a.folding_depth_validation:
-        fresh = os.path.join(a.folding_depth_validation, "folding_depth_validation")
-        earlier = pd.read_csv(os.path.join(a.folding_depth_context, "folding_depth_aware_summary.csv"))
-        earlier = earlier.loc[earlier.cohort == "all_pools"].assign(cohort="earlier_pools")
-        summary = pd.concat([pd.read_csv(fresh + "_summary.csv"), earlier], ignore_index=True)
-        fig_folding_depth_pools(
-            pd.read_csv(fresh + "_pairs.csv"), summary, a.outdir,
-            cohorts=(("all_pools", "Fresh validation"), ("earlier_pools", "Earlier tuning study")),
-            filename="fig_ch5_folding_depth_validation.png",
-        )
-    elif a.folding_depth_shot:
-        stem = os.path.join(a.folding_depth_shot, "folding_depth_shot")
-        fig_folding_depth_shot(
-            pd.read_csv(stem + "_scores.csv"), pd.read_csv(stem + "_pool_summary.csv"),
-            pd.read_csv(stem + "_summary.csv"), a.outdir,
-        )
-    elif a.folding_depth_shot_crossover:
-        stem = os.path.join(a.folding_depth_shot_crossover, "folding_depth_shot_crossover")
-        fig_folding_depth_shot_crossover(
-            pd.read_csv(stem + "_pool_summary.csv"), pd.read_csv(stem + "_summary.csv"), a.outdir,
-        )
-    elif a.folding_depth_shot_fixed:
-        stem = os.path.join(a.folding_depth_shot_fixed, "folding_depth_shot_fixed")
-        fig_folding_depth_shot_fixed(
-            pd.read_csv(stem + "_pool_summary.csv"), pd.read_csv(stem + "_summary.csv"), a.outdir,
-        )
-    elif a.folding_depth_shot_fixed_rbf:
-        stem = os.path.join(a.folding_depth_shot_fixed_rbf, "folding_depth_shot_fixed_rbf")
-        fig_folding_depth_shot_fixed_rbf(
-            pd.read_csv(stem + "_pool_summary.csv"), pd.read_csv(stem + "_summary.csv"),
-            pd.read_csv(stem + "_cost_summary.csv"), a.outdir,
-        )
-    elif a.folding_depth_shot_fixed_both:
-        stem = os.path.join(a.folding_depth_shot_fixed_both, "folding_depth_shot_fixed_both")
-        fig_folding_depth_shot_fixed_both(
-            pd.read_csv(stem + "_pool_summary.csv"), pd.read_csv(stem + "_summary.csv"),
-            pd.read_csv(os.path.join(a.folding_depth_context, "folding_depth_shot_fixed_summary.csv")),
-            a.outdir,
-        )
-    elif a.folding_depth_shot_recalibrated:
-        stem = os.path.join(a.folding_depth_shot_recalibrated, "folding_depth_shot_recalibrated")
-        summary = pd.read_csv(stem + "_summary.csv")
-        fig_folding_depth_shot_fixed_both(
-            pd.read_csv(stem + "_pool_summary.csv"), summary, summary, a.outdir,
-            filename="fig_ch5_folding_depth_shot_recalibrated.png", zoom_exact=True,
-        )
-    elif a.folding_depth_shot_budget_calibrated:
-        stem = os.path.join(a.folding_depth_shot_budget_calibrated, "folding_depth_shot_budget_calibrated")
-        summary = pd.read_csv(stem + "_summary.csv")
-        fig_folding_depth_shot_fixed_both(
-            pd.read_csv(stem + "_pool_summary.csv"), summary, summary, a.outdir,
-            filename="fig_ch5_folding_depth_shot_budget_calibrated.png",
-            fidelity_label="Budget-calibrated fidelity",
-        )
     else:
         sw = pd.read_csv("sweep_realistic.csv")
         fig_scaling(sw, a.outdir)
@@ -809,6 +392,8 @@ def main():
         fig_shotkernel(sw, a.outdir)
         fig_robustness(a.outdir)
         fig_ood_features(a.outdir)
+        with open("nonmarkovianity_check.json") as source:
+            fig_nonmarkov(json.load(source), os.path.join(a.outdir, "fig_ch5_nonmarkov.png"))
     print("wrote:", sorted(f for f in os.listdir(a.outdir)
                            if f.startswith("fig_ch5_") and f.endswith(".png")))
 

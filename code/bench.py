@@ -19,13 +19,12 @@ from sklearn.model_selection import GroupShuffleSplit, GridSearchCV, GroupKFold
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler
 
-from kernel_models import KERNEL_MODELS, fit_kernel_ridge, qk_states, quantum_gram
+from kernel_models import KERNEL_MODELS, fit_kernel_ridge
 from stats_util import paired_diff
 
 SEED = 7
 LAMS = np.array([1.0, 2.0, 3.0])
 FEATS = ["noisy_l1", "noisy_l2", "noisy_l3", "depth", "n_2q", "obs_weight"]
-rng_global = np.random.default_rng(SEED)
 kernel_choices = {name: {} for name in KERNEL_MODELS}
 
 

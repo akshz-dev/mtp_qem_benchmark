@@ -119,41 +119,9 @@ def main():
     json.dump(out, open("nonmarkovianity_check.json", "w"), indent=2)
 
     if a.fig:
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-        fig, axes = plt.subplots(1, 2, figsize=(10.2, 3.8))
-        ax = axes[0]
-        prod = out["nonmarkovian_production"]["pairs"]
-        ctrl = out["markovian_control"]["pairs"]
-        key = max(prod, key=lambda k: prod[k]["blp"])
-        x = np.arange(1, N_LAYERS + 1)
-        ax.plot(x, prod[key]["trace_distance"], "-o", color="#c2591a", ms=5,
-                label=f"non-Markovian (TLS on), $\\mathcal{{N}}$={prod[key]['blp']:.2f}")
-        ax.plot(x, ctrl[key]["trace_distance"], "-o", color="#3f7f5f", ms=5,
-                label=f"Markovian control, $\\mathcal{{N}}$={ctrl[key]['blp']:.2f}")
-        ax.set_xlabel("Idle layer"); ax.set_ylabel("Trace distance $D(\\rho_1,\\rho_2)$")
-        ax.set_xticks(x)
-        ax.set_title("Trace distance revives only with the defect coupled",
-                     loc="left", fontsize=9.5)
-        ax.legend(fontsize=7, frameon=False)
-        ax = axes[1]
-        g = [s["g_tls"] for s in sweep]; b = [s["blp_max"] for s in sweep]
-        ax.plot(g, b, "-o", color="#c2591a", ms=5)
-        ax.axhline(0, color="0.6", lw=0.8, ls=":")
-        ax.set_xlabel("TLS exchange coupling $g$ (rad)")
-        ax.set_ylabel("Non-Markovianity $\\mathcal{N}$")
-        ax.set_title("Non-Markovianity grows with coupling, zero without it",
-                     loc="left", fontsize=9.5)
-        ax.annotate("production\nsetting", xy=(0.15, [s["blp_max"] for s in sweep
-                    if s["g_tls"] == 0.15][0]), xytext=(-6, 26),
-                    textcoords="offset points", fontsize=7, ha="center", color="0.35",
-                    arrowprops=dict(arrowstyle="-", lw=0.8, color="0.5"))
-        for a_, l in zip(axes, "ab"):
-            a_.spines[["top", "right"]].set_visible(False)
-            a_.text(-0.16, 1.06, l, transform=a_.transAxes, fontsize=11, fontweight="bold")
-        fig.tight_layout()
-        fig.savefig(a.fig, dpi=300, bbox_inches="tight")
+        # Same drawing as make_figures_realistic.py, which replots from the saved JSON.
+        from make_figures_realistic import fig_nonmarkov
+        fig_nonmarkov(out, a.fig)
         print("wrote", a.fig)
 
 

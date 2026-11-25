@@ -48,27 +48,6 @@ def quantum_gram(Psi_a, Psi_b=None):
     return np.abs(Psi_a @ Psi_b.conj().T) ** 2
 
 
-def forward_depth_splits(depths, groups):
-    """Validate at each of depths 3 and 4 using two circuit-grouped subsets."""
-    depths, groups = np.asarray(depths), np.asarray(groups)
-    if depths.ndim != 1 or groups.shape != depths.shape:
-        raise ValueError("Expected one depth and circuit group per training row")
-    if not np.array_equal(np.unique(depths), [2, 3, 4]):
-        raise ValueError("Forward-depth tuning requires outer training depths 2, 3 and 4")
-    group_counts = sum(len(np.unique(groups[depths == depth])) for depth in (2, 3, 4))
-    if group_counts != len(np.unique(groups)):
-        raise ValueError("Each circuit group must belong to a single depth")
-
-    folds = []
-    for depth in (3, 4):
-        train = np.flatnonzero(depths < depth)
-        validation = np.flatnonzero(depths == depth)
-        splitter = GroupKFold(n_splits=2)
-        for _, subset in splitter.split(validation, groups=groups[validation]):
-            folds.append((train, validation[subset]))
-    return tuple(folds)
-
-
 @dataclass
 class KernelCVDiagnostics:
     scales: tuple[float, ...]
@@ -151,7 +130,7 @@ def fit_kernel_ridge(model, X_train, y_train, groups, *, fast=False, fixed_scale
         cv_splits = GroupKFold(n_splits=4).split(X_train, y_train, groups)
     folds = _checked_splits(cv_splits, groups)
     fold_scores = np.empty((len(folds), len(scales), len(alphas)))
-    # Both validation subsets at a depth use the same strictly shallower training rows.
+    # Folds that share their training rows reuse one Gram matrix and ridge path.
     by_training_rows = {}
     for fold, (tr, va) in enumerate(folds):
         by_training_rows.setdefault(tr.astype(np.intp, copy=False).tobytes(), []).append((fold, tr, va))

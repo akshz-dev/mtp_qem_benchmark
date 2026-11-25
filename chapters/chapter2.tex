@@ -119,10 +119,11 @@ central empirical question is whether that shortcut generalises.
 
 A practical corollary of the characterisation literature is that the effective
 noise seen by a mitigation routine is partly a matter of compilation choice
-rather than device physics. Coherent errors accumulate quadratically in
-amplitude and are not described by a Pauli channel, so their contribution to
-the bias $b(\lambda)$ in eqn.~\eqref{eq2:bias} is neither monotone nor smooth
-in the number of repetitions of a gate; twirling them into stochastic Pauli
+rather than device physics. Coherent errors add in amplitude rather than in
+probability, so the error probability they cause can grow quadratically with the
+number of repetitions of a gate, and they are not described by a Pauli channel.
+Their contribution to the bias $b(\lambda)$ in eqn.~\eqref{eq2:bias} can
+oscillate rather than grow monotonically with that number; twirling them into stochastic Pauli
 noise by randomised compiling restores the smooth, approximately exponential
 $\lambda$-dependence on which both extrapolation and learned regression
 implicitly rely \cite{wallman2016noise}. Two consequences follow for the
@@ -146,8 +147,8 @@ and Gambetta \cite{temme2017error} and, in the guise of active error
 minimisation for variational simulators, by Li and Benjamin
 \cite{li2017efficient}. The construction assumes that the expectation value
 can be measured not only at the native noise strength $\lambda_{0}$ but also at
-amplified strengths $\lambda_{i} = c_{i}\lambda_{0}$ with known scale factors
-$c_{i} \ge 1$, and that the resulting family of estimates is a smooth function
+amplified strengths $\lambda_{i} = s_{i}\lambda_{0}$ with known scale factors
+$s_{i} \ge 1$, and that the resulting family of estimates is a smooth function
 of $\lambda$ admitting a series expansion
 \begin{equation}
   \langle O\rangle(\lambda) \;=\; \langle O\rangle_{\mathrm{ideal}}
@@ -159,10 +160,10 @@ extrapolant is the unique degree-$m$ polynomial interpolant evaluated at
 $\lambda = 0$, which can be written as a fixed linear combination of the
 measured values,
 \begin{equation}
-  \widehat{\langle O\rangle}_{\mathrm{ZNE}} \;=\; \sum_{i=0}^{m} \gamma_{i}\,\langle O\rangle(c_{i}\lambda_{0}),
+  \widehat{\langle O\rangle}_{\mathrm{ZNE}} \;=\; \sum_{i=0}^{m} c_{i}\,\langle O\rangle(s_{i}\lambda_{0}),
   \qquad
-  \gamma_{i} \;=\; \prod_{j \ne i} \frac{c_{j}}{c_{j}-c_{i}},
-  \qquad \sum_{i} \gamma_{i} = 1 .
+  c_{i} \;=\; \prod_{j \ne i} \frac{s_{j}}{s_{j}-s_{i}},
+  \qquad \sum_{i} c_{i} = 1 .
   \label{eq2:richardson}
 \end{equation}
 Two properties of eqn.~\eqref{eq2:richardson} govern everything that follows.
@@ -172,9 +173,9 @@ is valid over the whole sampled range; when the true dependence is not
 polynomial --- and for deep circuits it is typically closer to an exponential
 decay --- Richardson extrapolation of increasing order does not converge to
 the noiseless value but instead amplifies model misspecification. Second, the
-coefficients $\gamma_{i}$ alternate in sign and grow with $m$, so the variance
+coefficients $c_{i}$ alternate in sign and grow with $m$, so the variance
 of the estimator is inflated by
-$\sum_{i}\gamma_{i}^{2}$ relative to a single measurement. Higher-order ZNE
+$\sum_{i}c_{i}^{2}$ relative to a single measurement. Higher-order ZNE
 therefore buys bias reduction at a quantifiable and rapidly worsening
 statistical price, which is the reason practical implementations rarely go
 beyond $m = 2$ or $3$.
@@ -240,15 +241,15 @@ $\{\mathcal{O}_{i}\}$,
   \mathcal{E}^{-1} \;=\; \sum_{i} q_{i}\,\mathcal{O}_{i},
   \qquad q_{i} \in \mathbb{R},
   \qquad \sum_{i} q_{i} = 1,
-  \qquad \gamma \;\equiv\; \sum_{i} \lvert q_{i}\rvert \;\ge\; 1,
+  \qquad \gamma_{\mathrm{PEC}} \;\equiv\; \sum_{i} \lvert q_{i}\rvert \;\ge\; 1,
   \label{eq2:pec}
 \end{equation}
 and an unbiased estimate of the ideal expectation value is obtained by sampling
-$\mathcal{O}_{i}$ with probability $\lvert q_{i}\rvert/\gamma$ and reweighting
-each shot by $\gamma\,\mathrm{sgn}(q_{i})$
+$\mathcal{O}_{i}$ with probability $\lvert q_{i}\rvert/\gamma_{\mathrm{PEC}}$ and reweighting
+each shot by $\gamma_{\mathrm{PEC}}\,\mathrm{sgn}(q_{i})$
 \cite{temme2017error,endo2018practical}. PEC is unbiased when the noise model
-is exact, and its cost is explicit: the variance is inflated by $\gamma^{2}$,
-and $\gamma$ grows exponentially in the circuit volume. Van den Berg et al.\
+is exact, and its cost is explicit: the variance is inflated by $\gamma_{\mathrm{PEC}}^{2}$,
+and $\gamma_{\mathrm{PEC}}$ grows exponentially in the circuit volume. Van den Berg et al.\
 made PEC practical at scale by fitting sparse Pauli--Lindblad models and
 sampling the inverse of the learned generator
 \cite{vandenberg2023probabilistic}, and Kim et al.\ combined learned-noise
@@ -335,7 +336,7 @@ functional form fitted \cite{endo2018practical,cai2021multiexponential}; a
 regressor whose input features are noisy expectation values at several noise
 levels costs one per feature; and a hybrid quantum model costs the same as its
 classical counterpart plus the executions needed to evaluate its feature map
-or ansatz. Expressing every method in this currency is what makes the nine-way
+or ansatz. Expressing every method in this currency is what makes the ten-way
 comparison in this thesis interpretable, and it is what most of the studies
 reviewed in the next section omit.
 
@@ -491,9 +492,11 @@ analytic extrapolants --- linear, Richardson and exponential --- that a
 practitioner actually chooses between. Cost accounting is usually informal:
 Liao et al.\ are explicit that reduced overhead is the point
 \cite{liao2024machine}, but most studies report accuracy at unstated total
-circuit cost, and none of the studies reviewed here reports an
-error-versus-circuit-evaluation curve from which a reader could read off which
-method wins at a fixed budget. And with the exception of the extrapolation
+circuit cost, and none of the learned-mitigation studies reviewed in this
+section reports an error-versus-circuit-evaluation curve from which a reader
+could read off which method wins at a fixed budget. The broader benchmark of
+Bultrini et al., discussed in Section~\ref{sec2:gap}, shows that such rankings
+depend on the total shot budget \cite{bultrini2023unifying}. And with the exception of the extrapolation
 experiments in \cite{liao2024machine} and the cross-device transfer test in
 \cite{zlokapa2020deep}, the evaluation protocol is in-distribution: models are
 tested on circuits drawn from the same family, depth range and noise profile as
@@ -567,12 +570,13 @@ particular circuit model. Once a kernel matrix
 $K_{ij} = k(\mathbf{x}_{i},\mathbf{x}_{j})$ has been estimated, regression is
 classical kernel ridge regression,
 \begin{equation}
-  \widehat{y}(\mathbf{x}) \;=\; \sum_{i=1}^{N} \alpha_{i}\, k(\mathbf{x},\mathbf{x}_{i}),
+  \widehat{y}(\mathbf{x}) \;=\; \sum_{i=1}^{N} \nu_{i}\, k(\mathbf{x},\mathbf{x}_{i}),
   \qquad
-  \boldsymbol{\alpha} \;=\; \bigl(K + \mu \mathbb{I}\bigr)^{-1}\mathbf{y},
+  \boldsymbol{\nu} \;=\; \bigl(K + \alpha \mathbb{I}\bigr)^{-1}\mathbf{y},
   \label{eq2:krr}
 \end{equation}
-with $\mu$ a ridge parameter. This is the estimator used for the quantum arm
+with $\alpha$ the ridge regularisation strength and $\nu_{i}$ the dual
+coefficients. This is the estimator used for the quantum arm
 of the present benchmark, and its appeal is that the quantum device is
 responsible only for the Gram matrix, so training is convex and there are no
 barren plateaus to navigate.

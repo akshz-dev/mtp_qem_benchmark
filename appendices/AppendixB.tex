@@ -295,7 +295,7 @@ E7 & tfim\_to\_hea & ZNE, exponential & 0.1682 & 0.1518 & 0.1828 & -66.8 \\
 {\footnotesize
 \setlength{\tabcolsep}{4pt}
 \begin{longtable}{llllcccr}
-\caption[Realistic regime, all experiments]{Device-realistic regime, all experiments except the shot-limited kernel. R1: scaling method; R2: memory, with configuration given as scaling method : noise condition (markovian\_control = defect removed, reset\_control = defect reset every layer, nonmarkovian\_production = defect with memory); R3: calibration drift. Split A = held-out random circuits, B = deeper circuits, C = drifted calibration. Intervals are circuit-grouped bootstrap $95\%$ intervals; Red.\% is error reduction relative to the unmitigated estimator of the same configuration.}\label{tab:appB_realistic}\\
+\caption[Realistic regime, all experiments]{Device-informed regime, all experiments except the shot-limited kernel. R1: scaling method; R2: memory, with configuration given as scaling method : noise condition (markovian\_control = defect removed, reset\_control = defect reset every layer, nonmarkovian\_production = defect with memory); R3: calibration drift. Split A = held-out random circuits, B = deeper circuits, C = drifted calibration. Intervals are circuit-grouped bootstrap $95\%$ intervals; Red.\% is error reduction relative to the unmitigated estimator of the same configuration.}\label{tab:appB_realistic}\\
 \toprule
 \textbf{Exp.} & \textbf{Configuration} & \textbf{Split} & \textbf{Method} & \textbf{RMSE} & \textbf{CI low} & \textbf{CI high} & \textbf{Red.\%} \\
 \midrule
@@ -1036,7 +1036,7 @@ Breuer--Laine--Piilo measure $\mathcal{N}$ (eqn.~\eqref{eq:ch3_blp}) on the idli
 {\footnotesize
 \setlength{\tabcolsep}{4pt}
 \begin{longtable}{llcc}
-\caption{Selected kernel parameters in the idealised main benchmark. Spread is the RBF coefficient $\gamma$ or the fidelity-map bandwidth $\beta$.}\label{tab:appB_kernelparams}\\
+\caption{Selected kernel parameters in the idealised main benchmark. Spread is the RBF coefficient $\gamma_{\mathrm{RBF}}$ or the fidelity-map bandwidth $\beta$.}\label{tab:appB_kernelparams}\\
 \toprule
 \textbf{Split} & \textbf{Kernel} & \textbf{Spread} & \textbf{$\alpha$} \\
 \midrule

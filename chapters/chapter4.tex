@@ -44,7 +44,9 @@ threadpoolctl     & 3.8.0 \\
 The matched-kernel mitigation rerun used Python 3.12.10, and \texttt{requirements.txt}
 pins the package versions. Timings reflect concurrent execution of configurations.
 
-PennyLane's \texttt{default.mixed} evaluates noisy circuits as density matrices.
+PennyLane's~\cite{bergholm2018pennylane} \texttt{default.mixed} evaluates noisy
+circuits as density matrices, and the classical regressors use
+scikit-learn~\cite{pedregosa2011scikit}.
 The variational models use \texttt{default.qubit} for exact state-vector
 expectations and gradients. The fidelity kernel computes its unitary IQP
 feature states and overlaps explicitly with NumPy. The finite-shot experiments
@@ -70,8 +72,9 @@ simulated shots at $4096$ per setting). One protocol takes three settings
 
 Generating the primary $900$-circuit dataset takes approximately three minutes at
 $n = 5$ qubits. Generating the secondary system-size datasets of $500$ circuits
-takes about one minute at $n = 4$ and eight minutes at $n = 6$, reflecting the exponential cost of density-matrix simulation. The E1 generator computes the ideal
-expectations once for its common circuit pool.
+takes about one minute at $n = 4$ and eight minutes at $n = 6$, reflecting the exponential cost of density-matrix simulation. The noise-strength generator
+(experiment E1 in the result files) computes the ideal expectations once for its common
+circuit pool.
 
 \section{Hyperparameter selection}
 
@@ -92,6 +95,12 @@ calibration~B. Table~\ref{tab:ch4_grids}
 lists the search spaces. No hyperparameter was selected using test-fold performance,
 and the analytic arms have no hyperparameters to select.
 
+Only the two kernels have matched tuning in every experiment. The reduced grid fixes
+the gradient-boosted trees at 31 leaves and learning rate $0.1$. On both main splits
+the full search selected 15 leaves ($4500$ leaves over $300$ trees, against $9300$ for
+the reduced setting), so the reduced-grid trees are not at their tuned setting. The
+neural-network architecture is fixed in every experiment.
+
 The finite-shot fidelity experiments fit the positive semidefinite repair
 inside each grouped training fold and project that fold's validation
 cross-kernel onto its retained eigenspace. Held-out prediction fits the scaler
@@ -107,8 +116,8 @@ were used for the sweep experiments of Sections~\ref{sec:ch5_noise},
 \ref{sec:ch5_ablation} and~\ref{sec:ch5_transfer}, and for every realistic-regime
 experiment of Sections~\ref{sec:ch5_scaling}--\ref{sec:ch5_drift}, to keep the total
 runtime tractable. Every E1 noise multiplier uses that same reduced budget.
-The main benchmark of Section~\ref{sec:ch5_main}, the E4
-depth-extrapolation experiment, and the $n=5$ point of the system-size sweep
+The main benchmark of Section~\ref{sec:ch5_main}, the
+depth-extrapolation experiment of Section~\ref{sec:ch5_bounded} (E4), and the $n=5$ point of the system-size sweep
 use the full grids and 40 epochs. The shot-limited kernel of
 Section~\ref{sec:ch5_shotkernel} fixes $\beta = 0.15$ and selects $\alpha$ from 12
 log-spaced points in $[10^{-6}, 10^{1}]$.}
@@ -136,8 +145,8 @@ log-spaced in $[10^{-6}, 10^{1}]$ &
 $\beta \in \{0.05, 0.15, 0.4\}$, $\alpha \in$ 8 points \\
 \addlinespace
 Classical RBF kernel ridge &
-$\gamma \in \{0.005, 0.02, 0.08, 0.32\}$, same 15-point $\alpha$ grid &
-$\gamma \in \{0.005, 0.02, 0.08\}$, same 8-point $\alpha$ grid \\
+$\gamma_{\mathrm{RBF}} \in \{0.005, 0.02, 0.08, 0.32\}$, same 15-point $\alpha$ grid &
+$\gamma_{\mathrm{RBF}} \in \{0.005, 0.02, 0.08\}$, same 8-point $\alpha$ grid \\
 \addlinespace
 Data-reuploading VQC &
 4 qubits, 4 layers, Adam, step $0.05$, batch $96$, 40 epochs &
@@ -233,7 +242,7 @@ bounded-encoding arm. \\
 \texttt{make\_figures.py} &
 The idealised-regime figures in Chapter~\ref{chap5:results}. \\
 \texttt{simulate\_realistic.py} &
-Device-realistic regime-II generator: inhomogeneous rates, coherent over-rotation,
+Device-informed regime-II generator: inhomogeneous rates, coherent over-rotation,
 $ZZ$ crosstalk, the non-Markovian defect, and both noise-scaling methods. Writes
 \texttt{ds\_real\_A/B/M/R.csv} (production, drift, defect removed, defect reset)
 with circuit and ideal-value signatures, shared scale-1 observations and
@@ -273,6 +282,9 @@ Appendix~\ref{AppendixB} from the result files. \\
 \texttt{make\_figures\_\allowbreak realistic.py} &
 The realistic-regime and robustness figures, including the circuit--shot
 replication. \\
+\texttt{thesis\_\allowbreak diagnostics.py} &
+Exponential-ZNE fallback counts, clipping sensitivity, the fidelity--Gaussian Gram
+comparison and shot-free error diagnostics (\texttt{thesis\_diagnostics.csv}). \\
 \end{longtable}
 
 \section{Verification practices}\label{sec:ch4_verification}
@@ -307,8 +319,10 @@ The ten repeated holdouts measure split sensitivity on a shared dataset
 (Section~\ref{sec:ch5_folding_seeds}) uses three independently generated circuit
 pools as the inference units.
 
-Fifth, the accompanying \texttt{results/claims\_audit.csv} records an earlier
-audit. The current comparisons use the updated result artifacts of
+Fifth, the accompanying \texttt{results/claims\_audit.csv} records an audit of an
+earlier draft. Its `wrong' and `overclaim' verdicts refer to that draft's wording;
+none of the $66$ flagged sentences appears in this version in its audited form. The
+current comparisons use the updated result artifacts of
 Chapters~\ref{chap5:results} and~\ref{chap6:realistic}.
 
 \end{document}

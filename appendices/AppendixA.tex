@@ -82,8 +82,9 @@ any traceless observable $O$ has $\mathrm{Tr}[O \, I/2^n] = 0$, so
 $\langle O \rangle$ is simply attenuated by $(1 - \varepsilon)$. If each of $L$
 circuit layers applies such a channel independently, the attenuation compounds to
 $(1-\varepsilon)^{L} = e^{L \ln (1 - \varepsilon)}$, which is exponential in circuit
-depth and motivates fitting
-$\mu(\lambda) = a e^{-b \lambda} + c$.
+depth with asymptote zero. Amplitude damping, present in both regimes, instead drives
+the $Z$-string observables towards a non-zero fixed point, so the fitted model
+$\mu(\lambda) = a e^{-b \lambda} + c$ keeps the asymptote $c$ free.
 
 The difficulty is one of parameter counting rather than of physics. With $K = 3$
 noise scales and three free parameters $(a, b, c)$ the fit is exactly determined:
@@ -92,9 +93,13 @@ fluctuations, and the covariance of the fit is not estimable. A fluctuation in a
 one of the three measurements propagates directly into the extrapolated value, and
 because the model is non-linear in $b$ the propagation can be violent. The results
 of Section~\ref{sec:ch5_main} show this arm performing worse than no mitigation at
-all, which is a statement about the three-point exactly-determined fit, not about
-the exponential ansatz. Four or more noise scales would make the fit
-overdetermined and the arm usable.
+all. With shot-free inputs the same three-point fit reaches $0.0119$ RMSE on Split~A,
+the lowest error of the analytic arms (Section~\ref{sec:ch5_shots}), so the failure at
+$4096$ shots is amplification of shot noise rather than a wrong functional form. When
+the fit fails, is non-finite or extrapolates beyond $1.5$ in magnitude, the
+implementation returns the linear extrapolation for that row; this happens for $317$
+of the $1350$ Split~A test rows. Whether additional noise scales would make the arm
+competitive is not tested here.
 
 \section{Fidelity kernel and concentration}
 \label{sec:appA_kernel}
@@ -113,7 +118,7 @@ $\ket{\phi(x_i)}$ can be computed once and stored as rows of a matrix $\Psi$, af
 which the entire Gram matrix is the single product
 $K = \left| \Psi \Psi^{\dagger} \right|^{2}$ taken elementwise -- the reason the
 kernel arm is computationally cheap in this study but would require
-$O(M^2)$ circuit evaluations on hardware for $M$ training points.
+$O(n^2)$ circuit evaluations on hardware for $n$ training points.
 
 The concentration phenomenon follows from a dimensional argument. If the embedding
 spreads states so that they are close to Haar-random in a $2^n$-dimensional space,
@@ -129,7 +134,11 @@ A kernel ridge regressor built on such a matrix can interpolate its training dat
 but has almost no ability to relate a test point to any training point, so its
 predictions collapse towards the mean and its test error approaches that of a
 constant model -- or worse, since the small residual off-diagonal structure is
-dominated by sampling noise. Rescaling the input by a bandwidth
+dominated by sampling noise. This limit does not describe the fidelity kernel of this
+study. With six encoding qubits the Haar value is $1/64 \approx 0.016$, while at
+$\beta = 1$ the mean off-diagonal entry is $0.204$ with standard deviation $0.179$
+(Table~\ref{tab:ch5_bandwidth}); at that bandwidth the kernel is narrow, not
+concentrated. Rescaling the input by a bandwidth
 $\beta < 1$ before embedding contracts the embedded states into a smaller region,
 restores non-trivial off-diagonal structure, and thereby controls the effective
 smoothness of the induced function class. This is why bandwidth is treated in
@@ -227,24 +236,24 @@ product of state vectors. To model hardware acquisition, each entry
 \end{equation}
 must be measured, for instance by the inversion test, which prepares
 $U^{\dagger}(x_j) U(x_i) \ket{0}$ and estimates the probability of the all-zeros
-outcome. For an ideal overlap circuit and independent shots, the $M$-shot estimator is
-$\hat{k}_{ij} = B/M$ with $B \sim \mathrm{Binomial}(M, k_{ij})$, so
+outcome. For an ideal overlap circuit and independent shots, the $N_{\mathrm{K}}$-shot estimator is
+$\hat{k}_{ij} = B/N_{\mathrm{K}}$ with $B \sim \mathrm{Binomial}(N_{\mathrm{K}}, k_{ij})$, so
 \begin{equation}
     \mathbb{E}\!\left[\hat{k}_{ij}\right] = k_{ij},
     \qquad
-    \mathrm{Var}\!\left[\hat{k}_{ij}\right] = \frac{k_{ij}(1 - k_{ij})}{M}.
+    \mathrm{Var}\!\left[\hat{k}_{ij}\right] = \frac{k_{ij}(1 - k_{ij})}{N_{\mathrm{K}}}.
     \label{eq:appA_kvar}
 \end{equation}
-Let $T$ denote the training set at a given fit and $U$ denote the points to
+Let $T$ denote the training set at a given fit and $P$ denote the points to
 predict. Diagonalising the measured training block gives
 $\widehat K_{TT}=V\Lambda V^\top$. Keeping eigenvalues above
-$|T|\epsilon_{\mathrm{mach}}\max_i|\lambda_i|$ yields
+$|T|\epsilon_{\mathrm{mach}}\max_i|\Lambda_{ii}|$ yields
 $K_{TT,+}=V_+\Lambda_+V_+^\top$. The cross-kernel is projected onto the retained training subspace,
-$K_{UT,+}=\widehat K_{UT}V_+V_+^\top$. With ridge penalty $\alpha>0$, the
+$K_{PT,+}=\widehat K_{PT}V_+V_+^\top$. With ridge penalty $\alpha>0$, the
 predictions are
 \begin{equation}
-    \widehat y_U
-    = \widehat K_{UT} V_+
+    \widehat y_P
+    = \widehat K_{PT} V_+
       (\Lambda_+ + \alpha I)^{-1} V_+^\top y_T.
     \label{eq:appA_shot_projection}
 \end{equation}
@@ -254,15 +263,15 @@ set, with the respective training block defining $V_+$.
 Training on $n$ points and predicting on $m$ points uses a symmetric training
 block and a rectangular cross-kernel. Counting the diagonal, their cost is
 \begin{equation}
-    C(n,m) = M \left[ \frac{n(n+1)}{2} + nm \right]
+    C(n,m) = N_{\mathrm{K}} \left[ \frac{n(n+1)}{2} + nm \right]
     \label{eq:appA_cost}
 \end{equation}
-circuit executions. In R4 each grouped fold fits its feature scaler on its own
+circuit executions. In the shot-limited study each grouped fold fits its feature scaler on its own
 training rows, so the simulated acquisition cost of tuning is the sum of
 $C(n_f,m_f)$ across the four folds. The matrices within a fold are shared across
 all tested ridge penalties. The final fit and held-out evaluation add
 $C(3150,1350)$, equivalent to $9{,}215{,}325$ entries before multiplying by
-$M$. A subsequent prediction adds $3150M$ fidelity shots. Acquisition of the
+$N_{\mathrm{K}}$. A subsequent prediction adds $3150N_{\mathrm{K}}$ fidelity shots. Acquisition of the
 three input measurements and labelled reference data is accounted for separately.
 
 

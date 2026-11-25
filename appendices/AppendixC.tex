@@ -30,6 +30,15 @@ circuit-parameter stream.
 \lstinputlisting[language=Python, caption={code/simulate.py},
                  label={lst:simulate}]{code/simulate.py}
 
+\section{Matched kernel ridge regression}
+
+\texttt{kernel\_models.py} implements the exact IQP fidelity states, the matched RBF
+and fidelity kernel ridge regressors, and their circuit-grouped tuning with fold-local
+feature scaling.
+
+\lstinputlisting[language=Python, caption={code/kernel\_models.py},
+                 label={lst:kernel_models}]{code/kernel_models.py}
+
 \section{Model arms and the main benchmark}
 
 \texttt{bench.py} implements the analytic estimators, the classical regressors and
@@ -49,7 +58,7 @@ kernel tables.
 \lstinputlisting[language=Python, caption={code/experiments.py},
                  label={lst:experiments}]{code/experiments.py}
 
-\section{Device-realistic, non-Markovian generator}
+\section{Device-informed, non-Markovian generator}
 
 \texttt{simulate\_realistic.py} implements the regime-II model of
 Section~\ref{sec:ch3_realistic}: per-qubit inhomogeneous rates, coherent
@@ -83,6 +92,9 @@ prediction as in eqn.~\eqref{eq:appA_shot_projection}.
 \lstinputlisting[language=Python, caption={code/experiments\_realistic.py},
                  label={lst:experiments_realistic}]{code/experiments_realistic.py}
 
+\lstinputlisting[language=Python, caption={code/shot\_kernel.py},
+                 label={lst:shot_kernel}]{code/shot_kernel.py}
+
 \section{Paired statistics and robustness}
 
 \texttt{stats\_util.py} implements the paired, circuit-grouped bootstrap on the
@@ -111,8 +123,8 @@ ratios while the learned feature vector retains its six inputs.
 \section{Bandwidth sensitivity study}
 
 \texttt{bandwidth\_study.py} evaluates the fidelity kernel at fixed bandwidths,
-recording both the resulting error and the mean off-diagonal Gram matrix entry that
-quantifies concentration.
+recording both the resulting error and the mean and standard deviation of the
+off-diagonal Gram matrix entries.
 
 \lstinputlisting[language=Python, caption={code/bandwidth\_study.py},
                  label={lst:bandwidth}]{code/bandwidth_study.py}

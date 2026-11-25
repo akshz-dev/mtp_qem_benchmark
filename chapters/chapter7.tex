@@ -26,14 +26,24 @@ RMSE(RBF) $-$ RMSE(fidelity) is $-0.00168$ (95\% CI $[-0.00324,\allowbreak -0.00
 grouped holdouts, the mean and standard deviation are $0.0416\pm0.0011$
 for RBF and $0.0426\pm0.0012$ for fidelity. The per-split paired intervals
 favour RBF in $9$ splits and favour fidelity in $0$; the tenth interval includes zero.
+At the selected bandwidth the fidelity Gram matrix has correlation $0.993$ with a
+Gaussian kernel on the same features, and the RBF grid contains a Gaussian of almost
+the same width. The matched RBF control can therefore represent nearly the same
+similarity structure, which is consistent with RBF matching or beating the fidelity
+kernel in these experiments. With $31$ reference circuits the fidelity kernel is
+favoured in $9$ of $20$ draws and RBF in $4$; at $63$ circuits the counts are $5$
+and $8$.
 
 \subsection{Sensitivity to hyperparameters and initialisation}
 
 The fixed-bandwidth diagnostic gives a fidelity-kernel RMSE of
 $0.1526$ at $\beta=1$ and $0.0421$ at the best observed
-bandwidth. The separate variational seed study shows a broad spread in test
-error at fixed data and training budget. Both results motivate systematic
-tuning and repeated initialisations in benchmarks.
+bandwidth. At $\beta=1$ the mean off-diagonal kernel entry is $0.204$, far above
+the concentrated limit, so the untuned failure comes from a narrow kernel. The separate
+variational seed study gives $0.0935 \pm 0.0327$ on Split~A for the data-reuploading
+VQC, with five of ten seeds worse than no mitigation, and the single main-table fit is
+not reproducible across scripts. Both results motivate systematic tuning and repeated
+initialisations in benchmarks.
 
 \subsection{The two noise-scaling protocols}
 
@@ -71,6 +81,34 @@ fidelity executions, and each subsequent prediction adds $3.15\times10^{8}$.
 RBF computes its similarities classically from the $12{,}288$ input executions
 per row that both kernels share.
 
+\subsection{Shot noise and analytic extrapolation}
+
+On idealised random circuits, the kernels reach $0.0029$ and $0.0031$ RMSE with
+shot-free inputs against $0.0411$ and $0.0427$ at $4096$ shots, so most of their
+error at the default budget comes from input shot noise. Exponential extrapolation
+reaches $0.0119$ with shot-free inputs but $0.1548$ at $4096$ shots, and it returns
+the linear value on $317$ of the $1350$ Split~A test rows. In the device-informed
+regime the residual error of linear extrapolation is mainly bias: on shot-free
+production values it reaches $0.0997$ under parameter scaling against $0.1206$
+unmitigated.
+
+\subsection{Non-Markovian memory and calibration drift}
+
+On the realistic random holdout, removing the defect lowers the unmitigated RMSE from
+$0.1239$ to $0.0807$, while resetting it after every layer leaves $0.1247$. Most of the
+defect's damage to the raw measurement therefore comes from energy exchange with the
+defect rather than from the state it retains. The retained state does affect the
+learned mitigators: the production-minus-reset RMSE difference is $+0.0095$ for RBF
+and $+0.0098$ for fidelity under parameter scaling, and $+0.0211$ and $+0.0204$ under
+folding, all with paired intervals excluding zero. Under parameter scaling the scaled
+settings also change the coherent dynamics, so the folded contrast is the more direct
+measure of memory.
+
+After the simulated $30\%$ recalibration, the unmitigated RMSE on the same held-out
+circuits rises from $0.1239$ to $0.1298$. Ridge regression ($+0.0034$) and linear
+extrapolation ($+0.0043$) show resolved increases; the other learned arms show none.
+This drift changes the raw error by about $5\%$, so it tests a mild recalibration.
+
 \subsection{Feature support and depth transfer}
 
 On the idealised deeper-circuit split, RBF reaches $0.0658$
@@ -80,12 +118,24 @@ observable weight gives $0.0718$ for RBF and $0.0723$ for fidelity. This feature
 ablation changes the inputs and fidelity-map width, and its result applies to
 the tested depth split (Section~\ref{sec:ch5_robustness}).
 
+Under these shifts the model classes separate. With all six inputs on deeper circuits,
+RBF, the boosted trees and ridge regression stay $41$--$46\%$ below the unmitigated
+error, while the neural network, the fidelity kernel and both variational circuits are
+worse than no mitigation. Ridge regression is the lowest-error arm from
+hardware-efficient to Ising circuits ($0.0546$), where RBF and fidelity are $2.0\%$ and
+$19.8\%$ worse than no mitigation. The arms that degrade gracefully in these tests are
+ridge regression, which extrapolates linearly, and the boosted trees, which hold their
+boundary values outside the training range; RBF does so on the depth split but not
+from hardware-efficient to Ising circuits.
+
 \subsection{Scope and limitations}
 
 Mitigation uses simulated circuits with at most six qubits. The device-informed
 regime models one set of noise parameters and one drift condition, including a
 coupled defect on qubit~$0$, which appears in four of the five measured Pauli
-strings. The model omits readout assignment errors and leakage. The trace-distance witness covers two
+strings. The model omits readout assignment errors and leakage. Parameter scaling in this
+regime also scales the coherent over-rotation, crosstalk and defect coupling, and the
+fidelity kernel uses six qubits at every system size. The trace-distance witness covers two
 probe pairs on an idle register. The reset comparison studies a specific
 between-layer intervention at fixed collision and damping parameters.
 The fidelity resource estimates count simulated circuit executions with ideal
@@ -127,9 +177,10 @@ budgets and models are pointwise.
 
 \section{Closing remark}
 
-These simulations show how a matched nonlinear baseline changes the accuracy
-comparison in quantum error mitigation. The comparison depends on the circuit
-distribution, feature set and noise-scaling protocol. Hardware use also requires
-counting the reference data, input measurements and fidelity-estimation circuits.
+In these simulations, a matched classical RBF kernel reaches or beats the fidelity
+kernel, and at its selected bandwidth the fidelity kernel is close to a Gaussian kernel.
+The ranking of all methods depends on the circuit distribution, the feature set and the
+noise-scaling protocol. A hardware deployment would also have to pay for the reference
+data, the input measurements and the fidelity-estimation circuits counted here.
 
 \end{document}

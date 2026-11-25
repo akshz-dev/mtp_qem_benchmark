@@ -163,9 +163,12 @@ def fig_bandwidth(bw, out):
 
     axes[1].plot(bw["bandwidth"], bw["mean_offdiag_kernel"], "-o", color="#3f5f7f",
                  mec="white", mew=0.7, label="mean")
-    axes[1].fill_between(bw["bandwidth"], bw["mean_offdiag_kernel"] - bw["std_offdiag_kernel"],
-                         bw["mean_offdiag_kernel"] + bw["std_offdiag_kernel"],
-                         color="#3f5f7f", alpha=0.18, lw=0, label="$\\pm$ 1 SD across entries")
+    # A fidelity lies in [0, 1], so the +-1 SD band is drawn only inside that range.
+    axes[1].fill_between(bw["bandwidth"],
+                         np.clip(bw["mean_offdiag_kernel"] - bw["std_offdiag_kernel"], 0, 1),
+                         np.clip(bw["mean_offdiag_kernel"] + bw["std_offdiag_kernel"], 0, 1),
+                         color="#3f5f7f", alpha=0.18, lw=0,
+                         label="$\\pm$ 1 SD across entries, within [0, 1]")
     axes[1].legend(loc="lower left", fontsize=7)
     axes[1].set_xscale("log"); axes[1].set_xlabel("Kernel bandwidth $\\beta$")
     axes[1].set_ylabel("Off-diagonal kernel entry")
@@ -275,7 +278,7 @@ def fig_learning(sw, out):
 def fig_ood(sw, out):
     e4 = sw[sw.experiment == "E4_bounded_encoding"].set_index("model")
     e7 = sw[sw.experiment == "E7_cross_family"]
-    sel = ["no_mitigation", "zne_richardson2", "hist_gbm", "mlp",
+    sel = ["no_mitigation", "zne_linear", "zne_richardson2", "ridge", "hist_gbm", "mlp",
            "rbf_krr", "qk_ridge_quantum", "dr_vqc_quantum", "bounded_vqc_quantum"]
     fig, axes = plt.subplots(1, 2, figsize=(9.4, 3.7))
 
